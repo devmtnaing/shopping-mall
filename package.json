@@ -17,7 +17,8 @@
     "size": "node tools/size.ts",
     "check": "pnpm typecheck && pnpm lint && pnpm test && pnpm build && pnpm size",
     "greybox": "node tools/greybox/build.ts && node tools/bake-navgrid.ts",
-    "navgrid": "node tools/bake-navgrid.ts"
+    "navgrid": "node tools/bake-navgrid.ts",
+    "bots": "node tools/bots.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.14",

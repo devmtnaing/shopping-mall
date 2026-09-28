@@ -1,5 +1,6 @@
 // One shared space: its players, the snapshot broadcast (nearest players only), and batched presence.
 import { encodeSnapshot, type PlayerInfo, type ServerMessage, snapshotBytes } from '@plaza/shared/protocol';
+import { stats } from './metrics.ts';
 import type { Player } from './player.ts';
 
 export class Room {
@@ -39,7 +40,11 @@ export class Room {
   broadcast(msg: ServerMessage, except?: number) {
     const text = JSON.stringify(msg);
     for (const p of this.players.values()) {
-      if (p.id !== except && p.socket?.readyState === 1) p.socket.send(text);
+      if (p.id !== except && p.socket?.readyState === 1) {
+        p.socket.send(text);
+        stats.bytesOut += text.length;
+        stats.messagesOut++;
+      }
     }
   }
 
@@ -86,6 +91,7 @@ export class Room {
 
   /** Advance one tick: send each connected player a snapshot of the nearest others. */
   step() {
+    const t0 = performance.now();
     this.tick = (this.tick + 1) & 0xffff;
     const placed = [...this.players.values()].filter((p) => p.placed);
     for (const me of this.players.values()) {
@@ -96,7 +102,11 @@ export class Room {
       const buf = new ArrayBuffer(snapshotBytes(others.length));
       encodeSnapshot(this.tick, others, buf);
       me.socket.send(buf);
+      stats.bytesOut += buf.byteLength;
+      stats.messagesOut++;
     }
+    stats.ticks++;
+    stats.tickMs += performance.now() - t0;
   }
 
   private nearest(me: Player, placed: Player[]): Player[] {
