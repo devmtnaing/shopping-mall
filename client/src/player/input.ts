@@ -66,6 +66,11 @@ export class KeyState {
     return this.held.has(code);
   }
 
+  /** A press from an on-screen button (touch). */
+  press(code: string) {
+    this.presses.add(code);
+  }
+
   /** True once per physical press. */
   consume(code: string) {
     return this.presses.delete(code);
@@ -91,6 +96,10 @@ export class Input {
   readonly keys = new KeyState();
   /** Joystick vector set by touch controls (T-107): x = strafe right, y = forward. */
   readonly stick = { x: 0, y: 0 };
+  /** Run toggled on by the touch Run button. */
+  runToggle = false;
+  /** Pointers owned by something else (the joystick); they never turn the camera. */
+  readonly claimed = new Set<number>();
   private lookX = 0;
   private lookY = 0;
   private zoom = 0;
@@ -119,6 +128,15 @@ export class Input {
     this.canvas.requestPointerLock?.()?.catch?.(() => {});
   }
 
+  get run() {
+    return this.runToggle || this.keys.isDown('ShiftLeft') || this.keys.isDown('ShiftRight');
+  }
+
+  /** True once per jump press (Space or the touch button). */
+  jump() {
+    return this.keys.consume('Space');
+  }
+
   /** Combined movement (keys + joystick), clamped to length 1. */
   move(): { x: number; y: number } {
     const k = this.keys.axis();
@@ -143,14 +161,9 @@ export class Input {
     return z;
   }
 
-  /** Claim a pointer for something else (the joystick) so it doesn't also turn the camera. */
-  release(pointerId: number) {
-    this.pointers.delete(pointerId);
-  }
-
   private onDown(e: PointerEvent) {
     this.canvas.focus();
-    if (this.mouseLocked) return;
+    if (this.mouseLocked || this.claimed.has(e.pointerId)) return;
     this.canvas.setPointerCapture?.(e.pointerId);
     this.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
     if (this.pointers.size === 2) this.pinchDist = this.spread();

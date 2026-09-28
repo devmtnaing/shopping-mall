@@ -5,6 +5,7 @@ import { createPlaceholderBody } from './player/body';
 import { OrbitCamera } from './player/camera';
 import { PlayerController } from './player/controller';
 import { Input } from './player/input';
+import { createTouchControls } from './player/touch';
 import type { DebugOverlay } from './render/debug';
 import { createRenderer } from './render/renderer';
 import { escalatorCarry } from './world/escalators';
@@ -29,6 +30,7 @@ const mall = await loadMall();
 scene.add(mall.visual);
 
 const input = new Input(canvas);
+if (matchMedia('(pointer: coarse)').matches) createTouchControls(canvas, input);
 const player = new PlayerController(mall.collider);
 const spawn = mall.meta.spawns[0] ?? { pos: [0, 0, 0], yaw: 0 };
 player.place(spawn.pos[0], spawn.pos[1], spawn.pos[2], spawn.yaw);
@@ -55,13 +57,12 @@ if (debugMode) {
 startLoop({
   step: (dt) => {
     const move = input.move();
-    const k = input.keys;
     escalatorCarry(mall.meta.escalators, player.pos, player.carry);
     player.step(dt, {
       x: move.x,
       y: move.y,
-      run: k.isDown('ShiftLeft') || k.isDown('ShiftRight'),
-      jump: k.consume('Space'),
+      run: input.run,
+      jump: input.jump(),
       yaw: orbit.yaw,
     });
   },
