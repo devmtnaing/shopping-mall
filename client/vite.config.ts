@@ -29,6 +29,7 @@ export default defineConfig({
   plugins: [plazaConfig()],
   build: {
     target: 'es2022',
+    manifest: true,
     // Three.js alone is ~500 kB minified; real limits are gzip budgets in /budgets.json.
     chunkSizeWarningLimit: 700,
   },

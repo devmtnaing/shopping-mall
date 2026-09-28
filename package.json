@@ -14,7 +14,8 @@
     "lint": "biome check .",
     "format": "biome check --write .",
     "test": "vitest run",
-    "check": "pnpm typecheck && pnpm lint && pnpm test && pnpm build"
+    "size": "node tools/size.ts",
+    "check": "pnpm typecheck && pnpm lint && pnpm test && pnpm build && pnpm size"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.14",
