@@ -1,0 +1,30 @@
+:root {
+  --ink: #f6f1e7;
+  --muted: #b9b2a5;
+  --accent: #e2b857;
+  --bg: #12110f;
+  --glass: rgba(18, 17, 15, 0.62);
+  --font: system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: dark;
+}
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font);
+}
+#gl {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  touch-action: none;
+  outline: none;
+}
