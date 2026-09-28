@@ -7,7 +7,7 @@ Ticket-sized work items grouped by [roadmap](roadmap.md) phase. Each one is mean
 
 Every task also has an implicit acceptance criterion: *typecheck, lint, tests and budgets pass, and no file is over ~300 lines.*
 
-**Progress:** Phase 0 ✅ (T-001 to T-007) · Phase 1 ✅ (T-101 to T-110) · Phase 3 ✅ (T-301 to T-312) · Phase 4 ✅ (T-401 to T-412). Changes from the plan are noted in the rows.
+**Progress:** Phase 0 ✅ (T-001 to T-007) · Phase 1 ✅ (T-101 to T-110) · Phase 3 ✅ (T-301 to T-312) · Phase 4 ✅ (T-401 to T-412) · Phase 3b (live content) added 2026-09-29, next up. Changes from the plan are noted in the rows.
 Phase 4 load test (laptop, 100 bots in one room): 6.5 KB/s down per client, server 3.7 % of a core, 1.9 ms per tick.
 T-101 deviated from the plan: with no Blender on hand, the greybox is generated from [`tools/greybox/layout.ts`](../tools/greybox/layout.ts) and writes the same files a Blender export will ([greybox.md](greybox.md)).
 T-104 uses a "floating capsule" (body capsule from step height up, with ground rays below) instead of a full capsule, because rounded capsules can't climb steps without hacks.
@@ -92,6 +92,19 @@ T-104 uses a "floating capsule" (body capsule from step height up, with ground r
 | T-410 | Host role: `HOST_SECRET` → `/host-token` JWT (12 h), gold tag, "Host is here" on the landing page, announcements | S | server client | The token is never stored in `localStorage`. An invalid token is rejected with a clear error |
 | T-411 | Dockerfile (distroless) + `docker-compose.yml` with the static site | S | tooling | `docker compose up` → working multiplayer mall on :8080. *(Server image is ~160 MB: the Node 24 runtime in the distroless base is almost all of it, so the original < 80 MB target was unrealistic. The web image is ~50 MB.)* |
 | T-412 | `tools/bots.ts`: N headless bots walking navgrid paths and chatting | S | tooling server | 100 bots run from one laptop. Server metrics are logged |
+
+## Phase 3b: Live content
+
+| ID | Task | Size | Labels | Acceptance criteria |
+|---|---|---|---|---|
+| T-700 | Rename Plaza → Shopping Mall: packages, Docker images, docs, demo mall name | S | tooling | No "Plaza" left except history. CI green |
+| T-701 | Postgres schema + migrations (mall, shops, products, assets); seed from `plaza.config.ts` on an empty database | M | server shared | `pnpm db:migrate` is idempotent. Seeding twice creates nothing new. Tests run against a real Postgres (CI service) |
+| T-702 | Content API: `GET /api/content` (public, cached by version), host-only writes for mall, shops and products, with shared zod validation | M | server shared | Writes without a host token get 401. Invalid data gets 400 with field paths. Content version bumps on every write |
+| T-703 | Uploads: presigned PUT to S3-compatible storage, asset records keyed by content hash, size and type limits | M | server | A 5 MB PNG uploads directly to the bucket. Duplicates dedupe by hash. Works with MinIO locally and Railway buckets |
+| T-704 | `/admin` page (host only): list, add, edit, delete and reorder shops, products, slot assignment, and the asset library | L | ui | A new shop with a logo and 3 products takes under 2 minutes. Keyboard accessible. Confirms before deleting |
+| T-705 | Live updates: server broadcasts `content` version, clients refetch and repaint signs, panels, directory and zones | M | client server | A change in /admin shows on another visitor's screen within 2 s, without a reload |
+| T-706 | Swappable art: mall package (model + collision + meta + navgrid), avatars and props loaded via asset records. Upload validates the meta schema and bakes the navgrid | L | client server tooling | Replacing the mall model in /admin swaps the building on the next visit. A bad package is rejected with a clear error |
+| T-707 | Railway deploy: server + Postgres + bucket, env docs, daily `pg_dump` to the bucket. compose gains Postgres + MinIO | M | tooling | A deploy from `main` works end to end. Restoring a backup is documented and tested once |
 
 ## Phase 5: Performance, accessibility, mobile
 

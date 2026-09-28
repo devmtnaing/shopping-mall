@@ -42,7 +42,11 @@ flowchart LR
   O --> CI[CI: inspect + budget check]
 ```
 
+### Sources
+v1 uses **free CC0 kits** (Kenney, Quaternius, Poly Pizza), recorded per asset in `assets-src/**/LICENSE`. Higgsfield-generated assets follow later as drop-in replacements through the asset library (ADR 0006); the licence has been checked and generated models may be committed.
+
 ### Characters
+
 1. Generate the character in Higgsfield (front-facing T-pose, neutral lighting). Keep the prompt in `assets-src/characters/<id>/prompt.md` so anyone can reproduce it.
 2. Import into Blender. Decimate to **≤ 15k tris** (LOD0), **3k** (LOD1) and **600** (LOD2).
 3. Skin to `assets-src/rig/plaza-skeleton.blend` (Mixamo bone names). **Never export animation with the outfit.** All animations live in `anims.glb`.

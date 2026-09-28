@@ -108,6 +108,22 @@ The dates assume one full-time developer plus one part-time 3D artist. Phases 2 
 
 ---
 
+## Phase 3b: Live content (decided 2026-09-29, before Phase 5)
+**Goal:** the mall owner edits shops, products and art from a browser, and changes appear live. See [ADR 0005](adr/0005-railway-postgres-s3.md) and [ADR 0006](adr/0006-live-content-and-swappable-assets.md).
+
+1. Rename the project to **Shopping Mall** (packages, image, docs). (T-700)
+2. Postgres schema and migrations; seed from `plaza.config.ts`. (T-701)
+3. Content API: public read, host-only write; live `content` broadcast. (T-702, T-705)
+4. S3-compatible uploads with presigned URLs; asset records by content hash. (T-703)
+5. `/admin` page: shops, products, slots, assets. (T-704)
+6. Swappable art: the client loads the mall package, avatars and props through asset records. (T-706)
+7. Railway deploy with Postgres, bucket and backups; compose gains Postgres + MinIO. (T-707)
+
+**Exit:** the host adds a shop with a logo and products from `/admin`, and every connected visitor sees the new sign within 2 seconds, with no deploy. Replacing the mall model file swaps the building on the next visit.
+
+## Phase 2 note
+3D art for v1 uses **free CC0 kits** (Kenney, Quaternius, Poly Pizza). Higgsfield-generated assets come later and drop in as file swaps (ADR 0006). The licence has been checked: generated models may be committed.
+
 ## After v1.0 (P2 backlog)
 - Private rooms and invite links
 - 3D product pedestals and product `.glb` viewer
