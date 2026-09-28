@@ -41,6 +41,10 @@ export default defineConfig({
   plugins: [preact(), mallConfig()],
   build: {
     target: 'es2022',
+    // two pages: the mall, and the host's admin (its own bundle, never loaded by visitors)
+    rollupOptions: {
+      input: { main: resolve(__dirname, 'index.html'), admin: resolve(__dirname, 'admin/index.html') },
+    },
     manifest: true,
     // Three.js alone is ~500 kB minified; real limits are gzip budgets in /budgets.json.
     chunkSizeWarningLimit: 700,

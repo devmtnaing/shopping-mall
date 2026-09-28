@@ -145,14 +145,15 @@ export function serverUrl(room: string): string | null {
   return url.toString();
 }
 
-/** The server's HTTP address for `path`, or null without a server. */
+/** The server's HTTP address for `path` (which may include a ?query), or null without a server. */
 export function httpUrl(path: string): string | null {
   const ws = serverUrl('main');
   if (!ws) return null;
   const url = new URL(ws);
   url.protocol = url.protocol === 'wss:' ? 'https:' : 'http:';
-  url.pathname = path;
-  url.search = '';
+  const [pathname = '/', query] = path.split('?');
+  url.pathname = pathname;
+  url.search = query ? `?${query}` : '';
   return url.toString();
 }
 

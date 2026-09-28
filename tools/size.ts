@@ -22,7 +22,8 @@ const visit = (key: string) => {
   for (const c of chunk.css ?? []) css.add(c);
   for (const i of chunk.imports ?? []) visit(i);
 };
-for (const [key, chunk] of Object.entries(manifest)) if (chunk.isEntry) visit(key);
+// the budget is about what visitors download: the mall page only (the admin page is its own bundle)
+for (const [key, chunk] of Object.entries(manifest)) if (chunk.isEntry && key === 'index.html') visit(key);
 
 const rows: [string, number, number][] = [];
 const sum = (files: Iterable<string>) => [...files].reduce((n, f) => n + gz(f), 0);
