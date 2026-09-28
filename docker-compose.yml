@@ -1,0 +1,22 @@
+# The whole mall, multiplayer included:  docker compose up --build  →  http://localhost:8080
+services:
+  server:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    environment:
+      # set these in a .env file next to this one (see .env.example)
+      HOST_SECRET: ${HOST_SECRET:-}
+      REPORT_WEBHOOK: ${REPORT_WEBHOOK:-}
+      ROOM_CAPACITY: ${ROOM_CAPACITY:-100}
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      dockerfile: client/Dockerfile
+    ports:
+      - "${WEB_PORT:-8080}:80"
+    depends_on:
+      - server
+    restart: unless-stopped

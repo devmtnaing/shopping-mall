@@ -56,7 +56,16 @@ pnpm greybox        # regenerate the greybox mall, its meta and the nav grid
 
 **Controls:** WASD / arrows to walk, Shift to run, Space to jump, drag to look, scroll to zoom, click the floor to walk there, click a shop to go to its door.
 On a phone: left thumb joystick, drag on the right to look, pinch to zoom, tap to walk, Run and Jump buttons.
-The multiplayer server (`pnpm dev:server`) arrives in Phase 4.
+For multiplayer while developing, run `pnpm dev:server` in a second terminal. The client finds it on port 8787, and open a second browser window to see yourself walk around.
+
+## Self-hosting
+
+```bash
+cp .env.example .env        # optional: HOST_SECRET, REPORT_WEBHOOK, WEB_PORT…
+docker compose up --build   # → http://localhost:8080
+```
+
+That runs two containers: nginx serving the built site (and proxying `/ws` to the server), and the multiplayer server. For a static-only deployment (single-player), `pnpm build` and upload `client/dist/` anywhere.
 
 ## License
 

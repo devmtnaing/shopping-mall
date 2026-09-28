@@ -26,3 +26,20 @@ jobs:
       - run: pnpm build
       - name: Size budget
         run: pnpm size >> "$GITHUB_STEP_SUMMARY"
+
+  docker:
+    # builds both images and checks the stack actually serves the mall and the server
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker compose build
+      - run: WEB_PORT=8080 docker compose up -d
+      - name: Smoke test
+        run: |
+          for i in $(seq 1 30); do curl -sf localhost:8080/health && break; sleep 1; done
+          curl -sf localhost:8080/health | grep '"ok":true'
+          curl -sf localhost:8080/ | grep -q '<canvas id="gl"'
+          curl -sf localhost:8080/directory/ | grep -q 'Shop directory'
+      - if: always()
+        run: docker compose logs && docker compose down

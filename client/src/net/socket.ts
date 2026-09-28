@@ -131,12 +131,16 @@ export class NetClient {
   }
 }
 
-/** Where the server lives: VITE_PLAZA_WS at build time, or port 8787 on this host in development. */
+/**
+ * Where the server lives: VITE_PLAZA_WS at build time (an absolute wss:// URL, or a path like
+ * "/ws" when the server sits behind the same host), or port 8787 on this host in development.
+ */
 export function serverUrl(room: string): string | null {
   const env = import.meta.env.VITE_PLAZA_WS as string | undefined;
   const base = env || (import.meta.env.DEV ? `ws://${location.hostname}:8787/ws` : null);
   if (!base) return null;
-  const url = new URL(base);
+  const sameHost = `${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${location.host}`;
+  const url = new URL(base, sameHost);
   url.searchParams.set('room', room);
   return url.toString();
 }

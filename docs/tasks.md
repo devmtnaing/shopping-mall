@@ -89,7 +89,7 @@ T-104 uses a "floating capsule" (body capsule from step height up, with ground r
 | T-408 | Emotes + speech bubbles above avatars (5 s) | S | client | Visible only to the interest set |
 | T-409 | Moderation: name/chat filter (pluggable word list), per-user mute (client), report → server log/webhook | M | server ui | Muted user's chat and bubbles hidden. The report includes the last 20 messages |
 | T-410 | Host role: `HOST_SECRET` → `/host-token` JWT (12 h), gold tag, "Host is here" on the landing page, announcements | S | server client | The token is never stored in `localStorage`. An invalid token is rejected with a clear error |
-| T-411 | Dockerfile (distroless, < 80 MB) + `docker-compose.yml` with the static site | S | tooling | `docker compose up` → working multiplayer mall on :8080 |
+| T-411 | Dockerfile (distroless) + `docker-compose.yml` with the static site | S | tooling | `docker compose up` → working multiplayer mall on :8080. *(Server image is ~160 MB: the Node 24 runtime in the distroless base is almost all of it, so the original < 80 MB target was unrealistic. The web image is ~50 MB.)* |
 | T-412 | `tools/bots.ts`: N headless bots walking navgrid paths and chatting | S | tooling server | 100 bots run from one laptop. Server metrics are logged |
 
 ## Phase 5: Performance, accessibility, mobile
