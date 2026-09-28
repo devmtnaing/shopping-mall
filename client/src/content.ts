@@ -5,9 +5,12 @@
 import builtIn from 'virtual:mall-config';
 import { signal } from '@preact/signals';
 import type { MallConfig } from '@shopping-mall/shared/config';
+import type { MallArt } from '@shopping-mall/shared/meta';
 import { httpUrl } from './net/socket';
 
 export const content = signal<MallConfig>(builtIn);
+/** The host's uploaded mall building, or null for the built-in one. Read once, at load (next visit swaps it). */
+export let art: MallArt | null = null;
 /** Version of what's in `content` (0 = the built-in config). */
 export let contentVersion = 0;
 
@@ -45,10 +48,14 @@ export function loadContent(): Promise<void> {
         signal: AbortSignal.timeout(4000),
       });
       if (res.status === 304 || !res.ok) return; // unchanged, or no database: keep what we have
-      const body = (await res.json()) as { version: number; config: MallConfig };
+      const body = (await res.json()) as { version: number; config: MallConfig; art?: MallArt | null };
+      const origin = new URL(url).origin;
       etag = res.headers.get('etag') ?? '';
       contentVersion = body.version;
-      content.value = resolveFiles(body.config, new URL(url).origin);
+      art = body.art
+        ? (Object.fromEntries(Object.entries(body.art).map(([k, u]) => [k, origin + u])) as MallArt)
+        : null;
+      content.value = resolveFiles(body.config, origin);
     } catch {
       /* offline or no server: the built-in config stays */
     } finally {

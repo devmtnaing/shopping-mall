@@ -2,7 +2,7 @@ import { effect } from '@preact/signals';
 import { EMOTES } from '@shopping-mall/shared/protocol';
 import { Color, DirectionalLight, Fog, HemisphereLight, Scene } from 'three';
 import { installCommands } from './commands';
-import { content, loadContent } from './content';
+import { art, content, loadContent } from './content';
 import { locale, t } from './i18n';
 import type { Key } from './i18n/en';
 import { parseLink } from './links';
@@ -61,7 +61,9 @@ sun.position.set(8, 20, 6);
 scene.add(sun);
 
 // the mall model and the latest content (from the server, when there is one) load together
-const [mall] = await Promise.all([loadMall(), loadContent()]);
+// content first: it says which building to load (a host may have uploaded their own)
+await loadContent();
+const mall = await loadMall(art ?? undefined);
 scene.add(mall.visual);
 const vacant = () => ({ title: t('sign.comingSoon'), subtitle: t('sign.available') });
 let storefronts = await buildStorefronts(mall.meta, content.value.shops, vacant());

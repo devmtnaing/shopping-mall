@@ -62,6 +62,23 @@ Check the Higgsfield terms of service before committing generated assets to a pu
 - Lightmap UV on `uv1`, texel density 32 px/m (concourse) and 16 px/m (upper floor).
 - Empties named `slot.<id>`, `seat.<id>`, `spawn.<id>`, `zone.<name>` (with scale = AABB), `esc.<id>.start|end`. `tools/export-meta.py` writes `mall.meta.json`.
 
+### Replacing the building (mall package)
+The building is swappable without a deploy: **admin → Building** takes three files and the server does the rest.
+
+| File | What it is |
+|---|---|
+| Visual model `.glb` | What visitors see. Plain glTF 2.0 for now (meshopt and KTX2 arrive with `optimize-assets.ts`). Max 25 MB. |
+| Collision model `.glb` | Simple, uncompressed triangles that people stand on and bump into. Every mesh in the scene counts, with its node transforms. Max 5 MB. |
+| `mall.meta.json` | Floors, spawns, shop units, seats, zones and escalators, in the format of `shared/src/meta.ts`. |
+
+On upload the server checks, in order, and refuses the package with the reason if any step fails:
+1. The meta matches the schema (errors name the field, e.g. `meta.slots.3.door.yaw`).
+2. Every current shop's unit exists in the new meta (move or delete shops first otherwise).
+3. The visual model is a valid `.glb`.
+4. The navgrid bakes: the collision model isn't absurdly large, every spawn is on walkable floor, and every escalator starts and ends on walkable floor.
+
+The baked navgrid becomes the fourth file of the package. Visitors get the new building on their next visit. Files in use can't be deleted, and **Use the built-in building** switches back. The greybox in `client/public/assets/mall/` is itself a valid package: `pnpm greybox` rebuilds it and `pnpm navgrid` bakes it with the same code the server runs (`shared/src/bake.ts`).
+
 ### `optimize-assets.ts` steps
 ```
 dedup → prune → join (per material, static only) → weld → simplify (LOD only)

@@ -38,3 +38,6 @@ export type Slot = MallMeta['slots'][number];
 export type Zone = MallMeta['zones'][number];
 export type Escalator = MallMeta['escalators'][number];
 export type Vec3 = z.infer<typeof vec3>;
+
+/** Where a mall package's files live. The content API sends this when the host has uploaded one. */
+export type MallArt = { model: string; collision: string; meta: string; navgrid: string };

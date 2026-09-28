@@ -3,6 +3,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { mallSchema, shopSchema } from '@shopping-mall/shared/config';
 import { z } from 'zod';
+import { loadArt, replaceMallArt } from '../art.ts';
 import { deleteAsset, KINDS, listAssets, storeAsset } from '../assets.ts';
 import {
   type AssetUrl,
@@ -12,6 +13,7 @@ import {
   reorderShops,
   saveMall,
   saveShop,
+  setMallArt,
 } from '../db/content.ts';
 import type { Sql } from '../db/db.ts';
 import type { Storage } from '../storage.ts';
@@ -61,8 +63,8 @@ export function contentApi(opts: ContentApiOptions) {
         res.end();
         return;
       }
-      const content = await loadContent(sql, assetUrl);
-      json(res, 200, content, { ETag: `"v${content.version}"`, 'Cache-Control': 'no-cache' });
+      const [content, art] = await Promise.all([loadContent(sql, assetUrl), loadArt(sql)]);
+      json(res, 200, { ...content, art }, { ETag: `"v${content.version}"`, 'Cache-Control': 'no-cache' });
       return;
     }
 
@@ -90,7 +92,13 @@ export function contentApi(opts: ContentApiOptions) {
       return;
     }
 
-    if (path === '/api/mall' && method === 'PUT') {
+    const upload = z.uuid({ error: 'Upload the file first.' });
+    if (path === '/api/art/mall' && method === 'PUT') {
+      const ids = parse(z.object({ model: upload, collision: upload, meta: upload }), await readJson(req));
+      version = await replaceMallArt(sql, needStorage(), ids);
+    } else if (path === '/api/art/mall' && method === 'DELETE') {
+      version = await setMallArt(sql, null);
+    } else if (path === '/api/mall' && method === 'PUT') {
       version = await saveMall(sql, parse(mallSchema, await readJson(req)));
     } else if (path === '/api/shops/order' && method === 'POST') {
       version = await reorderShops(sql, parse(z.array(z.string()).max(500), await readJson(req)));

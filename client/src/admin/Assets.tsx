@@ -52,7 +52,12 @@ export function Assets() {
                 class="btn small danger"
                 onClick={async () => {
                   if (!confirm('Delete this file? Shops using it will lose it.')) return;
-                  await api.deleteAsset(a.id);
+                  error.value = '';
+                  try {
+                    await api.deleteAsset(a.id);
+                  } catch (e) {
+                    error.value = (e as Error).message;
+                  }
                   await load();
                 }}
               >

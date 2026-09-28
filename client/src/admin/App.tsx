@@ -3,11 +3,12 @@
 
 import { useSignal } from '@preact/signals';
 import type { MallConfig, Shop } from '@shopping-mall/shared/config';
-import type { MallMeta } from '@shopping-mall/shared/meta';
+import type { MallArt, MallMeta } from '@shopping-mall/shared/meta';
 import { render } from 'preact';
 import { useEffect } from 'preact/hooks';
 import { Assets } from './Assets';
-import { api, token } from './api';
+import { api, fileUrl, token } from './api';
+import { Building } from './Building';
 import { MallForm } from './MallForm';
 import { ShopEditor } from './ShopEditor';
 import { ShopList } from './ShopList';
@@ -51,10 +52,13 @@ function SignIn() {
   );
 }
 
-type Tab = 'shops' | 'mall' | 'files';
+type Tab = 'shops' | 'mall' | 'building' | 'files';
+const TABS: Record<Tab, string> = { shops: 'Shops', mall: 'Mall', building: 'Building', files: 'Files' };
+const BUILT_IN_META = '/assets/mall/mall.meta.json';
 
 function Admin() {
   const cfg = useSignal<MallConfig | null>(null);
+  const art = useSignal<MallArt | null>(null);
   const slots = useSignal<MallMeta['slots']>([]);
   const tab = useSignal<Tab>('shops');
   const editing = useSignal<Shop | 'new' | null>(null);
@@ -62,16 +66,18 @@ function Admin() {
 
   const load = async () => {
     try {
-      cfg.value = (await api.content()).config;
+      const body = await api.content();
+      cfg.value = body.config;
+      art.value = body.art ?? null;
+      // units come from the building's meta (uploaded or built-in)
+      const meta = (await (await fetch(fileUrl(art.value?.meta) || BUILT_IN_META)).json()) as MallMeta;
+      slots.value = meta.slots;
     } catch (e) {
       error.value = (e as Error).message;
     }
   };
   useEffect(() => {
     void load();
-    fetch('/assets/mall/mall.meta.json')
-      .then((r) => r.json() as Promise<MallMeta>)
-      .then((m) => (slots.value = m.slots));
   }, []);
 
   const c = cfg.value;
@@ -86,7 +92,7 @@ function Admin() {
       <header class="topbar">
         <strong>{c?.mall.name ?? 'Mall'} · admin</strong>
         <nav aria-label="Sections">
-          {(['shops', 'mall', 'files'] as Tab[]).map((t) => (
+          {(Object.keys(TABS) as Tab[]).map((t) => (
             <button
               key={t}
               type="button"
@@ -97,7 +103,7 @@ function Admin() {
                 editing.value = null;
               }}
             >
-              {t === 'shops' ? 'Shops' : t === 'mall' ? 'Mall' : 'Files'}
+              {TABS[t]}
             </button>
           ))}
         </nav>
@@ -139,6 +145,7 @@ function Admin() {
           />
         )}
         {c && tab.value === 'mall' && <MallForm mall={c.mall} onSaved={load} />}
+        {c && tab.value === 'building' && <Building art={art.value} onSaved={load} />}
         {tab.value === 'files' && <Assets />}
       </main>
     </div>

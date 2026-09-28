@@ -120,7 +120,14 @@ export async function listAssets(sql: Sql): Promise<Asset[]> {
 
 /** Delete an asset record and its file. Returns false if there was no such asset. */
 export async function deleteAsset(sql: Sql, storage: Storage, id: string): Promise<boolean> {
-  const [row] = await sql<{ key: string }[]>`delete from assets where id = ${id} returning key`;
+  let row: { key: string } | undefined;
+  try {
+    [row] = await sql<{ key: string }[]>`delete from assets where id = ${id} returning key`;
+  } catch (e) {
+    if ((e as { code?: string }).code === '23503')
+      throw new HttpError(409, 'That file is part of the mall building. Replace the building first.');
+    throw e;
+  }
   if (!row) return false;
   await storage.delete(row.key);
   return true;

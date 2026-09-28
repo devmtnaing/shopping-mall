@@ -3,6 +3,7 @@
 
 import { signal } from '@preact/signals';
 import type { MallConfig, Shop } from '@shopping-mall/shared/config';
+import type { MallArt } from '@shopping-mall/shared/meta';
 import { httpUrl, signInAsHost } from '../net/socket';
 
 export const token = signal<string | null>(null);
@@ -54,7 +55,7 @@ export const api = {
     if (!r.token) throw new ApiError(401, r.error ?? 'Sign-in failed.');
     token.value = r.token;
   },
-  content: () => call<{ version: number; config: MallConfig }>('GET', '/api/content'),
+  content: () => call<{ version: number; config: MallConfig; art?: MallArt | null }>('GET', '/api/content'),
   saveMall: (m: MallConfig['mall']) => call<{ version: number }>('PUT', '/api/mall', m),
   saveShop: (s: Shop) => call<{ version: number }>('PUT', `/api/shops/${s.id}`, s),
   deleteShop: (id: string) => call<{ version: number }>('DELETE', `/api/shops/${id}`),
@@ -63,4 +64,7 @@ export const api = {
   upload: (kind: string, file: File) =>
     call<Asset>('POST', `/api/assets?kind=${encodeURIComponent(kind)}`, file),
   deleteAsset: (id: string) => call<{ deleted: string }>('DELETE', `/api/assets/${id}`),
+  replaceArt: (ids: { model: string; collision: string; meta: string }) =>
+    call<{ version: number }>('PUT', '/api/art/mall', ids),
+  resetArt: () => call<{ version: number }>('DELETE', '/api/art/mall'),
 };

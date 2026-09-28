@@ -183,6 +183,18 @@ export async function reorderShops(sql: Sql, ids: string[]): Promise<number> {
   });
 }
 
+/** Make these assets the mall building, or null for the built-in one. */
+export async function setMallArt(
+  sql: Sql,
+  art: { model: string; collision: string; meta: string; navgrid: string } | null,
+): Promise<number> {
+  return sql.begin(async (tx) => {
+    await tx`update mall set art_model = ${art?.model ?? null}, art_collision = ${art?.collision ?? null},
+             art_meta = ${art?.meta ?? null}, art_navgrid = ${art?.navgrid ?? null}`;
+    return bump(tx);
+  });
+}
+
 /** Current content version (cheap; used for ETags). */
 export async function contentVersion(sql: Sql): Promise<number> {
   const [row] = await sql<{ version: string }[]>`select version from mall`;

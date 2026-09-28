@@ -69,6 +69,9 @@ importers:
 
   server:
     dependencies:
+      '@gltf-transform/core':
+        specifier: ^4.5.0
+        version: 4.5.0
       '@shopping-mall/shared':
         specifier: workspace:*
         version: link:../shared
@@ -94,9 +97,22 @@ importers:
 
   shared:
     dependencies:
+      '@gltf-transform/core':
+        specifier: ^4.5.0
+        version: 4.5.0
+      three:
+        specifier: ^0.186.1
+        version: 0.186.1
+      three-mesh-bvh:
+        specifier: ^0.9.15
+        version: 0.9.15(three@0.186.1)
       zod:
         specifier: ^4.6.5
         version: 4.6.5
+    devDependencies:
+      '@types/three':
+        specifier: ^0.186.0
+        version: 0.186.0
 
 packages:
 
