@@ -3,7 +3,9 @@
 import { render } from 'preact';
 import { useEffect } from 'preact/hooks';
 import { dialog, panel } from '../state';
+import { Directory } from './Directory';
 import { Dock } from './Dock';
+import { Fade } from './Fade';
 import { Help } from './Help';
 import { BrandPill, TopRight, ZoneLabel } from './Hud';
 import { ShopPanel } from './ShopPanel';
@@ -17,6 +19,10 @@ function App() {
       const t = e.target as HTMLElement;
       if (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || e.ctrlKey || e.metaKey) return;
       if (e.key === '?') dialog.value = dialog.value === 'help' ? null : 'help';
+      if (e.key === '/' && !dialog.value) {
+        e.preventDefault(); // don't type the slash into the search box
+        dialog.value = 'directory';
+      }
     };
     addEventListener('keydown', onKey);
     return () => removeEventListener('keydown', onKey);
@@ -29,7 +35,9 @@ function App() {
       <ShopPrompt />
       <Dock />
       <Toasts />
+      <Fade />
       {dialog.value === 'help' && <Help />}
+      {dialog.value === 'directory' && <Directory />}
       {panel.value && <ShopPanel id={panel.value} key={panel.value} />}
     </>
   );

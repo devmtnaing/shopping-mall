@@ -479,3 +479,100 @@ a.product:hover {
     animation: none;
   }
 }
+
+/* ---- directory (T-307) ---- */
+.directory {
+  display: grid;
+  gap: 14px;
+}
+.search {
+  width: 100%;
+  min-height: 46px;
+  padding: 0 16px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--ink);
+  font: inherit;
+  font-size: 16px; /* 16px stops iOS zooming on focus */
+}
+.search:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 0;
+}
+.dir-list,
+.dir-list ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.dir-list > li + li {
+  margin-top: 14px;
+}
+.dir-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  text-align: left;
+}
+.dir-item:hover,
+.dir-item:focus-visible {
+  background: rgba(255, 255, 255, 0.07);
+}
+.swatch {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  font-weight: 700;
+  border: 1px solid var(--line);
+}
+.dir-text {
+  display: grid;
+  min-width: 0;
+  flex: 1;
+}
+.dir-name {
+  font-weight: 600;
+}
+.dir-sub,
+.dir-where {
+  font-size: 13px;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dir-where {
+  flex: none;
+}
+@media (max-width: 560px) {
+  .dir-where {
+    display: none;
+  }
+}
+
+/* ---- teleport fade ---- */
+.fade {
+  position: fixed;
+  inset: 0;
+  background: #0b0a09;
+  opacity: 0;
+  transition: opacity 0.22s ease;
+  pointer-events: none;
+}
+.fade.on {
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .fade {
+    transition: none;
+  }
+}

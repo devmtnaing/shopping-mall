@@ -2,12 +2,12 @@
 // is loaded; until then they're no-ops. This keeps UI components free of three.js imports.
 
 export type Commands = {
-  /** Walk (or teleport, if far) to a shop slot's door. */
-  travelToSlot: (slotId: string) => void;
+  /** Go to a shop's door (walk if near, fade-teleport if far) and open its panel on arrival. */
+  travelToShop: (shopId: string) => void;
 };
 
 export const commands: Commands = {
-  travelToSlot: () => {},
+  travelToShop: () => {},
 };
 
 export function installCommands(impl: Partial<Commands>) {

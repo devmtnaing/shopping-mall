@@ -1,5 +1,6 @@
 import config from 'virtual:plaza-config';
 import { Color, DirectionalLight, Fog, HemisphereLight, Scene } from 'three';
+import { installCommands } from './commands';
 import { startLoop } from './loop';
 import { createPlaceholderBody } from './player/body';
 import { OrbitCamera } from './player/camera';
@@ -8,6 +9,7 @@ import { PathFollower } from './player/follow';
 import { Input } from './player/input';
 import { PathFinder } from './player/path';
 import { createTouchControls } from './player/touch';
+import { Travel } from './player/travel';
 import { WalkTo } from './player/walkto';
 import type { DebugOverlay } from './render/debug';
 import { createRenderer } from './render/renderer';
@@ -48,8 +50,11 @@ scene.add(body);
 
 const orbit = new OrbitCamera(mall.collider, spawn.yaw);
 const follower = new PathFollower();
-const walkTo = new WalkTo(camera, mall.collider, mall.meta, new PathFinder(mall.nav), follower);
+const finder = new PathFinder(mall.nav);
+const walkTo = new WalkTo(camera, mall.collider, mall.meta, finder, follower);
 scene.add(walkTo.marker);
+const travel = new Travel(config.shops, mall.meta, player, orbit, finder, follower);
+installCommands({ travelToShop: (id) => travel.toShop(id) });
 const still = { x: 0, y: 0 };
 
 // "You are in …": shop zones show the name of the shop assigned to that slot in plaza.config.ts
@@ -75,12 +80,18 @@ startLoop({
     const manual = uiHasFocus.value ? still : input.move();
     const jump = !uiHasFocus.value && input.jump();
     // any manual movement or a jump cancels tap-to-walk
-    if (manual.x !== 0 || manual.y !== 0 || jump) follower.stop();
+    if (manual.x !== 0 || manual.y !== 0 || jump) {
+      follower.stop();
+      travel.cancel();
+    }
     const move = follower.active ? (follower.update(dt, player.pos, orbit.yaw) ?? still) : manual;
     escalatorCarry(mall.meta.escalators, player.pos, player.carry);
     player.step(dt, { x: move.x, y: move.y, run: input.run, jump, yaw: orbit.yaw });
     const near = storefronts.nearby(player.pos)?.id ?? null;
     if (near !== nearbyShop.value) nearbyShop.value = near;
+    // arrived after directory travel: open that shop's panel
+    const arrived = travel.arrived(near);
+    if (arrived) openShop(arrived);
     const visit = input.keys.consume('KeyE'); // always consume, so a stray press can't fire later
     if (visit && near && !uiHasFocus.value) openShop(near);
     if (zones.update(dt, player.pos) && zones.current) {

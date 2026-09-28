@@ -9,6 +9,8 @@ const DESKTOP: [string, string][] = [
   ['Scroll', 'Zoom'],
   ['Click the floor', 'Walk there'],
   ['Click a shop', 'Walk to its door'],
+  ['/', 'Find a shop'],
+  ['E', 'Visit the shop in front of you'],
   ['?', 'This help'],
 ];
 const PHONE: [string, string][] = [

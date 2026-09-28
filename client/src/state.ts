@@ -12,8 +12,11 @@ export const nearbyShop = signal<string | null>(null);
 export const panel = signal<string | null>(null);
 
 /** Which modal dialog is open. */
-export type DialogId = 'help';
+export type DialogId = 'help' | 'directory';
 export const dialog = signal<DialogId | null>(null);
+
+/** Full-screen fade used when teleporting (true = faded to black). */
+export const faded = signal(false);
 
 /** Short messages at the bottom of the screen. */
 export type Toast = { id: number; text: string };
