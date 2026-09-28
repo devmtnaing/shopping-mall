@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.env*
+!.env.example
+.DS_Store
+# local browser-automation output (screenshots of third-party sites — do not commit)
+.playwright-mcp/
