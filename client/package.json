@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@plaza/shared": "workspace:*",
+    "@preact/signals-core": "^1.14.4",
     "three": "^0.186.1",
     "three-mesh-bvh": "^0.9.15"
   },

@@ -11,8 +11,11 @@ import { createTouchControls } from './player/touch';
 import { WalkTo } from './player/walkto';
 import type { DebugOverlay } from './render/debug';
 import { createRenderer } from './render/renderer';
+import { zone } from './state';
+import { mountZoneLabel } from './ui/zone-label';
 import { escalatorCarry } from './world/escalators';
 import { loadMall } from './world/mall';
+import { ZoneTracker } from './world/zones';
 import './style.css';
 
 document.title = config.mall.name;
@@ -46,6 +49,11 @@ const walkTo = new WalkTo(camera, mall.collider, mall.meta, new PathFinder(mall.
 scene.add(walkTo.marker);
 const still = { x: 0, y: 0 };
 
+// "You are in …": shop zones show the name of the shop assigned to that slot in plaza.config.ts
+const shopBySlot = new Map(config.shops.map((s) => [s.slot, s.name]));
+const zones = new ZoneTracker(mall.meta.zones);
+mountZoneLabel();
+
 let debug: DebugOverlay | undefined;
 if (debugMode) {
   const [{ createDebugOverlay }, { createGizmos }] = await Promise.all([
@@ -67,6 +75,10 @@ startLoop({
     const move = follower.active ? (follower.update(dt, player.pos, orbit.yaw) ?? still) : manual;
     escalatorCarry(mall.meta.escalators, player.pos, player.carry);
     player.step(dt, { x: move.x, y: move.y, run: input.run, jump, yaw: orbit.yaw });
+    if (zones.update(dt, player.pos) && zones.current) {
+      const z = zones.current;
+      zone.value = { id: z.id, name: (z.slot && shopBySlot.get(z.slot)) || z.name };
+    }
   },
   render: (alpha, dt) => {
     const t0 = performance.now();
