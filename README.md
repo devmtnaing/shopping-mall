@@ -3,8 +3,8 @@
 **An open-source, multiplayer 3D shopping mall that runs in the browser.**
 Walk around with friends, visit shops, browse real products, and chat. It loads fast, stays at 60 fps on a mid-range phone, and you set it up by editing one config file.
 
-> Status: **Phase 1 of 6 done.** You can walk a greybox mall on desktop or phone: two floors, escalators, tap-to-walk, a collision-aware camera.
-> Next up: real art and avatars (Phase 2) and shops and UI (Phase 3), following the [roadmap](docs/roadmap.md). Open decisions: [#1](https://github.com/devmtnaing/shopping-mall/issues/1).
+> Status: **Phases 0, 1, 3 and 4 done.** A greybox mall with working shops, directory, minimap, overview, deep links, English and Burmese, and multiplayer: see others move, chat, emote, host announcements. Self-host with `docker compose up`.
+> Next up: real art and avatars (Phase 2, waiting on [#1](https://github.com/devmtnaing/shopping-mall/issues/1)) and performance, accessibility and phone polish (Phase 5), following the [roadmap](docs/roadmap.md).
 > "Plaza" is a working name.
 
 ---

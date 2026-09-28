@@ -119,7 +119,7 @@ The game writes a handful of signals (`zone`, `nearbyShop`, `online`, `chat`, `p
   | > 35 m or off-screen | LOD2 (~600 tris), animation frozen or at 10 Hz |
   | beyond the 40 closest | hidden. Name tag shown only on the minimap |
 
-- Name tags are **one shared `InstancedMesh` of quads** sampling a name atlas. They don't create one DOM node per player.
+- Name tags are **one instanced billboard mesh** sampling a name atlas; atlas cells go only to people in view and are reused. Speech bubbles and emotes are a small DOM overlay instead (few, short-lived; the browser handles wrapping and emoji).
 
 ## Networking
 
@@ -165,7 +165,7 @@ Players are bucketed by zone. A client receives players in its own zone and neig
 The client keeps a snapshot ring buffer and renders remote players at `serverTime − 100 ms`. It lerps position and slerps yaw. If a packet is late it extrapolates for up to 250 ms, then holds.
 
 ### Server limits
-- A room holds up to 100 players. When `main` is full, the server creates `main-2` automatically.
+- A room holds up to 100 players. Newcomers go to the busiest room in the family (`main`, `main-2`, …) that has space; a new overflow room opens only when all are full.
 - Chat: 1 message per 1.5 s, 200 characters max, a word filter, and HTML escaped on render. There's never an `innerHTML` with user text.
 - Names: 2–20 characters, normalised to Unicode NFC, with the filter applied.
 - Host: `HOST_SECRET` env var → `POST /host-token` → a signed JWT valid for 12 h, kept in memory (not `localStorage`).
