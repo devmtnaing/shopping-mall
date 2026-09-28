@@ -1,6 +1,7 @@
 import { BoxGeometry, Color, HemisphereLight, Mesh, MeshStandardMaterial, Scene } from 'three';
 import { createRenderer } from './render/renderer';
 import './style.css';
+import type { DebugOverlay } from './render/debug';
 
 const canvas = document.getElementById('gl') as HTMLCanvasElement;
 const { renderer, camera } = createRenderer(canvas);
@@ -14,6 +15,13 @@ scene.add(cube);
 camera.position.set(0, 1.2, 3);
 camera.lookAt(0, 0, 0);
 
+let debug: DebugOverlay | undefined;
+if (new URLSearchParams(location.search).has('debug')) {
+  import('./render/debug').then((m) => {
+    debug = m.createDebugOverlay(renderer);
+  });
+}
+
 let last = performance.now();
 function frame(now: number) {
   const dt = Math.min((now - last) / 1000, 0.1);
@@ -21,6 +29,7 @@ function frame(now: number) {
   cube.rotation.y += dt * 0.8;
   cube.rotation.x += dt * 0.3;
   renderer.render(scene, camera);
+  debug?.update(performance.now() - now);
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
