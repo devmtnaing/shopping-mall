@@ -1,9 +1,16 @@
 // Entry point: `pnpm dev:server` or `node server/src/main.ts`. Configure with environment variables.
+import { parseConfig } from '@shopping-mall/shared/config';
+import config from '../../mall.config.ts';
+import { openDatabase } from './db/index.ts';
 import { startMetrics } from './metrics.ts';
 import { loadBlocklist } from './moderation.ts';
 import { startServer } from './server.ts';
 
 const port = Number(process.env.PORT ?? 8787);
+// optional: with DATABASE_URL the server owns live content (docs/adr/0006); without it, clients use mall.config.ts
+const db = process.env.DATABASE_URL
+  ? await openDatabase(process.env.DATABASE_URL, parseConfig(config))
+  : null;
 const server = await startServer({
   port,
   capacity: Number(process.env.ROOM_CAPACITY ?? 100),
@@ -21,6 +28,7 @@ if (process.env.METRICS) {
 
 const shutdown = async () => {
   await server.close();
+  await db?.end();
   process.exit(0);
 };
 process.on('SIGTERM', shutdown);

@@ -19,6 +19,8 @@ COPY shared/package.json shared/
 COPY shared/src shared/src
 COPY server/package.json server/
 COPY server/src server/src
+COPY server/migrations server/migrations
+COPY mall.config.ts ./
 ENV PORT=8787 NODE_ENV=production
 EXPOSE 8787
 USER nonroot

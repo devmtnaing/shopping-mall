@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@shopping-mall/shared": "workspace:*",
+    "postgres": "^3.4.9",
     "ws": "^8.22.0",
     "zod": "^4.6.5"
   },

@@ -3,9 +3,12 @@
 // Slots (where each shop sits) come from the mall layout: w0–w5 are on the left
 // as you walk in, e0–e5 on the right, "u-" prefixed slots are upstairs, and
 // "flagship" is the big store at the far end. See docs/greybox.md for the map.
-import { defineConfig } from '@shopping-mall/shared';
+//
+// With a database (DATABASE_URL), this file only seeds an empty mall; after that, edit shops in /admin.
+// Type-only import: the server loads this file with plain Node, without the shared package.
+import type { MallConfigInput } from '@shopping-mall/shared/config';
 
-export default defineConfig({
+export default {
   mall: {
     name: 'Shopping Mall',
     tagline: 'Walk the mall together.',
@@ -94,4 +97,4 @@ export default defineConfig({
       links: [{ label: 'Get in touch', url: 'https://example.com/contact' }],
     },
   ],
-});
+} satisfies MallConfigInput;

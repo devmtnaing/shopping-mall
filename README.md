@@ -55,7 +55,7 @@ pnpm greybox        # regenerate the greybox mall, its meta and the nav grid
 
 **Controls:** WASD / arrows to walk, Shift to run, Space to jump, drag to look, scroll to zoom, click the floor to walk there, click a shop to go to its door.
 On a phone: left thumb joystick, drag on the right to look, pinch to zoom, tap to walk, Run and Jump buttons.
-For multiplayer while developing, run `pnpm dev:server` in a second terminal. The client finds it on port 8787, and open a second browser window to see yourself walk around.
+For multiplayer while developing, run `pnpm dev:server` in a second terminal. For live content, first run `pnpm db:up` (Postgres in Docker on port 5433) and start the server with `DATABASE_URL=postgres://mall:mall@localhost:5433/mall`. The client finds it on port 8787, and open a second browser window to see yourself walk around.
 
 ## Self-hosting
 

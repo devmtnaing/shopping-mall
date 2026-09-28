@@ -12,6 +12,19 @@ jobs:
   check:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    services:
+      # real Postgres for the content database tests
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: mall
+          POSTGRES_PASSWORD: mall
+          POSTGRES_DB: mall
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U mall" --health-interval 2s --health-retries 30
+    env:
+      TEST_DATABASE_URL: postgres://mall:mall@localhost:5432/mall
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
