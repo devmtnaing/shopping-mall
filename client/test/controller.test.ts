@@ -23,17 +23,18 @@ beforeEach(() => {
 
 describe('PlayerController on the greybox', () => {
   it('stands still on flat ground without drifting', () => {
-    p.place(0, 0, -2.5);
+    p.place(0, 0, -5.5);
     sim(p, 2);
     expect(p.grounded).toBe(true);
-    expect(p.pos.distanceTo({ x: 0, y: 0, z: -2.5 } as never)).toBeLessThan(0.01);
+    expect(p.pos.distanceTo({ x: 0, y: 0, z: -5.5 } as never)).toBeLessThan(0.01);
   });
 
   it('is stopped by the planter (0.6 m, too tall to step)', () => {
-    p.place(0, 0, -2.5);
-    sim(p, 3, { y: 1 });
-    expect(p.pos.z).toBeGreaterThan(-5 + PLAYER.radius - 0.05);
-    expect(p.pos.z).toBeLessThan(-4.5);
+    // planter spans x -4…-2, z -5.5…-3.5; walk west into its east side
+    p.place(0, 0, -4.5);
+    sim(p, 3, { x: -1 });
+    expect(p.pos.x).toBeGreaterThan(-2 + PLAYER.radius - 0.05);
+    expect(p.pos.x).toBeLessThan(-1.5);
     expect(p.pos.y).toBeLessThan(0.05);
   });
 
@@ -114,16 +115,16 @@ describe('PlayerController on the greybox', () => {
   });
 
   it('recovers when spawned inside geometry', () => {
-    p.place(0, 0.1, -6); // inside the planter
+    p.place(-3, 0.1, -4.5); // inside the planter
     sim(p, 1);
-    const inside = Math.abs(p.pos.x) < 1 && p.pos.z < -5 && p.pos.z > -7 && p.pos.y < 0.55;
+    const inside = p.pos.x > -4 && p.pos.x < -2 && p.pos.z < -3.5 && p.pos.z > -5.5 && p.pos.y < 0.55;
     expect(inside).toBe(false);
   });
 
   it('respawns after falling out of the world', () => {
-    p.place(0, 0, -2.5);
+    p.place(0, 0, -5.5);
     p.pos.set(0, -30, 20);
     p.step(STEP, idle);
-    expect(p.pos.z).toBeCloseTo(-2.5, 1);
+    expect(p.pos.z).toBeCloseTo(-5.5, 1);
   });
 });

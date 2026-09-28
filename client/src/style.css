@@ -39,6 +39,9 @@ body {
   .touch {
     display: block;
   }
+  .touch.off {
+    display: none;
+  }
 }
 .joy {
   position: fixed;

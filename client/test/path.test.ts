@@ -12,7 +12,7 @@ import { collider, greybox } from './greybox';
 const bytes = readFileSync(resolve(import.meta.dirname, '../public/assets/mall/navgrid.bin'));
 const nav = decodeNavGrid(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength));
 const finder = new PathFinder(nav);
-const spawn: Waypoint = { x: 0, y: 0, z: -2.5 };
+const spawn: Waypoint = { x: 0, y: 0, z: -5.5 };
 
 /** Walk a path with the real controller. Returns the final position and time taken. */
 function walk(to: Waypoint, from = spawn, maxSeconds = 60) {
@@ -49,7 +49,7 @@ describe('PathFinder', () => {
   });
 
   it('refuses goals you cannot walk to (the top of the planter)', () => {
-    expect(finder.find(spawn, { x: 0, y: 0.6, z: -6 })).toBeNull();
+    expect(finder.find(spawn, { x: -3, y: 0.6, z: -4.5 })).toBeNull();
   });
 
   it('snaps goals that are just off the grid (a wall) to the nearest walkable cell', () => {

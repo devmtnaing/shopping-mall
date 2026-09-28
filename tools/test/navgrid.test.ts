@@ -23,7 +23,7 @@ describe('navgrid.bin', () => {
   });
 
   it('marks the open concourse walkable and walls, pillars and escalators blocked', () => {
-    expect(at(GROUND, 0, -2.5)).toBe(true); // spawn
+    expect(at(GROUND, 0, -5.5)).toBe(true); // spawn
     expect(at(GROUND, 6.15, -8)).toBe(true); // shop doorway
     expect(at(GROUND, 6.15, -4.5)).toBe(false); // storefront pillar
     expect(at(GROUND, -15.9, -20)).toBe(false); // against the outer wall
@@ -31,7 +31,7 @@ describe('navgrid.bin', () => {
   });
 
   it('records planter and bench tops at their height, so A* can refuse to walk up them', () => {
-    const planter = nav.index(0, -6);
+    const planter = nav.index(-3, -4.5);
     const bench = nav.index(4.6, -20);
     expect(nav.height(GROUND, planter)).toBeCloseTo(0.6, 2);
     expect(nav.height(GROUND, bench)).toBeCloseTo(0.45, 2);

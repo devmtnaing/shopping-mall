@@ -31,9 +31,9 @@ The Blender mall (Phase 2) replaces these files with the same names and formats.
        │   w3      │   12 m     │ (under the bridge│            │      e3       │
        │   w2      │   wide     │   −25 … −32)     │            │      e2       │
        │   w1      │            │  esc A ↑ (to −25)│            │      e1       │
-       │   w0      │            │    planter       │            │      e0       │
+       │   w0      │            │                  │            │      e0       │
  z=−4  ├───────────┤            │                  │            ├───────────────┤
-       │ (closed)  │            │   spawn ↑        │            │   (closed)    │
+       │ (closed)  │  planter   │   spawn ↑        │            │   (closed)    │
  z=0   └───────────┴────────────┴── glass doors ───┴────────────┴───────────────┘
       x=−16      x=−6         x=−3               x=3          x=6            x=16
 ```
@@ -48,7 +48,8 @@ The Blender mall (Phase 2) replaces these files with the same names and formats.
 | Escalator B | x = 2, rises from z = −45 (ground) to −32 (bridge) | 1.2 m wide, ~32°, 1.2 m/s |
 | Flagship | z ∈ [−64, −54], stage 0.6 m high reached by 0.2 m steps | doorway 10 × 4.5 m |
 | Benches | ground x = ±4.6 at z −8, −20, −36, −48; upper x = ±4.5 at z −16, −40 | 0.45 m high (you can't step onto them; jump) |
-| Spawn | (0, 0, −2.5), facing into the mall | |
+| Spawn | (0, 0, −5.5), facing into the mall | |
+| Planters | (−3, −4.5) by the entrance, (−2, −38) | 2 × 2 × 0.6 m |
 
 ## Zones
 
@@ -60,4 +61,4 @@ The client shows the name of the highest-priority zone containing the player. Sh
 - **Step-up:** flagship steps (0.2 m) must be walkable. Benches (0.45 m) must block.
 - **Slopes:** escalator surfaces (~30–32°) must be walkable even when they aren't moving.
 - **Ceilings:** walking under the sky bridge and jumping under the upper slab.
-- **Tight spots:** 1.8 m gap between escalator B and the fountain. 0.4 m next to the planter.
+- **Tight spots:** 1.8 m gap between escalator B and the fountain. 1.8 m between the entrance planter and escalator A's side.

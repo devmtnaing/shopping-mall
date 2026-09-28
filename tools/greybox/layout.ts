@@ -31,7 +31,7 @@ export function buildGreybox() {
       { id: 'ground', y: 0 },
       { id: 'upper', y: UP },
     ],
-    spawns: [{ id: 'entrance', pos: [0, 0, -2.5], yaw: 0 }],
+    spawns: [{ id: 'entrance', pos: [0, 0, -5.5], yaw: 0 }],
     slots: [],
     seats: [],
     zones: [],
@@ -233,7 +233,7 @@ function props(g: Geo, meta: MallMeta) {
     g.box('planter', [x - 1, 0, z - 1], [x + 1, 0.6, z + 1]);
     g.box('plant', [x - 0.8, 0.6, z - 0.8], [x + 0.8, 1.5, z + 0.8], false);
   };
-  planter(0, -6);
+  planter(-3, -4.5); // off the centre line, so the view from the spawn is clear
   planter(-2, -38);
 
   g.box('wall', [-2.2, 0, -51.2], [2.2, 0.5, -46.8]);

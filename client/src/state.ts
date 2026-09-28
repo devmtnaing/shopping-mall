@@ -1,6 +1,26 @@
 // Shared state between the game and the UI. The game writes these only when a value changes;
 // the UI reads them. UI code never imports three.js, game code never touches the DOM (except the canvas).
+import type { MallMeta } from '@plaza/shared/meta';
 import { computed, signal } from '@preact/signals';
+import { load, save } from './storage';
+
+/** 'landing' shows the welcome screen over an orbiting view; 'playing' hands over control. */
+export const phase = signal<'landing' | 'playing'>('landing');
+
+/** Mall meta once the world has loaded (the landing screen shows before it's ready). */
+export const mallMeta = signal<MallMeta | null>(null);
+
+/** Body colours offered until real outfits arrive (Phase 2). */
+export const BODY_COLORS = ['#e2b857', '#e76f51', '#2a9d8f', '#6d8bff', '#c77dff', '#f4f1ea'] as const;
+
+/** Who the visitor is. Remembered on this device. */
+export type Profile = { name: string; color: string };
+export const profile = signal<Profile>(load('profile', { name: '', color: BODY_COLORS[0] }));
+
+export function saveProfile(p: Profile) {
+  profile.value = p;
+  save('profile', p);
+}
 
 /** The zone the player is in: its id and display name ("Main hall", a shop's name, …). */
 export const zone = signal<{ id: string; name: string } | null>(null);
@@ -29,7 +49,9 @@ export type Toast = { id: number; text: string };
 export const toasts = signal<Toast[]>([]);
 
 /** True while the UI owns the keyboard (a dialog is open), so the player shouldn't move. */
-export const uiHasFocus = computed(() => dialog.value !== null || panel.value !== null);
+export const uiHasFocus = computed(
+  () => phase.value !== 'playing' || dialog.value !== null || panel.value !== null,
+);
 
 export function openShop(id: string) {
   panel.value = id;

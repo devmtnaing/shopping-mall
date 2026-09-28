@@ -1,4 +1,5 @@
 import config from 'virtual:plaza-config';
+import { effect } from '@preact/signals';
 import { Color, DirectionalLight, Fog, HemisphereLight, Scene } from 'three';
 import { installCommands } from './commands';
 import { startLoop } from './loop';
@@ -7,6 +8,7 @@ import { OrbitCamera } from './player/camera';
 import { PlayerController } from './player/controller';
 import { PathFollower } from './player/follow';
 import { Input } from './player/input';
+import { Intro } from './player/intro';
 import { Overview } from './player/overview';
 import { PathFinder } from './player/path';
 import { createTouchControls } from './player/touch';
@@ -14,7 +16,18 @@ import { Travel } from './player/travel';
 import { WalkTo } from './player/walkto';
 import type { DebugOverlay } from './render/debug';
 import { createRenderer } from './render/renderer';
-import { nearbyShop, openShop, overview, pose, toast, uiHasFocus, zone } from './state';
+import {
+  mallMeta,
+  nearbyShop,
+  openShop,
+  overview,
+  phase,
+  pose,
+  profile,
+  toast,
+  uiHasFocus,
+  zone,
+} from './state';
 import { mountUI } from './ui/App';
 import { escalatorCarry } from './world/escalators';
 import { loadMall } from './world/mall';
@@ -27,6 +40,8 @@ const debugMode = new URLSearchParams(location.search).has('debug');
 
 const canvas = document.getElementById('gl') as HTMLCanvasElement;
 const { renderer, camera } = createRenderer(canvas);
+// the landing screen shows straight away; the world loads behind it
+mountUI();
 
 const scene = new Scene();
 scene.background = new Color('#12110f');
@@ -41,14 +56,23 @@ const mall = await loadMall();
 scene.add(mall.visual);
 const storefronts = await buildStorefronts(mall.meta, config.shops);
 scene.add(storefronts.group);
+mallMeta.value = mall.meta;
 
 const input = new Input(canvas);
-if (matchMedia('(pointer: coarse)').matches) createTouchControls(canvas, input);
+if (matchMedia('(pointer: coarse)').matches) {
+  const touch = createTouchControls(canvas, input);
+  effect(() => {
+    touch.classList.toggle('off', phase.value !== 'playing'); // no joystick over the landing screen
+  });
+}
 const player = new PlayerController(mall.collider);
 const spawn = mall.meta.spawns[0] ?? { pos: [0, 0, 0], yaw: 0 };
 player.place(spawn.pos[0], spawn.pos[1], spawn.pos[2], spawn.yaw);
-const body = createPlaceholderBody();
+const { group: body, setColor } = createPlaceholderBody();
 scene.add(body);
+effect(() => {
+  setColor(profile.value.color);
+});
 
 const orbit = new OrbitCamera(mall.collider, spawn.yaw);
 const follower = new PathFollower();
@@ -81,7 +105,14 @@ const still = { x: 0, y: 0 };
 // "You are in …": shop zones show the name of the shop assigned to that slot in plaza.config.ts
 const shopBySlot = new Map(config.shops.map((s) => [s.slot, s.name]));
 const zones = new ZoneTracker(mall.meta.zones);
-mountUI(mall.meta);
+
+// landing: a slow dolly down the concourse; on Enter, fly down to the follow camera
+const intro = new Intro();
+effect(() => {
+  if (phase.value !== 'playing' || intro.flying) return;
+  intro.begin();
+  performance.mark('playable');
+});
 
 let debug: DebugOverlay | undefined;
 if (debugMode) {
@@ -127,7 +158,8 @@ startLoop({
     body.rotation.y = player.facing;
 
     const tap = input.takeTap();
-    if (tap && !walkTo.tap(tap.x, tap.y, player, canvas, over.clipY)) toast("Can't walk there");
+    if (tap && phase.value === 'playing' && !walkTo.tap(tap.x, tap.y, player, canvas, over.clipY))
+      toast("Can't walk there");
     walkTo.update(dt);
     // minimap pose at ≤ 10 Hz
     const now = performance.now();
@@ -145,8 +177,10 @@ startLoop({
     over.active = overview.value;
     const floorY = mall.meta.floors[mall.nav.floorAt(player.pos.y + 0.1)]?.y ?? 0;
     over.update(dt, reduceMotion.matches, orbit, bounds, floorY, camera.fov, camera.aspect);
-    camera.position.copy(over.position);
-    camera.lookAt(over.target);
+    intro.update(dt, reduceMotion.matches, over);
+    const view = intro.done ? over : intro;
+    camera.position.copy(view.position);
+    camera.lookAt(view.target);
     // the overview camera is ~70 m up: push the fog back so the mall isn't greyed out
     fog.near = 60 + 200 * over.t;
     fog.far = 140 + 200 * over.t;

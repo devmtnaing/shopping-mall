@@ -7,7 +7,7 @@ import { collider } from './greybox';
 const still = { yaw: 0, pitch: 0 };
 /** Walkable spots all over the greybox, many of them tight against walls and under the bridge. */
 const SPOTS: [number, number, number][] = [
-  [0, 0, -2.5],
+  [0, 0, -5.5],
   [5.6, 0, -2],
   [-5.6, 0, -30],
   [5.6, 0, -50],

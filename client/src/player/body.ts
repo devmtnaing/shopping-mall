@@ -11,5 +11,5 @@ export function createPlaceholderBody(color = '#e2b857') {
   const nose = new Mesh(new BoxGeometry(0.16, 0.1, 0.22), new MeshStandardMaterial({ color: '#1b1a18' }));
   nose.position.set(0, h - 0.3, -r);
   group.add(capsule, nose);
-  return group;
+  return { group, setColor: (c: string) => mat.color.set(c) };
 }

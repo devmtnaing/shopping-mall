@@ -627,3 +627,123 @@ a.product:hover {
     transform-origin: top right;
   }
 }
+
+/* ---- landing (T-302) ---- */
+.landing {
+  position: fixed;
+  left: calc(24px + env(safe-area-inset-left));
+  top: 50%;
+  transform: translateY(-50%);
+  width: min(420px, calc(100vw - 32px));
+  display: grid;
+  gap: 10px;
+  padding: 28px;
+  border-radius: 24px;
+  pointer-events: auto;
+  animation: fade-in 0.4s ease-out;
+}
+.landing h1 {
+  margin: 2px 0 0;
+  font-size: clamp(40px, 7vw, 56px);
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+.landing h1 span {
+  color: var(--accent);
+}
+.landing-tagline {
+  margin: 4px 0 10px;
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1.45;
+}
+.field-label {
+  margin-top: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.field-error {
+  margin: 0;
+  color: #ff9b85;
+  font-size: 14px;
+}
+.swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.swatches legend {
+  padding: 0;
+  margin-bottom: 8px;
+}
+.swatch-pick {
+  position: relative;
+  cursor: pointer;
+}
+#ui .swatch-pick input {
+  position: absolute;
+  opacity: 0;
+  inset: 0;
+  margin: 0;
+  cursor: pointer;
+}
+#ui .swatch-pick span {
+  display: block;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--c);
+  border: 2px solid transparent;
+  box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.25);
+}
+#ui .swatch-pick input:checked + span {
+  border-color: var(--ink);
+}
+#ui .swatch-pick input:focus-visible + span {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+#ui .enter {
+  margin-top: 12px;
+  min-height: 52px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #1b1a18;
+  font-weight: 700;
+  font-size: 16px;
+}
+#ui .enter:disabled {
+  opacity: 0.7;
+  cursor: progress;
+}
+#ui .landing input {
+  pointer-events: auto;
+}
+@media (max-width: 560px) {
+  .landing {
+    left: 16px;
+    right: 16px;
+    top: auto;
+    bottom: calc(16px + env(safe-area-inset-bottom));
+    transform: none;
+    width: auto;
+    padding: 22px;
+  }
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .landing {
+    animation: none;
+  }
+}

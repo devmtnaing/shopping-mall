@@ -9,7 +9,7 @@ const { zones } = greybox.meta;
 describe('ZoneTracker', () => {
   it('picks the most specific zone: a shop beats the hall, the bridge beats the gallery', () => {
     const t = new ZoneTracker(zones);
-    expect(t.best(new Vector3(0, 0, -2.5))?.id).toBe('entrance');
+    expect(t.best(new Vector3(0, 0, -5.5))?.id).toBe('entrance');
     expect(t.best(new Vector3(0, 0, -20))?.id).toBe('main-hall');
     expect(t.best(new Vector3(-12, 0, -32))?.id).toBe('shop-w3');
     expect(t.best(new Vector3(0, 7.6, -28))?.id).toBe('sky-bridge');
