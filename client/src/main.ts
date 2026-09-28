@@ -6,6 +6,7 @@ import { PlayerController } from './player/controller';
 import { Input } from './player/input';
 import type { DebugOverlay } from './render/debug';
 import { createRenderer } from './render/renderer';
+import { escalatorCarry } from './world/escalators';
 import { loadMall } from './world/mall';
 import './style.css';
 
@@ -56,6 +57,7 @@ startLoop({
   step: (dt) => {
     const move = input.move();
     const k = input.keys;
+    escalatorCarry(mall.meta.escalators, player.pos, player.carry);
     player.step(dt, {
       x: move.x,
       y: move.y,
