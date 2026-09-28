@@ -52,6 +52,17 @@ export default defineConfig({
       links: [{ label: 'Shop sneakers', url: 'https://example.com/stride' }],
     },
     {
+      id: 'shwe-tea',
+      slot: 'w3',
+      name: 'Shwe Tea House',
+      tagline: 'မြန်မာ လက်ဖက်ရည်ဆိုင်',
+      category: 'Food & drink',
+      colors: { bg: '#3b2413', accent: '#ffcf6e' },
+      description:
+        'Sweet milk tea, mohinga and fresh samosas. The tagline is in Burmese to show that signs handle complex scripts.',
+      links: [{ label: 'See the menu', url: 'https://example.com/shwe-tea' }],
+    },
+    {
       id: 'verde',
       slot: 'e0',
       name: 'Verde',

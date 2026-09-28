@@ -64,7 +64,7 @@ T-104 uses a "floating capsule" (body capsule from step height up, with ground r
 |---|---|---|---|---|
 | T-301 | Preact overlay shell, `state.ts` signals, command bus, dock, toasts | M | ui | No component re-renders during steady walking (Preact devtools) |
 | T-302 | Landing screen: name, body, outfit, accessories, live preview, online count. Preloads the world during the form | M | ui client | Enter → first playable ≤ 1 s on broadband when the preload is already done. Look is saved |
-| T-303 | Signage generator: worker + OffscreenCanvas, text fitting, complex-script shaping, IndexedDB cache by hash | M | client | Burmese and Latin signs render correctly. 2nd visit generates 0 signs |
+| T-303 | Signage generator: canvas painting, text fitting, complex-script shaping, per-script fonts loaded on demand | M | client | Burmese and Latin signs render correctly. ≤ 5 ms per sign. *(Changed from worker + IndexedDB: web fonts don't reach workers without extra loading code, and painting ~3 ms/sign is cheaper than a cache round-trip.)* |
 | T-304 | Shop registry: config → slot storefronts (sign, window, door trigger), E / tap prompt | M | client | Moving a shop to another slot in config moves it in the world. No Blender change needed |
 | T-305 | Shop panel (desktop sheet / mobile bottom sheet): details, features, products, CTAs, focus trap | M | ui a11y | Opens < 100 ms. Esc closes and returns focus. Works with no WebGL |
 | T-306 | Product adapters: `static`, `json-url`. Cache (memory 5 min + IndexedDB). Error state | M | client shared | Adapter failure shows an honest message, never fake products. Unit tests with mocked fetch |
