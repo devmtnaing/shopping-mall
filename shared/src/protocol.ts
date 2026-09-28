@@ -136,6 +136,8 @@ export type ServerMessage =
   | { t: 'chat'; id: number; name: string; text: string; at: number; host?: boolean }
   | { t: 'emote'; id: number; e: string }
   | { t: 'announce'; text: string }
+  /** Shops or mall details changed: refetch /api/content if your version is older. */
+  | { t: 'content'; version: number }
   | { t: 'error'; code: 'bad-name' | 'rate' | 'full' | 'bad-token' | 'bad-message'; message: string };
 
 /** Emotes anyone can send (keeps the wire and the UI in agreement). */

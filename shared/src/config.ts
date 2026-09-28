@@ -50,15 +50,17 @@ export const outfitSchema = z.object({
   file: z.string().min(1),
 });
 
+export const mallSchema = z.object({
+  name: z.string().min(1).max(40),
+  tagline: z.string().max(140).default(''),
+  accent: color.default('#e2b857'),
+  currency: z.string().length(3).default('USD'),
+  locales: z.array(z.string()).min(1).default(['en']),
+});
+
 export const configSchema = z
   .object({
-    mall: z.object({
-      name: z.string().min(1).max(40),
-      tagline: z.string().max(140).default(''),
-      accent: color.default('#e2b857'),
-      currency: z.string().length(3).default('USD'),
-      locales: z.array(z.string()).min(1).default(['en']),
-    }),
+    mall: mallSchema,
     shops: z.array(shopSchema).min(1),
     outfits: z.array(outfitSchema).default([]),
   })

@@ -17,6 +17,7 @@ const server = await startServer({
   blocklist: loadBlocklist(process.env.BLOCKLIST_FILE),
   reportWebhook: process.env.REPORT_WEBHOOK,
   hostSecret: process.env.HOST_SECRET || undefined,
+  db: db ?? undefined,
 });
 console.log(`shopping-mall server listening on :${server.port} (ws path /ws, health /health)`);
 if (process.env.METRICS) {

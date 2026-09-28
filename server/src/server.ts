@@ -10,7 +10,10 @@ import {
   type ServerMessage,
 } from '@shopping-mall/shared/protocol';
 import { type RawData, type WebSocket, WebSocketServer } from 'ws';
+import type { Sql } from './db/db.ts';
 import { issueHostToken, secretMatches, verifyHostToken } from './host.ts';
+import { contentApi } from './http/content-api.ts';
+import { CORS, json } from './http/util.ts';
 import { RateLimit } from './limits.ts';
 import { type Blocklist, containsBlocked, fileReport, maskBlocked } from './moderation.ts';
 import { plausibleMove } from './movement.ts';
@@ -36,6 +39,10 @@ export type ServerOptions = {
   reportWebhook?: string;
   /** Enables the host role: typing this on the landing screen signs you in as host. */
   hostSecret?: string;
+  /** Content database; without it there's no /api and clients use mall.config.ts. */
+  db?: Sql;
+  /** Public URL for an uploaded asset id (storage arrives in T-703). */
+  assetUrl?: (id: string) => string;
 };
 
 const ROOM_NAME = /^[a-z0-9-]{1,32}$/;
@@ -58,6 +65,8 @@ export async function startServer(opts: ServerOptions = {}) {
     blocklist = { words: [] },
     reportWebhook,
     hostSecret,
+    db,
+    assetUrl = (id: string) => `/assets/${id}`,
   } = opts;
   /** Host sign-in attempts per IP: 5, then one a minute. */
   const signInLimits = new Map<string, RateLimit>();
@@ -70,17 +79,25 @@ export async function startServer(opts: ServerOptions = {}) {
     return id;
   };
 
-  const cors = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Content-Type' };
-  const json = (res: import('node:http').ServerResponse, status: number, body: object) => {
-    res.writeHead(status, { 'Content-Type': 'application/json', ...cors });
-    res.end(JSON.stringify(body));
-  };
+  // live content API, when there's a database (docs/adr/0006)
+  const api = db
+    ? contentApi({
+        sql: db,
+        assetUrl,
+        isHost: (token) => !!hostSecret && !!token && verifyHostToken(hostSecret, token),
+        // tell every connected visitor that content changed (they refetch it)
+        onChange: (version) => {
+          for (const room of rooms.values()) room.broadcast({ t: 'content', version });
+        },
+      })
+    : null;
 
-  const http = createServer((req, res) => {
+  const http = createServer(async (req, res) => {
     if (req.method === 'OPTIONS') {
-      res.writeHead(204, { ...cors, 'Access-Control-Allow-Methods': 'GET, POST' }).end();
+      res.writeHead(204, CORS).end();
       return;
     }
+    if (api && (await api(req, res))) return;
     if (req.url === '/health') {
       const list = [...rooms.values()].map((r) => ({ name: r.name, players: r.players.size }));
       const host = [...rooms.values()].some((r) => [...r.players.values()].some((p) => p.host && p.socket));
