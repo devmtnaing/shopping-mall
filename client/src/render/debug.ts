@@ -10,7 +10,7 @@ const MAX_MS = 33.4;
 export function createDebugOverlay(renderer: WebGLRenderer) {
   const root = document.createElement('div');
   root.style.cssText =
-    'position:fixed;top:8px;left:8px;z-index:99;padding:6px 8px;border-radius:8px;background:rgba(0,0,0,.72);' +
+    'position:fixed;top:72px;left:14px;z-index:99;padding:6px 8px;border-radius:8px;background:rgba(0,0,0,.72);' +
     'font:11px/1.35 ui-monospace,Menlo,monospace;color:#cfe;pointer-events:none;white-space:pre';
   const text = document.createElement('div');
   const graph = document.createElement('canvas');

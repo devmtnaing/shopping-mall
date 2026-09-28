@@ -1,5 +1,6 @@
 import { resolve } from 'node:path';
 import { parseConfig } from '@plaza/shared/config';
+import preact from '@preact/preset-vite';
 import { defineConfig, type Plugin } from 'vite';
 import rawConfig from '../plaza.config';
 
@@ -26,7 +27,7 @@ function plazaConfig(): Plugin {
 }
 
 export default defineConfig({
-  plugins: [plazaConfig()],
+  plugins: [preact(), plazaConfig()],
   build: {
     target: 'es2022',
     manifest: true,

@@ -11,8 +11,8 @@ import { createTouchControls } from './player/touch';
 import { WalkTo } from './player/walkto';
 import type { DebugOverlay } from './render/debug';
 import { createRenderer } from './render/renderer';
-import { zone } from './state';
-import { mountZoneLabel } from './ui/zone-label';
+import { toast, uiHasFocus, zone } from './state';
+import { mountUI } from './ui/App';
 import { escalatorCarry } from './world/escalators';
 import { loadMall } from './world/mall';
 import { ZoneTracker } from './world/zones';
@@ -52,7 +52,7 @@ const still = { x: 0, y: 0 };
 // "You are in …": shop zones show the name of the shop assigned to that slot in plaza.config.ts
 const shopBySlot = new Map(config.shops.map((s) => [s.slot, s.name]));
 const zones = new ZoneTracker(mall.meta.zones);
-mountZoneLabel();
+mountUI();
 
 let debug: DebugOverlay | undefined;
 if (debugMode) {
@@ -68,8 +68,9 @@ if (debugMode) {
 
 startLoop({
   step: (dt) => {
-    const manual = input.move();
-    const jump = input.jump();
+    // while a dialog is open the keyboard belongs to the UI
+    const manual = uiHasFocus.value ? still : input.move();
+    const jump = !uiHasFocus.value && input.jump();
     // any manual movement or a jump cancels tap-to-walk
     if (manual.x !== 0 || manual.y !== 0 || jump) follower.stop();
     const move = follower.active ? (follower.update(dt, player.pos, orbit.yaw) ?? still) : manual;
@@ -86,7 +87,7 @@ startLoop({
     body.rotation.y = player.facing;
 
     const tap = input.takeTap();
-    if (tap) walkTo.tap(tap.x, tap.y, player, canvas);
+    if (tap && !walkTo.tap(tap.x, tap.y, player, canvas)) toast("Can't walk there");
     walkTo.update(dt);
     const moving = player.speed > 0.3;
     orbit.update(dt, body.position, player.facing, moving, input.takeLook(), input.takeZoom());
