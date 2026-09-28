@@ -1,4 +1,5 @@
 // Keyboard, mouse and touch → a small input state the game reads once per step.
+// Drag (any button, or one finger) looks around; a quick click or tap is reported for tap-to-walk.
 // Rules: typing in a text field never moves the player; browser shortcuts (Ctrl/⌘ + key) always pass through.
 
 /** Keys the game owns (their default browser action is suppressed while playing). */
@@ -91,6 +92,9 @@ const LOOK_SPEED = 0.0042;
 /** Zoom units per wheel "line" and per pixel of pinch. */
 const WHEEL_ZOOM = 0.0025;
 const PINCH_ZOOM = 0.012;
+/** A press that moves less than this (px) and lifts within TAP_TIME (ms) is a tap, not a drag. */
+const TAP_SLOP = 8;
+const TAP_TIME = 350;
 
 export class Input {
   readonly keys = new KeyState();
@@ -105,6 +109,9 @@ export class Input {
   private zoom = 0;
   private readonly pointers = new Map<number, { x: number; y: number }>();
   private pinchDist = 0;
+  /** The pointer that might become a tap: where and when it went down. */
+  private down: { id: number; x: number; y: number; t: number } | null = null;
+  private tap: { x: number; y: number } | null = null;
 
   constructor(private readonly canvas: HTMLCanvasElement) {
     addEventListener('keydown', (e) => this.keys.down(e));
@@ -119,13 +126,11 @@ export class Input {
     canvas.addEventListener('contextmenu', (e) => e.preventDefault());
   }
 
-  get mouseLocked() {
-    return document.pointerLockElement === this.canvas;
-  }
-
-  /** Lock the mouse for FPS-style looking (desktop). Esc releases it (browser default). */
-  lockMouse() {
-    this.canvas.requestPointerLock?.()?.catch?.(() => {});
+  /** A quick tap/click (not a drag) since the last call, in client pixels, or null. */
+  takeTap(): { x: number; y: number } | null {
+    const t = this.tap;
+    this.tap = null;
+    return t;
   }
 
   get run() {
@@ -163,18 +168,14 @@ export class Input {
 
   private onDown(e: PointerEvent) {
     this.canvas.focus();
-    if (this.mouseLocked || this.claimed.has(e.pointerId)) return;
+    if (this.claimed.has(e.pointerId)) return;
     this.canvas.setPointerCapture?.(e.pointerId);
     this.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    this.down = e.button === 0 ? { id: e.pointerId, x: e.clientX, y: e.clientY, t: e.timeStamp } : null;
     if (this.pointers.size === 2) this.pinchDist = this.spread();
   }
 
   private onMove(e: PointerEvent) {
-    if (this.mouseLocked) {
-      this.lookX += e.movementX;
-      this.lookY += e.movementY;
-      return;
-    }
     const p = this.pointers.get(e.pointerId);
     if (!p) return;
     const dx = e.clientX - p.x;
@@ -192,6 +193,12 @@ export class Input {
   }
 
   private onUp(e: PointerEvent) {
+    const d = this.down;
+    if (d && d.id === e.pointerId && this.pointers.size === 1) {
+      const moved = Math.hypot(e.clientX - d.x, e.clientY - d.y);
+      if (moved < TAP_SLOP && e.timeStamp - d.t < TAP_TIME) this.tap = { x: e.clientX, y: e.clientY };
+    }
+    this.down = null;
     this.pointers.delete(e.pointerId);
   }
 

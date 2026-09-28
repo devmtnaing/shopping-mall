@@ -4,8 +4,11 @@ import { startLoop } from './loop';
 import { createPlaceholderBody } from './player/body';
 import { OrbitCamera } from './player/camera';
 import { PlayerController } from './player/controller';
+import { PathFollower } from './player/follow';
 import { Input } from './player/input';
+import { PathFinder } from './player/path';
 import { createTouchControls } from './player/touch';
+import { WalkTo } from './player/walkto';
 import type { DebugOverlay } from './render/debug';
 import { createRenderer } from './render/renderer';
 import { escalatorCarry } from './world/escalators';
@@ -38,9 +41,10 @@ const body = createPlaceholderBody();
 scene.add(body);
 
 const orbit = new OrbitCamera(mall.collider, spawn.yaw);
-canvas.addEventListener('click', () => {
-  if (matchMedia('(pointer: fine)').matches) input.lockMouse();
-});
+const follower = new PathFollower();
+const walkTo = new WalkTo(camera, mall.collider, mall.meta, new PathFinder(mall.nav), follower);
+scene.add(walkTo.marker);
+const still = { x: 0, y: 0 };
 
 let debug: DebugOverlay | undefined;
 if (debugMode) {
@@ -51,28 +55,28 @@ if (debugMode) {
   debug = createDebugOverlay(renderer);
   scene.add(createGizmos(mall.meta, mall.nav));
   // handle for Playwright tests and console poking; never present without ?debug
-  Object.assign(window, { plaza: { scene, camera, renderer, mall, player, input } });
+  Object.assign(window, { plaza: { scene, camera, renderer, mall, player, input, follower } });
 }
 
 startLoop({
   step: (dt) => {
-    const move = input.move();
+    const manual = input.move();
+    const jump = input.jump();
+    // any manual movement or a jump cancels tap-to-walk
+    if (manual.x !== 0 || manual.y !== 0 || jump) follower.stop();
+    const move = follower.active ? (follower.update(dt, player.pos, orbit.yaw) ?? still) : manual;
     escalatorCarry(mall.meta.escalators, player.pos, player.carry);
-    player.step(dt, {
-      x: move.x,
-      y: move.y,
-      run: input.run,
-      jump: input.jump(),
-      yaw: orbit.yaw,
-    });
+    player.step(dt, { x: move.x, y: move.y, run: input.run, jump, yaw: orbit.yaw });
   },
   render: (alpha, dt) => {
     const t0 = performance.now();
     body.position.lerpVectors(player.prev, player.pos, alpha);
     body.rotation.y = player.facing;
 
-    const m = input.move();
-    const moving = m.x !== 0 || m.y !== 0;
+    const tap = input.takeTap();
+    if (tap) walkTo.tap(tap.x, tap.y, player, canvas);
+    walkTo.update(dt);
+    const moving = player.speed > 0.3;
     orbit.update(dt, body.position, player.facing, moving, input.takeLook(), input.takeZoom());
     camera.position.copy(orbit.position);
     camera.lookAt(orbit.target);
