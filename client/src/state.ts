@@ -49,6 +49,12 @@ export type NetState = 'off' | 'connecting' | 'online' | 'reconnecting' | 'offli
 export const netStatus = signal<NetState>('off');
 export const roomCount = signal(0);
 
+/** Host token for this tab (memory only; signing in again is needed after a reload). */
+export const hostToken = signal<string | null>(null);
+
+/** The latest host announcement, shown as a banner for a while. */
+export const announcement = signal<{ text: string; key: number } | null>(null);
+
 /** Chat log (newest last) and whether the chat box is open. */
 export type ChatLine = {
   key: number;

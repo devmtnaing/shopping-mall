@@ -1010,3 +1010,55 @@ a.product:hover {
   background: rgba(255, 255, 255, 0.06);
   font-size: 12px;
 }
+
+/* ---- host (T-410) ---- */
+#ui .link-btn {
+  justify-self: start;
+  padding: 4px 0;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font-size: 13px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+#ui .pill-btn {
+  min-height: 40px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #1b1a18;
+  font-weight: 700;
+}
+.host-signin {
+  display: grid;
+  gap: 8px;
+}
+.host-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.host-ok,
+.host-here {
+  margin: 0;
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 600;
+}
+.announce {
+  position: fixed;
+  top: calc(72px + env(safe-area-inset-top));
+  left: 50%;
+  transform: translateX(-50%);
+  display: grid;
+  gap: 2px;
+  max-width: min(520px, calc(100vw - 32px));
+  padding: 10px 18px;
+  border-radius: 16px;
+  border-color: var(--accent);
+  text-align: center;
+  font-weight: 600;
+  animation: fade-down 0.3s ease-out;
+}

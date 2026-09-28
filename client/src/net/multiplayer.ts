@@ -10,7 +10,18 @@ import type { PlayerController } from '../player/controller';
 import type { Travel } from '../player/travel';
 import { Bubbles } from '../render/bubbles';
 import { Crowd } from '../render/crowd';
-import { addChat, muted, netStatus, others, phase, profile, roomCount, toast } from '../state';
+import {
+  addChat,
+  announcement,
+  hostToken,
+  muted,
+  netStatus,
+  others,
+  phase,
+  profile,
+  roomCount,
+  toast,
+} from '../state';
 import { Remotes } from './remotes';
 import { NetClient, serverUrl } from './socket';
 
@@ -48,6 +59,16 @@ export function createMultiplayer(opts: {
       }
       if (m.t === 'emote') return bubbles.show(m.id === net.selfId ? 'me' : m.id, m.e, true);
       if (m.t === 'error' && m.code === 'rate') return toast(t('chat.slowDown'));
+      if (m.t === 'error' && m.code === 'bad-token') {
+        hostToken.value = null; // expired: carry on as a regular visitor
+        toast(m.message);
+        net.disconnect();
+        return connect();
+      }
+      if (m.t === 'announce') {
+        announcement.value = { text: m.text, key: Date.now() };
+        return addChat({ kind: 'sys', text: `📣 ${m.text}` });
+      }
       if (m.t === 'welcome') remotes.welcome(m.id, m.players);
       else if (m.t === 'presence') {
         const leaving = m.left.map((id) => remotes.players.get(id)?.info.name ?? '');
@@ -81,7 +102,8 @@ export function createMultiplayer(opts: {
     line(joined, 'chat.joined', 'chat.joinedMany');
     line(left, 'chat.left', 'chat.leftMany');
   }
-  const connect = () => net.connect(profile.value.name, { color: profile.value.color });
+  const connect = () =>
+    net.connect(profile.value.name, { color: profile.value.color }, hostToken.value ?? undefined);
   effect(() => {
     if (phase.value === 'playing') connect();
   });

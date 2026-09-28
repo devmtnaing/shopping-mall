@@ -5,6 +5,7 @@ import { useSignal } from '@preact/signals';
 import { render } from 'preact';
 import { useEffect } from 'preact/hooks';
 import { chatOpen, dialog, mallMeta, panel, phase } from '../state';
+import { Announcement } from './Announcement';
 import { Chat } from './Chat';
 import { Dock } from './Dock';
 import { EmoteBar } from './EmoteBar';
@@ -74,6 +75,7 @@ function App() {
       <BrandPill />
       <ZoneLabel />
       <NetNotice />
+      <Announcement />
       <TopRight playing />
       <ShopPrompt />
       <Dock />

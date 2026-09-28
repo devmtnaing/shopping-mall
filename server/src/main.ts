@@ -8,6 +8,7 @@ const server = await startServer({
   capacity: Number(process.env.ROOM_CAPACITY ?? 100),
   blocklist: loadBlocklist(process.env.BLOCKLIST_FILE),
   reportWebhook: process.env.REPORT_WEBHOOK,
+  hostSecret: process.env.HOST_SECRET || undefined,
 });
 console.log(`plaza server listening on :${server.port} (ws path /ws, health /health)`);
 

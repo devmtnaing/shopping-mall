@@ -141,19 +141,44 @@ export function serverUrl(room: string): string | null {
   return url.toString();
 }
 
-/** People online right now (for the landing screen), or null if there's no server to ask. */
-export async function onlineCount(): Promise<number | null> {
+/** The server's HTTP address for `path`, or null without a server. */
+function httpUrl(path: string): string | null {
   const ws = serverUrl('main');
   if (!ws) return null;
-  const http = new URL(ws);
-  http.protocol = http.protocol === 'wss:' ? 'https:' : 'http:';
-  http.pathname = '/health';
-  http.search = '';
+  const url = new URL(ws);
+  url.protocol = url.protocol === 'wss:' ? 'https:' : 'http:';
+  url.pathname = path;
+  url.search = '';
+  return url.toString();
+}
+
+export type Health = { online: number; host: boolean; hostLogin: boolean };
+
+/** Who's in the mall right now (for the landing screen), or null if there's no server to ask. */
+export async function health(): Promise<Health | null> {
+  const url = httpUrl('/health');
+  if (!url) return null;
   try {
-    const res = await fetch(http, { signal: AbortSignal.timeout(3000) });
-    const body = (await res.json()) as { online?: number };
-    return typeof body.online === 'number' ? body.online : null;
+    const body = (await (await fetch(url, { signal: AbortSignal.timeout(3000) })).json()) as Partial<Health>;
+    return { online: body.online ?? 0, host: !!body.host, hostLogin: !!body.hostLogin };
   } catch {
     return null;
+  }
+}
+
+/** Trade the host password for a signed token. Kept in memory only, never in storage. */
+export async function signInAsHost(secret: string): Promise<{ token?: string; error?: string }> {
+  const url = httpUrl('/host-token');
+  if (!url) return { error: 'No server.' };
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ secret }),
+      signal: AbortSignal.timeout(5000),
+    });
+    return (await res.json()) as { token?: string; error?: string };
+  } catch {
+    return { error: 'Could not reach the server.' };
   }
 }

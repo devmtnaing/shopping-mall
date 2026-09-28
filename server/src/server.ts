@@ -5,6 +5,8 @@ import { NET_HZ } from '@plaza/shared/constants';
 import { parseClientMessage } from '@plaza/shared/messages';
 import { type ClientMessage, decodeInput, type Pose, type ServerMessage } from '@plaza/shared/protocol';
 import { type RawData, type WebSocket, WebSocketServer } from 'ws';
+import { issueHostToken, secretMatches, verifyHostToken } from './host.ts';
+import { RateLimit } from './limits.ts';
 import { type Blocklist, containsBlocked, fileReport, maskBlocked } from './moderation.ts';
 import { plausibleMove } from './movement.ts';
 import { cleanChat, cleanName } from './names.ts';
@@ -27,6 +29,8 @@ export type ServerOptions = {
   blocklist?: Blocklist;
   /** POST reports here as JSON (they're always logged too). */
   reportWebhook?: string;
+  /** Enables the host role: typing this on the landing screen signs you in as host. */
+  hostSecret?: string;
 };
 
 const ROOM_NAME = /^[a-z0-9-]{1,32}$/;
@@ -48,7 +52,10 @@ export async function startServer(opts: ServerOptions = {}) {
     presenceMs = 2000,
     blocklist = { words: [] },
     reportWebhook,
+    hostSecret,
   } = opts;
+  /** Host sign-in attempts per IP: 5, then one a minute. */
+  const signInLimits = new Map<string, RateLimit>();
   const rooms = new Map<string, Room>();
   const sessions = new Map<string, Session>();
   let nextId = 1;
@@ -58,15 +65,59 @@ export async function startServer(opts: ServerOptions = {}) {
     return id;
   };
 
+  const cors = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Content-Type' };
+  const json = (res: import('node:http').ServerResponse, status: number, body: object) => {
+    res.writeHead(status, { 'Content-Type': 'application/json', ...cors });
+    res.end(JSON.stringify(body));
+  };
+
   const http = createServer((req, res) => {
-    if (req.url === '/health') {
-      const list = [...rooms.values()].map((r) => ({ name: r.name, players: r.players.size }));
-      res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
-      res.end(JSON.stringify({ ok: true, online: list.reduce((n, r) => n + r.players, 0), rooms: list }));
+    if (req.method === 'OPTIONS') {
+      res.writeHead(204, { ...cors, 'Access-Control-Allow-Methods': 'GET, POST' }).end();
       return;
     }
+    if (req.url === '/health') {
+      const list = [...rooms.values()].map((r) => ({ name: r.name, players: r.players.size }));
+      const host = [...rooms.values()].some((r) => [...r.players.values()].some((p) => p.host && p.socket));
+      json(res, 200, {
+        ok: true,
+        online: list.reduce((n, r) => n + r.players, 0),
+        rooms: list,
+        host,
+        hostLogin: !!hostSecret,
+      });
+      return;
+    }
+    if (req.url === '/host-token' && req.method === 'POST') return hostSignIn(req, res);
     res.writeHead(404).end();
   });
+
+  function hostSignIn(req: import('node:http').IncomingMessage, res: import('node:http').ServerResponse) {
+    if (!hostSecret) return json(res, 404, { error: 'Host sign-in is not set up on this server.' });
+    const ip = req.socket.remoteAddress ?? '?';
+    let limit = signInLimits.get(ip);
+    if (!limit) {
+      if (signInLimits.size > 10_000) signInLimits.clear(); // don't grow forever
+      limit = new RateLimit(5, 1 / 60);
+      signInLimits.set(ip, limit);
+    }
+    if (!limit.take()) return json(res, 429, { error: 'Too many tries. Wait a minute.' });
+    let body = '';
+    req.on('data', (c: Buffer) => {
+      body += c;
+      if (body.length > 1024) req.destroy();
+    });
+    req.on('end', () => {
+      let secret = '';
+      try {
+        secret = String((JSON.parse(body) as { secret?: unknown }).secret ?? '');
+      } catch {
+        /* treated as a wrong secret */
+      }
+      if (!secretMatches(hostSecret, secret)) return json(res, 401, { error: 'That password is not right.' });
+      json(res, 200, { token: issueHostToken(hostSecret) });
+    });
+  }
 
   const wss = new WebSocketServer({ noServer: true, maxPayload: 4096 });
   http.on('upgrade', (req, socket, head) => {
@@ -163,8 +214,13 @@ export async function startServer(opts: ServerOptions = {}) {
         return;
       }
       clearTimeout(joinTimer);
+      if (msg.hostToken && !(hostSecret && verifyHostToken(hostSecret, msg.hostToken))) {
+        sendError('bad-token', 'Your host sign-in has expired. Sign in again.');
+        return;
+      }
       const room = roomFor(roomName);
       const player = new Player(newId(), name, msg.look, ws);
+      player.host = !!msg.hostToken;
       room.add(player);
       const token = randomBytes(18).toString('base64url');
       session = { player, room, timer: null };
@@ -199,6 +255,12 @@ export async function startServer(opts: ServerOptions = {}) {
     if (msg.t === 'chat') {
       const text = maskBlocked(blocklist, cleanChat(msg.text));
       if (!text) return;
+      // hosts can announce to the whole room
+      if (player.host && text.startsWith('/announce ')) {
+        const announcement = text.slice('/announce '.length).trim();
+        if (announcement) room.broadcast({ t: 'announce', text: announcement });
+        return;
+      }
       if (!player.chatLimit.take()) {
         player.send({ t: 'error', code: 'rate', message: 'Slow down a little.' } satisfies ServerMessage);
         return;
