@@ -73,6 +73,12 @@ export const en = {
   'zone.sky-court': 'Sky court',
   'zone.sky-bridge': 'Sky bridge',
   'zone.vacant': 'Vacant unit',
+  'net.online': '{n} online',
+  'net.reconnecting': 'Reconnecting…',
+  'net.offline': 'Offline · exploring on your own',
+  'landing.here': '{n} people are in the mall right now',
+  'landing.hereOne': '1 person is in the mall right now',
+  'landing.empty': 'Nobody is here yet. Be the first!',
   'sign.comingSoon': 'Coming soon',
   'sign.available': 'This unit is available',
 } as const;

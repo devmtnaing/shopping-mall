@@ -2,7 +2,7 @@
 import config from 'virtual:plaza-config';
 import { locales, nextLocale, setLocale, t, zoneName } from '../i18n';
 import { linkUrl } from '../links';
-import { pose, zone } from '../state';
+import { netStatus, pose, roomCount, zone } from '../state';
 import { IconExpand, IconGlobe, IconShare } from './icons';
 import { share } from './share';
 
@@ -20,6 +20,12 @@ export function BrandPill() {
     <div class="brand glass">
       <span class="brand-mark">{initials(config.mall.name)}</span>
       <span class="brand-name">{config.mall.name}</span>
+      {netStatus.value === 'online' && (
+        <span class="brand-online">
+          <i aria-hidden="true" />
+          {t('net.online', { n: String(roomCount.value) })}
+        </span>
+      )}
     </div>
   );
 }
@@ -32,6 +38,17 @@ export function ZoneLabel() {
     <div class="zone glass" key={z.id} aria-live="polite">
       <div class="eyebrow">{t('hud.youAreIn')}</div>
       <div class="zone-name">{z.area ? zoneName(z.area, z.name) : z.name}</div>
+    </div>
+  );
+}
+
+/** Shown only when the connection is trouble: reconnecting, or offline (solo). */
+export function NetNotice() {
+  const s = netStatus.value;
+  if (s !== 'reconnecting' && s !== 'offline') return null;
+  return (
+    <div class="net-notice glass" role="status">
+      {t(s === 'offline' ? 'net.offline' : 'net.reconnecting')}
     </div>
   );
 }

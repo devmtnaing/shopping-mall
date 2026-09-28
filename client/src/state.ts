@@ -41,6 +41,11 @@ export const panel = signal<string | null>(null);
 export type DialogId = 'help' | 'directory';
 export const dialog = signal<DialogId | null>(null);
 
+/** Multiplayer connection state (see net/socket.ts) and how many people are in your room. */
+export type NetState = 'off' | 'connecting' | 'online' | 'reconnecting' | 'offline';
+export const netStatus = signal<NetState>('off');
+export const roomCount = signal(0);
+
 /** Top-down overview camera on/off. */
 export const overview = signal(false);
 

@@ -74,6 +74,12 @@ export const my: Partial<Record<Key, string>> = {
   'zone.sky-court': 'အပေါ်ထပ် ရင်ပြင်',
   'zone.sky-bridge': 'ကောင်းကင် တံတား',
   'zone.vacant': 'ဆိုင်ခန်း လွတ်',
+  'net.online': '{n} ယောက် အွန်လိုင်း',
+  'net.reconnecting': 'ပြန်ချိတ်ဆက်နေပါတယ်…',
+  'net.offline': 'အော့ဖ်လိုင်း · တစ်ယောက်တည်း လှည့်ပတ်နေပါတယ်',
+  'landing.here': 'ယခု မောလ်ထဲမှာ {n} ယောက် ရှိပါတယ်',
+  'landing.hereOne': 'ယခု မောလ်ထဲမှာ ၁ ယောက် ရှိပါတယ်',
+  'landing.empty': 'ဘယ်သူမှ မရှိသေးပါ။ ပထမဆုံး ဝင်လိုက်ပါ!',
   'sign.comingSoon': 'မကြာမီ ဖွင့်မည်',
   'sign.available': 'ဆိုင်ခန်း ငှားရန် ရှိသည်',
 };

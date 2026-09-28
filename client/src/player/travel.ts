@@ -17,6 +17,8 @@ const FADE_MS = 230;
 export class Travel {
   private pending: string | null = null;
   private readonly reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+  /** Called just before the player jumps somewhere far (the server needs to be told). */
+  onTeleport: () => void = () => {};
 
   constructor(
     private readonly shops: readonly Shop[],
@@ -68,6 +70,7 @@ export class Travel {
     }
 
     const jump = () => {
+      this.onTeleport();
       this.follower.stop();
       this.player.place(out.x, out.y, out.z, out.yaw);
       this.orbit.yaw = out.yaw;

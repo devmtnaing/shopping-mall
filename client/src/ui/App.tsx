@@ -7,7 +7,7 @@ import { Directory } from './Directory';
 import { Dock } from './Dock';
 import { Fade } from './Fade';
 import { Help } from './Help';
-import { BrandPill, TopRight, ZoneLabel } from './Hud';
+import { BrandPill, NetNotice, TopRight, ZoneLabel } from './Hud';
 import { Landing } from './Landing';
 import { Minimap } from './Minimap';
 import { ShopPanel } from './ShopPanel';
@@ -49,6 +49,7 @@ function App() {
     <>
       <BrandPill />
       <ZoneLabel />
+      <NetNotice />
       <TopRight playing />
       <ShopPrompt />
       <Dock />

@@ -3,6 +3,7 @@ import config from 'virtual:plaza-config';
 import { useSignal } from '@preact/signals';
 import { useEffect, useRef } from 'preact/hooks';
 import { t } from '../i18n';
+import { onlineCount } from '../net/socket';
 import { BODY_COLORS, mallMeta, phase, profile, saveProfile } from '../state';
 
 export function Landing() {
@@ -13,6 +14,10 @@ export function Landing() {
   const ready = mallMeta.value !== null;
   const returning = profile.value.name !== '';
   const [first, ...rest] = config.mall.name.split(' ');
+  const here = useSignal<number | null>(null);
+  useEffect(() => {
+    onlineCount().then((n) => (here.value = n));
+  }, []);
   const nameRef = useRef<HTMLInputElement>(null);
   const enterRef = useRef<HTMLButtonElement>(null);
   // focus the next step, but not on touch screens (it would pop the keyboard over the view)
@@ -92,6 +97,16 @@ export function Landing() {
             ? t('landing.enterAs', { name: profile.value.name })
             : t('landing.enter')}
       </button>
+      {here.value !== null && (
+        <p class="landing-here">
+          <i aria-hidden="true" />
+          {here.value === 0
+            ? t('landing.empty')
+            : here.value === 1
+              ? t('landing.hereOne')
+              : t('landing.here', { n: String(here.value) })}
+        </p>
+      )}
     </form>
   );
 }
