@@ -25,7 +25,10 @@ jobs:
           --health-cmd "pg_isready -U mall" --health-interval 2s --health-retries 30
     env:
       TEST_DATABASE_URL: postgres://mall:mall@localhost:5432/mall
+      TEST_S3_ENDPOINT: http://localhost:8333
     steps:
+      # S3-compatible storage for the upload tests (services can't take a start command, so run it here)
+      - run: docker run -d -p 8333:8333 -e AWS_ACCESS_KEY_ID=mall -e AWS_SECRET_ACCESS_KEY=mall-secret chrislusf/seaweedfs:latest server -s3
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4

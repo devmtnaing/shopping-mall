@@ -14,7 +14,7 @@ Shops must be editable while the mall runs, and assets (logos, product images, l
 ## Decision
 - **Railway** runs the server container (site + multiplayer + content API), a **Postgres** service and a **storage bucket**, deployed from `main`.
 - The server talks to storage through the **S3 API only** (endpoint, bucket and keys from env), so moving uploads to Cloudflare R2 or any S3-compatible store is a configuration change.
-- Self-hosting stays possible: `docker compose` gains Postgres and MinIO (an S3-compatible store) services.
+- Self-hosting stays possible: `docker compose` gains Postgres and SeaweedFS (an open-source S3-compatible store; MinIO no longer publishes free images) services.
 
 ## Consequences
 - ✅ One dashboard and one bill; roughly $5–10/month at small scale.

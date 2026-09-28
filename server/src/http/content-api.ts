@@ -3,6 +3,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { mallSchema, shopSchema } from '@shopping-mall/shared/config';
 import { z } from 'zod';
+import { deleteAsset, KINDS, listAssets, storeAsset } from '../assets.ts';
 import {
   type AssetUrl,
   contentVersion,
@@ -13,13 +14,16 @@ import {
   saveShop,
 } from '../db/content.ts';
 import type { Sql } from '../db/db.ts';
-import { bearer, HttpError, json, readJson } from './util.ts';
+import type { Storage } from '../storage.ts';
+import { bearer, HttpError, json, readBody, readJson } from './util.ts';
 
 export type ContentApiOptions = {
   sql: Sql;
   assetUrl: AssetUrl;
   isHost: (token: string) => boolean;
   onChange: (version: number) => void;
+  /** Object storage for uploads; without it the asset endpoints answer 503. */
+  storage?: Storage | null;
 };
 
 const SHOP_ID = /^\/api\/shops\/([a-z0-9][a-z0-9-]*)$/;
@@ -35,7 +39,11 @@ function parse<T>(schema: z.ZodType<T>, body: unknown): T {
 
 /** Handle /api/* requests. Returns false if the path isn't ours. */
 export function contentApi(opts: ContentApiOptions) {
-  const { sql, assetUrl, isHost, onChange } = opts;
+  const { sql, assetUrl, isHost, onChange, storage } = opts;
+  const needStorage = () => {
+    if (!storage) throw new HttpError(503, 'Uploads are not set up on this server (S3_* settings).');
+    return storage;
+  };
 
   async function route(req: IncomingMessage, res: ServerResponse) {
     const path = (req.url ?? '').split('?')[0] ?? '';
@@ -61,6 +69,26 @@ export function contentApi(opts: ContentApiOptions) {
     // everything below changes content: host only
     if (!isHost(bearer(req))) throw new HttpError(401, 'Sign in as the host to change the mall.');
     let version: number | null = null;
+
+    // asset library: upload (raw body, ?kind=…), list, delete. Uploads don't change content by
+    // themselves; using an asset (e.g. as a logo) does, through the shop endpoints.
+    if (path === '/api/assets' && method === 'POST') {
+      const kind = new URL(req.url ?? '', 'http://x').searchParams.get('kind') ?? '';
+      const limit = KINDS[kind]?.maxBytes;
+      if (!limit) throw new HttpError(400, `Unknown asset kind "${kind}".`);
+      json(res, 201, await storeAsset(sql, needStorage(), kind, await readBody(req, limit)));
+      return;
+    }
+    if (path === '/api/assets' && method === 'GET') {
+      json(res, 200, await listAssets(sql));
+      return;
+    }
+    const assetId = /^\/api\/assets\/([0-9a-f-]{36})$/.exec(path)?.[1];
+    if (assetId && method === 'DELETE') {
+      if (!(await deleteAsset(sql, needStorage(), assetId))) throw new HttpError(404, 'No such asset.');
+      json(res, 200, { deleted: assetId });
+      return;
+    }
 
     if (path === '/api/mall' && method === 'PUT') {
       version = await saveMall(sql, parse(mallSchema, await readJson(req)));

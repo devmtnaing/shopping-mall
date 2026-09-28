@@ -13,6 +13,7 @@ import { type RawData, type WebSocket, WebSocketServer } from 'ws';
 import type { Sql } from './db/db.ts';
 import { issueHostToken, secretMatches, verifyHostToken } from './host.ts';
 import { contentApi } from './http/content-api.ts';
+import { filesHandler } from './http/files.ts';
 import { CORS, json } from './http/util.ts';
 import { RateLimit } from './limits.ts';
 import { type Blocklist, containsBlocked, fileReport, maskBlocked } from './moderation.ts';
@@ -20,6 +21,7 @@ import { plausibleMove } from './movement.ts';
 import { cleanChat, cleanName } from './names.ts';
 import { Player } from './player.ts';
 import { Room } from './room.ts';
+import type { Storage } from './storage.ts';
 
 export type ServerOptions = {
   port?: number;
@@ -43,6 +45,8 @@ export type ServerOptions = {
   db?: Sql;
   /** Public URL for an uploaded asset id (storage arrives in T-703). */
   assetUrl?: (id: string) => string;
+  /** Object storage for uploads (S3-compatible). */
+  storage?: Storage | null;
 };
 
 const ROOM_NAME = /^[a-z0-9-]{1,32}$/;
@@ -67,7 +71,9 @@ export async function startServer(opts: ServerOptions = {}) {
     hostSecret,
     db,
     assetUrl = (id: string) => `/assets/${id}`,
+    storage = null,
   } = opts;
+  const files = filesHandler(storage);
   /** Host sign-in attempts per IP: 5, then one a minute. */
   const signInLimits = new Map<string, RateLimit>();
   const rooms = new Map<string, Room>();
@@ -84,6 +90,7 @@ export async function startServer(opts: ServerOptions = {}) {
     ? contentApi({
         sql: db,
         assetUrl,
+        storage,
         isHost: (token) => !!hostSecret && !!token && verifyHostToken(hostSecret, token),
         // tell every connected visitor that content changed (they refetch it)
         onChange: (version) => {
@@ -98,6 +105,7 @@ export async function startServer(opts: ServerOptions = {}) {
       return;
     }
     if (api && (await api(req, res))) return;
+    if (await files(req, res)) return;
     if (req.url === '/health') {
       const list = [...rooms.values()].map((r) => ({ name: r.name, players: r.players.size }));
       const host = [...rooms.values()].some((r) => [...r.players.values()].some((p) => p.host && p.socket));

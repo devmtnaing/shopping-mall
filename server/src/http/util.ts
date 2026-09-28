@@ -55,3 +55,26 @@ export function bearer(req: IncomingMessage): string {
   const h = req.headers.authorization ?? '';
   return h.startsWith('Bearer ') ? h.slice(7).trim() : '';
 }
+
+/** Read a raw request body of at most `limit` bytes. */
+export function readBody(req: IncomingMessage, limit: number): Promise<Uint8Array<ArrayBuffer>> {
+  return new Promise((resolve, reject) => {
+    const declared = Number(req.headers['content-length'] ?? 0);
+    if (declared > limit) {
+      reject(new HttpError(413, `That file is too big (max ${Math.round(limit / 1048576)} MB).`));
+      req.resume();
+      return;
+    }
+    let size = 0;
+    const chunks: Buffer[] = [];
+    req.on('data', (c: Buffer) => {
+      size += c.length;
+      if (size > limit) {
+        reject(new HttpError(413, `That file is too big (max ${Math.round(limit / 1048576)} MB).`));
+        req.destroy();
+      } else chunks.push(c);
+    });
+    req.on('end', () => resolve(new Uint8Array(Buffer.concat(chunks))));
+    req.on('error', reject);
+  });
+}

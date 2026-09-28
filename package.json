@@ -19,7 +19,7 @@
     "greybox": "node tools/greybox/build.ts && node tools/bake-navgrid.ts",
     "navgrid": "node tools/bake-navgrid.ts",
     "bots": "node tools/bots.ts",
-    "db:up": "docker compose up -d postgres",
+    "db:up": "docker compose up -d postgres storage",
     "db:migrate": "node server/src/db/migrate-cli.ts"
   },
   "devDependencies": {
