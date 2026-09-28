@@ -10,14 +10,16 @@
     "dev": "pnpm --filter @plaza/client dev",
     "dev:server": "pnpm --filter @plaza/server dev",
     "build": "pnpm -r build",
-    "typecheck": "pnpm -r typecheck",
+    "typecheck": "pnpm -r typecheck && tsc -p tools",
     "lint": "biome check .",
     "format": "biome check --write .",
-    "test": "vitest run"
+    "test": "vitest run",
+    "check": "pnpm typecheck && pnpm lint && pnpm test && pnpm build"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.14",
     "@plaza/shared": "workspace:*",
+    "@types/node": "^24.19.0",
     "typescript": "^5.9.3",
     "vitest": "^5.0.2"
   }
