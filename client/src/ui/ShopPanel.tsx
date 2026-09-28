@@ -4,9 +4,12 @@
 import config from 'virtual:plaza-config';
 import type { Shop } from '@plaza/shared/config';
 import { useEffect, useState } from 'preact/hooks';
+import { linkUrl } from '../links';
 import { formatPrice, loadProducts, type Product, type ProductsResult } from '../shops/products';
 import { panel } from '../state';
 import { Dialog } from './Dialog';
+import { IconShare } from './icons';
+import { share } from './share';
 
 const external = { target: '_blank', rel: 'noopener noreferrer' } as const;
 
@@ -101,6 +104,14 @@ export function ShopPanel({ id }: { id: string }) {
             ))}
           </div>
         )}
+        <button
+          type="button"
+          class="cta cta-ghost"
+          onClick={() => share(linkUrl({ kind: 'shop', id: shop.id }), `${shop.name} · ${config.mall.name}`)}
+        >
+          Share this shop
+          <IconShare size={18} />
+        </button>
       </div>
     </Dialog>
   );

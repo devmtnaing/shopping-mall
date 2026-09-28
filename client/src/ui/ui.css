@@ -747,3 +747,9 @@ a.product:hover {
     animation: none;
   }
 }
+
+.cta-ghost {
+  background: transparent;
+  color: var(--muted);
+  font-weight: 500;
+}

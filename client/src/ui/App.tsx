@@ -40,7 +40,7 @@ function App() {
   if (phase.value === 'landing')
     return (
       <>
-        <TopRight />
+        <TopRight playing={false} />
         <Landing />
       </>
     );
@@ -49,7 +49,7 @@ function App() {
     <>
       <BrandPill />
       <ZoneLabel />
-      <TopRight />
+      <TopRight playing />
       <ShopPrompt />
       <Dock />
       {meta && <Minimap meta={meta} />}

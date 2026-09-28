@@ -2,6 +2,7 @@ import config from 'virtual:plaza-config';
 import { effect } from '@preact/signals';
 import { Color, DirectionalLight, Fog, HemisphereLight, Scene } from 'three';
 import { installCommands } from './commands';
+import { parseLink } from './links';
 import { startLoop } from './loop';
 import { createPlaceholderBody } from './player/body';
 import { OrbitCamera } from './player/camera';
@@ -100,6 +101,20 @@ const bounds = {
   maxZ: Math.max(...inner.map((b) => b.max[2])) + 4,
 };
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
+
+// shared links: start at a shop (its panel opens after the fly-in) or at an exact spot
+const link = parseLink(location.search);
+let linkProblem = '';
+if (link?.kind === 'shop' && !travel.placeAt(link.id)) linkProblem = "That shop isn't in this mall any more.";
+if (link?.kind === 'at') {
+  const y = mall.meta.floors[link.floor]?.y;
+  const inside = link.x > bounds.minX && link.x < bounds.maxX && link.z > bounds.minZ && link.z < bounds.maxZ;
+  if (y === undefined || !inside) linkProblem = "That spot isn't in this mall.";
+  else {
+    player.place(link.x, y + 0.05, link.z, link.yaw);
+    orbit.yaw = link.yaw;
+  }
+}
 const still = { x: 0, y: 0 };
 
 // "You are in …": shop zones show the name of the shop assigned to that slot in plaza.config.ts
@@ -112,6 +127,7 @@ effect(() => {
   if (phase.value !== 'playing' || intro.flying) return;
   intro.begin();
   performance.mark('playable');
+  if (linkProblem) toast(linkProblem, 4000);
 });
 
 let debug: DebugOverlay | undefined;
@@ -142,7 +158,7 @@ startLoop({
     const near = storefronts.nearby(player.pos)?.id ?? null;
     if (near !== nearbyShop.value) nearbyShop.value = near;
     // arrived after directory travel: open that shop's panel
-    const arrived = travel.arrived(near);
+    const arrived = intro.done ? travel.arrived(near) : null;
     if (arrived) openShop(arrived);
     if (input.keys.consume('KeyM') && !uiHasFocus.value) overview.value = !overview.value;
     const visit = input.keys.consume('KeyE'); // always consume, so a stray press can't fire later

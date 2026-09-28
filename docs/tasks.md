@@ -71,7 +71,7 @@ T-104 uses a "floating capsule" (body capsule from step height up, with ground r
 | T-307 | Directory: categories, fuzzy search (multi-language), travel (walk < 40 m, else fade-teleport) | M | ui client | `/` opens it. Keyboard-only use works. Reduced motion → instant |
 | T-308 | Minimap: SVG from meta (slots, you, friends), click to travel, floor switch | S | ui `good first issue` | Updates at ≤ 10 Hz. No layout thrash |
 | T-309 | Overview camera (M): animated top-down view, tap to travel | S | client | Transition ≤ 800 ms, skipped with reduced motion |
-| T-310 | Deep links `/s/:id` and `/@x,z,yaw`, plus a "Share this spot" button | S | client | Opening a link spawns you there with the panel open. Unknown id → toast + default spawn |
+| T-310 | Deep links `?s=<shop>` and `?at=x,z,yaw,floor`, plus Share buttons | S | client | Opening a link spawns you there with the panel open. Unknown id → toast + default spawn. *(Query parameters instead of `/s/:id` paths: they work on any static host with no rewrite rules.)* |
 | T-311 | Static HTML directory (`/directory`) generated at build from config: shops, links, products | S | tooling a11y | Lighthouse SEO ≥ 95. Fully usable with JS disabled |
 | T-312 | i18n: string tables, locale switcher, per-locale font loading, `Intl.NumberFormat` prices | M | ui | Switching locale re-renders UI and signs without a reload |
 

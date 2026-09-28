@@ -21,7 +21,7 @@ Priority: **P0** = MVP, **P1** = v1.0, **P2** = later.
 - **P0** Landing screen: mall name, tagline, name input, body type, outfit, live 3D preview, online count, "Enter".
 - **P0** Remember name and look locally. Returning visitors skip straight to "Enter".
 - **P1** Accessories (hat, glasses) as attachable meshes on the shared skeleton.
-- **P1** Deep link: `/s/:shopId` opens the mall with you standing at that shop and its panel open. `/@x,z,yaw` spawns you at that position.
+- **P1** Deep links: `?s=<shopId>` opens the mall with you standing at that shop and its panel open. `?at=x,z,yaw,floor` spawns you at that position. (Query parameters, so they work on any static host.)
 - **P2** Colour tints for outfits (a single material parameter, no extra downloads).
 
 ### Movement & camera

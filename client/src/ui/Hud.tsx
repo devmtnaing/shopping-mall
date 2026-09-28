@@ -1,7 +1,9 @@
 // Always-on overlay: brand pill (top left), zone label (top centre), fullscreen (top right).
 import config from 'virtual:plaza-config';
-import { zone } from '../state';
-import { IconExpand } from './icons';
+import { linkUrl } from '../links';
+import { pose, zone } from '../state';
+import { IconExpand, IconShare } from './icons';
+import { share } from './share';
 
 function initials(name: string) {
   return name
@@ -33,18 +35,28 @@ export function ZoneLabel() {
   );
 }
 
-export function TopRight() {
+export function TopRight({ playing }: { playing: boolean }) {
   const canFullscreen = typeof document.documentElement.requestFullscreen === 'function';
-  if (!canFullscreen) return null;
+  const shareSpot = () => {
+    const p = pose.value;
+    share(linkUrl({ kind: 'at', ...p }), `Meet me in ${config.mall.name}`);
+  };
   const toggle = () => {
     if (document.fullscreenElement) document.exitFullscreen();
     else document.documentElement.requestFullscreen().catch(() => {});
   };
   return (
     <div class="top-right">
-      <button type="button" class="icon-btn glass" aria-label="Full screen" onClick={toggle}>
-        <IconExpand />
-      </button>
+      {playing && (
+        <button type="button" class="icon-btn glass" aria-label="Share where you are" onClick={shareSpot}>
+          <IconShare />
+        </button>
+      )}
+      {canFullscreen && (
+        <button type="button" class="icon-btn glass" aria-label="Full screen" onClick={toggle}>
+          <IconExpand />
+        </button>
+      )}
     </div>
   );
 }

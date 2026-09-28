@@ -20,7 +20,7 @@ Walk around with friends, visit shops, browse real products, and chat. It loads 
 | Avatars | 1 GLB of ~2.4 MB per outfit | Shared skeleton + shared animation pack, ≤ 400 KB per outfit |
 | Lighting | Real-time, single light | Baked lightmaps, environment reflections, quality tiers |
 | Content | Edit JS source | `plaza.config.ts` plus a product adapter (JSON, Shopify, …) |
-| Links | One URL | Deep links to every shop (`/s/coffee`), plus an HTML directory that crawlers can read |
+| Links | One URL | Deep links to every shop (`?s=coffee`) and spot, plus an HTML directory that crawlers can read |
 | Mobile | Joystick | Joystick **and** tap-to-walk with pathfinding |
 | Self-hosting | PHP server | Static site + one small Node/Bun server (Docker), or static-only single-player |
 
