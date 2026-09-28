@@ -1,0 +1,7 @@
+# Example blocklist for Plaza. Copy it, add the words your community needs, and start the server
+# with BLOCKLIST_FILE=/path/to/blocklist.txt. One word per line, matched as a whole word,
+# ignoring case, accents and look-alike digits (so "sp4m" matches "spam").
+#
+# Blocked words are masked in chat (•••) and names containing them are refused.
+spam
+scam

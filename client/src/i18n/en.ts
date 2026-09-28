@@ -90,6 +90,11 @@ export const en = {
   'chat.leftMany': '{n} people left',
   'chat.slowDown': 'Slow down a little.',
   'emote.label': 'React',
+  'mod.mute': 'Mute',
+  'mod.unmute': 'Unmute',
+  'mod.report': 'Report',
+  'mod.reported': 'Thanks. The mall’s hosts have been told.',
+  'mod.options': 'Options for {name}',
   'sign.comingSoon': 'Coming soon',
   'sign.available': 'This unit is available',
 } as const;

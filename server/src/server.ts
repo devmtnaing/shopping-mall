@@ -5,6 +5,7 @@ import { NET_HZ } from '@plaza/shared/constants';
 import { parseClientMessage } from '@plaza/shared/messages';
 import { type ClientMessage, decodeInput, type Pose, type ServerMessage } from '@plaza/shared/protocol';
 import { type RawData, type WebSocket, WebSocketServer } from 'ws';
+import { type Blocklist, containsBlocked, fileReport, maskBlocked } from './moderation.ts';
 import { plausibleMove } from './movement.ts';
 import { cleanChat, cleanName } from './names.ts';
 import { Player } from './player.ts';
@@ -22,6 +23,10 @@ export type ServerOptions = {
   graceMs?: number;
   /** How often join/leave notices are batched and sent. */
   presenceMs?: number;
+  /** Words to mask in chat and refuse in names. */
+  blocklist?: Blocklist;
+  /** POST reports here as JSON (they're always logged too). */
+  reportWebhook?: string;
 };
 
 const ROOM_NAME = /^[a-z0-9-]{1,32}$/;
@@ -41,6 +46,8 @@ export async function startServer(opts: ServerOptions = {}) {
     joinTimeoutMs = 5000,
     graceMs = 30_000,
     presenceMs = 2000,
+    blocklist = { words: [] },
+    reportWebhook,
   } = opts;
   const rooms = new Map<string, Room>();
   const sessions = new Map<string, Session>();
@@ -151,7 +158,7 @@ export async function startServer(opts: ServerOptions = {}) {
         return;
       }
       const name = cleanName(msg.name);
-      if (!name) {
+      if (!name || containsBlocked(blocklist, name)) {
         sendError('bad-name', 'Names need 2 to 20 letters.');
         return;
       }
@@ -190,20 +197,36 @@ export async function startServer(opts: ServerOptions = {}) {
 
   function handle(msg: ClientMessage, player: Player, room: Room) {
     if (msg.t === 'chat') {
-      const text = cleanChat(msg.text);
+      const text = maskBlocked(blocklist, cleanChat(msg.text));
       if (!text) return;
       if (!player.chatLimit.take()) {
         player.send({ t: 'error', code: 'rate', message: 'Slow down a little.' } satisfies ServerMessage);
         return;
       }
+      const at = Date.now();
+      room.rememberChat(player.name, text, at);
       room.broadcast({
         t: 'chat',
         id: player.id,
         name: player.name,
         text,
-        at: Date.now(),
+        at,
         host: player.host || undefined,
       });
+    } else if (msg.t === 'report') {
+      const target = room.players.get(msg.id);
+      if (!target || target === player || !player.reportLimit.take()) return;
+      void fileReport(
+        {
+          at: new Date().toISOString(),
+          room: room.name,
+          reporter: { id: player.id, name: player.name },
+          reported: { id: target.id, name: target.name },
+          reason: cleanChat(msg.reason ?? ''),
+          recentChat: room.recentChat.slice(-20),
+        },
+        reportWebhook,
+      );
     } else if (msg.t === 'emote') {
       if (player.emoteLimit.take())
         room.nearby(player, EMOTE_RADIUS, { t: 'emote', id: player.id, e: msg.e });

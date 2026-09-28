@@ -16,6 +16,8 @@ export class Player {
   /** Chat: a burst of 3, then one message every 1.5 s. Emotes: a burst of 4, then 2 a second. */
   readonly chatLimit = new RateLimit(3, 1 / 1.5);
   readonly emoteLimit = new RateLimit(4, 2);
+  /** One report every 30 s. */
+  readonly reportLimit = new RateLimit(1, 1 / 30);
 
   constructor(id: number, name: string, look: Look, socket: WebSocket) {
     this.id = id;

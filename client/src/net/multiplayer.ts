@@ -10,7 +10,7 @@ import type { PlayerController } from '../player/controller';
 import type { Travel } from '../player/travel';
 import { Bubbles } from '../render/bubbles';
 import { Crowd } from '../render/crowd';
-import { addChat, netStatus, others, phase, profile, roomCount, toast } from '../state';
+import { addChat, muted, netStatus, others, phase, profile, roomCount, toast } from '../state';
 import { Remotes } from './remotes';
 import { NetClient, serverUrl } from './socket';
 
@@ -40,9 +40,11 @@ export function createMultiplayer(opts: {
       netStatus.value = s;
     },
     message: (m) => {
+      if ((m.t === 'chat' || m.t === 'emote') && muted.value.has(m.id)) return;
       if (m.t === 'chat') {
         bubbles.show(m.id === net.selfId ? 'me' : m.id, m.text);
-        return addChat({ kind: 'msg', name: m.name, text: m.text, host: m.host });
+        const from = m.id === net.selfId ? undefined : m.id;
+        return addChat({ kind: 'msg', from, name: m.name, text: m.text, host: m.host });
       }
       if (m.t === 'emote') return bubbles.show(m.id === net.selfId ? 'me' : m.id, m.e, true);
       if (m.t === 'error' && m.code === 'rate') return toast(t('chat.slowDown'));
@@ -96,6 +98,7 @@ export function createMultiplayer(opts: {
   return {
     net,
     sendChat: (text: string) => net.send({ t: 'chat', text }),
+    report: (id: number) => net.send({ t: 'report', id }),
     /** Emote: shown right away for you, and sent to people nearby when online. */
     emote(e: string) {
       if (net.online) net.send({ t: 'emote', e });

@@ -6,6 +6,8 @@ export type Commands = {
   travelToShop: (shopId: string) => void;
   /** Play an emote over your head (everyone nearby sees it). */
   emote: (e: string) => void;
+  /** Report a player to the mall's hosts. */
+  report: (id: number) => void;
   /** Send a chat message to the room. */
   sendChat: (text: string) => void;
   /** Walk to a point on a floor (index into meta.floors). */
@@ -15,6 +17,7 @@ export type Commands = {
 export const commands: Commands = {
   travelToShop: () => {},
   sendChat: () => {},
+  report: () => {},
   emote: () => {},
   walkTo: () => {},
 };

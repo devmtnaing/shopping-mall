@@ -53,6 +53,8 @@ export const roomCount = signal(0);
 export type ChatLine = {
   key: number;
   kind: 'msg' | 'sys';
+  /** Sender's player id (messages only), for mute / report. */
+  from?: number;
   name?: string;
   text: string;
   host?: boolean;
@@ -63,6 +65,14 @@ export const chatOpen = signal(false);
 let chatKey = 1;
 export function addChat(line: Omit<ChatLine, 'key' | 'at'>) {
   chat.value = [...chat.value, { ...line, key: chatKey++, at: Date.now() }].slice(-50);
+}
+
+/** People you've muted this visit (by player id): their chat, bubbles and emotes are hidden. */
+export const muted = signal<ReadonlySet<number>>(new Set());
+export function toggleMute(id: number) {
+  const next = new Set(muted.value);
+  if (!next.delete(id)) next.add(id);
+  muted.value = next;
 }
 
 /** The emoji bar (phones open it from the dock; desktop has keys 1–6). */

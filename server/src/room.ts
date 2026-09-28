@@ -9,6 +9,8 @@ export class Room {
   readonly interest: number;
   readonly players = new Map<number, Player>();
   tick = 0;
+  /** Recent chat, kept so reports can include context. */
+  readonly recentChat: { name: string; text: string; at: number }[] = [];
   private joined = new Map<number, PlayerInfo>();
   private left = new Set<number>();
 
@@ -39,6 +41,11 @@ export class Room {
     for (const p of this.players.values()) {
       if (p.id !== except && p.socket?.readyState === 1) p.socket.send(text);
     }
+  }
+
+  rememberChat(name: string, text: string, at: number) {
+    this.recentChat.push({ name, text, at });
+    if (this.recentChat.length > 50) this.recentChat.shift();
   }
 
   /** Send to everyone within `radius` metres of `from` (and `from` itself): emotes are local. */

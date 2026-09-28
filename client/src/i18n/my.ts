@@ -91,6 +91,11 @@ export const my: Partial<Record<Key, string>> = {
   'chat.leftMany': '{n} ယောက် ထွက်သွားပါပြီ',
   'chat.slowDown': 'နည်းနည်း ဖြည်းဖြည်း ပို့ပါ။',
   'emote.label': 'တုံ့ပြန်မယ်',
+  'mod.mute': 'အသံပိတ်',
+  'mod.unmute': 'အသံပြန်ဖွင့်',
+  'mod.report': 'တိုင်ကြားမယ်',
+  'mod.reported': 'ကျေးဇူးပါ။ မောလ် တာဝန်ခံများကို အသိပေးပြီးပါပြီ။',
+  'mod.options': '{name} အတွက် ရွေးချယ်စရာများ',
   'sign.comingSoon': 'မကြာမီ ဖွင့်မည်',
   'sign.available': 'ဆိုင်ခန်း ငှားရန် ရှိသည်',
 };

@@ -97,6 +97,7 @@ installCommands({
   travelToShop: (id) => travel.toShop(id),
   sendChat: (text) => multi.sendChat(text),
   emote: (e) => multi.emote(e),
+  report: (id) => multi.report(id),
   walkTo: (x, z, floor) => {
     const y = mall.meta.floors[floor]?.y ?? 0;
     if (!walkTo.walkToPoint({ x, y, z }, player)) toast(t('toast.cantWalk'));
