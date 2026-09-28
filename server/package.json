@@ -3,14 +3,17 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
+    "dev": "node --watch src/main.ts",
+    "start": "node src/main.ts",
     "typecheck": "tsc -p ."
   },
   "dependencies": {
-    "@plaza/shared": "workspace:*"
+    "@plaza/shared": "workspace:*",
+    "ws": "^8.22.0",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
-    "tsx": "^4.23.15"
+    "@types/ws": "^8.18.1"
   }
 }
