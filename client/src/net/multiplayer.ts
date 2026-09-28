@@ -1,8 +1,8 @@
 // Multiplayer wiring: the server connection, everyone else's avatars, sending your movement,
 // and the room state the UI shows. Without a server this all quietly does nothing.
 
-import { ANIM, FLAG_GROUNDED, packAnim } from '@plaza/shared/protocol';
 import { effect } from '@preact/signals';
+import { ANIM, FLAG_GROUNDED, packAnim } from '@shopping-mall/shared/protocol';
 import type { Camera, Scene } from 'three';
 import { Vector3 } from 'three';
 import { t } from '../i18n';

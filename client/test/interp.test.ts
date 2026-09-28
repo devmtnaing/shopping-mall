@@ -1,4 +1,4 @@
-import type { Pose } from '@plaza/shared/protocol';
+import type { Pose } from '@shopping-mall/shared/protocol';
 import { describe, expect, it } from 'vitest';
 import { INTERP_DELAY, PoseBuffer, ServerClock } from '../src/net/interp';
 

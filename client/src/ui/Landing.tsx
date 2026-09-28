@@ -1,5 +1,5 @@
 // Welcome screen, shown over a slowly orbiting view of the mall while the world loads behind it.
-import config from 'virtual:plaza-config';
+import config from 'virtual:mall-config';
 import { useSignal } from '@preact/signals';
 import { useEffect, useRef } from 'preact/hooks';
 import { t } from '../i18n';

@@ -1,4 +1,4 @@
-declare module 'virtual:plaza-config' {
-  const config: import('@plaza/shared/config').PlazaConfig;
+declare module 'virtual:mall-config' {
+  const config: import('@shopping-mall/shared/config').MallConfig;
   export default config;
 }

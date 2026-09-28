@@ -1,5 +1,5 @@
 // "Lumen Coffee · Visit [E]" pill that appears when you walk up to a shop.
-import config from 'virtual:plaza-config';
+import config from 'virtual:mall-config';
 import { t } from '../i18n';
 import { nearbyShop, openShop } from '../state';
 

@@ -1,6 +1,6 @@
 // Loads the mall: visual model, collision mesh and gameplay meta (slots, seats, zones, escalators).
-import type { MallMeta } from '@plaza/shared/meta';
-import { decodeNavGrid, type NavGrid } from '@plaza/shared/navgrid';
+import type { MallMeta } from '@shopping-mall/shared/meta';
+import { decodeNavGrid, type NavGrid } from '@shopping-mall/shared/navgrid';
 import type { Group, Mesh } from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshBVH } from 'three-mesh-bvh';

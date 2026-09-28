@@ -9,7 +9,7 @@ A browser tab that feels like walking into a nice mall with friends. It opens in
 | Who | Wants |
 |---|---|
 | **Visitor** | To look around, find a shop, see products, hang out with friends. No install and no account |
-| **Mall owner** (the person deploying Plaza) | To add shops and products by editing config. To see what visitors do. To host events |
+| **Mall owner** (the person deploying Shopping Mall) | To add shops and products by editing config. To see what visitors do. To host events |
 | **Shop owner / tenant** | A good-looking storefront, products that stay in sync, clicks through to their store |
 | **Contributor** | A codebase they can understand in an afternoon |
 
@@ -67,7 +67,7 @@ Priority: **P0** = MVP, **P1** = v1.0, **P2** = later.
 - **P1** Volume sliders (ambience, SFX). Ambient music loads lazily.
 
 ### Operator features
-- **P0** `plaza.config.ts`: mall name, brand, shops, layout slots, outfits, languages, adapters.
+- **P0** `mall.config.ts`: mall name, brand, shops, layout slots, outfits, languages, adapters.
 - **P1** Anonymous analytics events (see [architecture § Analytics](architecture.md#analytics)) posted to a pluggable sink.
 - **P2** Scheduled events: a banner, a countdown and a special spawn point.
 

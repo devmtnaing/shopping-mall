@@ -1,4 +1,4 @@
-import { encodeInput, type Pose } from '@plaza/shared/protocol';
+import { encodeInput, type Pose } from '@shopping-mall/shared/protocol';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { RateLimit } from '../src/limits';
 import { cleanChat, cleanName } from '../src/names';

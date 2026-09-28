@@ -1,7 +1,7 @@
 // Tiny i18n: string tables per locale, a `locale` signal, and t(). Components that call t()
 // re-render when the locale changes, so switching language needs no reload.
 
-import config from 'virtual:plaza-config';
+import config from 'virtual:mall-config';
 import { computed, signal } from '@preact/signals';
 import { loadFontsFor } from '../fonts';
 import { load, save } from '../storage';

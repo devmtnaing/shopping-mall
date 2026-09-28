@@ -14,7 +14,7 @@ importers:
       '@gltf-transform/core':
         specifier: ^4.5.0
         version: 4.5.0
-      '@plaza/shared':
+      '@shopping-mall/shared':
         specifier: workspace:*
         version: link:shared
       '@types/node':
@@ -41,12 +41,12 @@ importers:
 
   client:
     dependencies:
-      '@plaza/shared':
-        specifier: workspace:*
-        version: link:../shared
       '@preact/signals':
         specifier: ^2.11.2
         version: 2.11.2(preact@10.29.8)
+      '@shopping-mall/shared':
+        specifier: workspace:*
+        version: link:../shared
       preact:
         specifier: ^10.29.8
         version: 10.29.8
@@ -69,7 +69,7 @@ importers:
 
   server:
     dependencies:
-      '@plaza/shared':
+      '@shopping-mall/shared':
         specifier: workspace:*
         version: link:../shared
       ws:

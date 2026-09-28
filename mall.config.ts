@@ -1,13 +1,13 @@
-// ─── Plaza configuration ─────────────────────────────────────────────────────
+// ─── Shopping Mall configuration ─────────────────────────────────────────────────────
 // Edit this file to change the mall's name, shops, products and outfits.
 // Slots (where each shop sits) come from the mall layout: w0–w5 are on the left
 // as you walk in, e0–e5 on the right, "u-" prefixed slots are upstairs, and
 // "flagship" is the big store at the far end. See docs/greybox.md for the map.
-import { defineConfig } from '@plaza/shared';
+import { defineConfig } from '@shopping-mall/shared';
 
 export default defineConfig({
   mall: {
-    name: 'Plaza',
+    name: 'Shopping Mall',
     tagline: 'Walk the mall together.',
     currency: 'USD',
     // UI languages offered (first is the default). Strings live in client/src/i18n.

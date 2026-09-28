@@ -2,9 +2,9 @@
 // mall) is up. Click a shop to travel there, or open floor to walk there. The directory is the
 // accessible way to do the same, so the map itself is hidden from screen readers.
 
-import config from 'virtual:plaza-config';
-import type { MallMeta, Slot } from '@plaza/shared/meta';
+import config from 'virtual:mall-config';
 import { useSignal } from '@preact/signals';
+import type { MallMeta, Slot } from '@shopping-mall/shared/meta';
 import { commands } from '../commands';
 import { t } from '../i18n';
 import { others, pose } from '../state';

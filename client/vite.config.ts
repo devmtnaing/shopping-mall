@@ -1,22 +1,22 @@
 import { resolve } from 'node:path';
-import { parseConfig } from '@plaza/shared/config';
 import preact from '@preact/preset-vite';
+import { parseConfig } from '@shopping-mall/shared/config';
 import { defineConfig, type Plugin } from 'vite';
-import rawConfig from '../plaza.config';
+import rawConfig from '../mall.config';
 import { renderDirectory } from './plugins/directory';
 
-const CONFIG_FILE = resolve(__dirname, '../plaza.config.ts');
-const VIRTUAL_ID = 'virtual:plaza-config';
+const CONFIG_FILE = resolve(__dirname, '../mall.config.ts');
+const VIRTUAL_ID = 'virtual:mall-config';
 
 /**
- * Validates plaza.config.ts once (build fails with a readable error) and serves the parsed,
- * defaults-filled result as `virtual:plaza-config`. zod stays out of the client bundle.
+ * Validates mall.config.ts once (build fails with a readable error) and serves the parsed,
+ * defaults-filled result as `virtual:mall-config`. zod stays out of the client bundle.
  */
-function plazaConfig(): Plugin {
+function mallConfig(): Plugin {
   const config = parseConfig(rawConfig);
   const json = JSON.stringify(config);
   return {
-    name: 'plaza-config',
+    name: 'mall-config',
     resolveId: (id) => (id === VIRTUAL_ID ? `\0${VIRTUAL_ID}` : undefined),
     load: (id) => (id === `\0${VIRTUAL_ID}` ? `export default ${json};` : undefined),
     // plain-HTML shop directory at /directory/ (no JS: for crawlers, screen readers, no-WebGL devices)
@@ -38,7 +38,7 @@ function plazaConfig(): Plugin {
 }
 
 export default defineConfig({
-  plugins: [preact(), plazaConfig()],
+  plugins: [preact(), mallConfig()],
   build: {
     target: 'es2022',
     manifest: true,

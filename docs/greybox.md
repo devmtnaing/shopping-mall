@@ -54,7 +54,7 @@ The Blender mall (Phase 2) replaces these files with the same names and formats.
 ## Zones
 
 `Entrance`, `Main hall`, `Fountain court`, `Upper gallery`, `Sky court`, `Sky bridge`, and one per shop unit (priority 10).
-The client shows the name of the highest-priority zone containing the player. Shop zones take their name from `plaza.config.ts`.
+The client shows the name of the highest-priority zone containing the player. Shop zones take their name from `mall.config.ts`.
 
 ## Movement tests built into the layout
 

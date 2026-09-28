@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { STEP } from '@plaza/shared/constants';
-import { decodeNavGrid } from '@plaza/shared/navgrid';
+import { STEP } from '@shopping-mall/shared/constants';
+import { decodeNavGrid } from '@shopping-mall/shared/navgrid';
 import { describe, expect, it } from 'vitest';
 import { PlayerController } from '../src/player/controller';
 import { PathFollower } from '../src/player/follow';

@@ -1,6 +1,6 @@
-import config from 'virtual:plaza-config';
-import { EMOTES } from '@plaza/shared/protocol';
+import config from 'virtual:mall-config';
 import { effect } from '@preact/signals';
+import { EMOTES } from '@shopping-mall/shared/protocol';
 import { Color, DirectionalLight, Fog, HemisphereLight, Scene } from 'three';
 import { installCommands } from './commands';
 import { locale, t } from './i18n';
@@ -132,7 +132,7 @@ if (link?.kind === 'at') {
 }
 const still = { x: 0, y: 0 };
 
-// "You are in …": shop zones show the name of the shop assigned to that slot in plaza.config.ts
+// "You are in …": shop zones show the name of the shop assigned to that slot in mall.config.ts
 const shopBySlot = new Map(config.shops.map((s) => [s.slot, s.name]));
 const zones = new ZoneTracker(mall.meta.zones);
 
@@ -154,7 +154,7 @@ if (debugMode) {
   debug = createDebugOverlay(renderer);
   scene.add(createGizmos(mall.meta, mall.nav));
   // handle for Playwright tests and console poking; never present without ?debug
-  Object.assign(window, { plaza: { scene, camera, renderer, mall, player, input, follower } });
+  Object.assign(window, { mallDebug: { scene, camera, renderer, mall, player, input, follower } });
 }
 
 startLoop({

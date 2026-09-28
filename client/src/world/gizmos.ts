@@ -1,6 +1,6 @@
 // ?debug gizmos for mall meta: spawns, doors, signs, seats, zones and escalator paths.
-import type { MallMeta, Vec3 } from '@plaza/shared/meta';
-import type { NavGrid } from '@plaza/shared/navgrid';
+import type { MallMeta, Vec3 } from '@shopping-mall/shared/meta';
+import type { NavGrid } from '@shopping-mall/shared/navgrid';
 import {
   ArrowHelper,
   Box3,

@@ -1,4 +1,4 @@
-import type { Shop } from '@plaza/shared/config';
+import type { Shop } from '@shopping-mall/shared/config';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { clearProductCache, formatPrice, loadProducts, normalize } from '../src/shops/products';
 

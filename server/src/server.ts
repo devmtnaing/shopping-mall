@@ -1,9 +1,14 @@
 // HTTP (health) + WebSocket server. One process, rooms in memory (docs/adr/0003).
 import { randomBytes } from 'node:crypto';
 import { createServer } from 'node:http';
-import { NET_HZ } from '@plaza/shared/constants';
-import { parseClientMessage } from '@plaza/shared/messages';
-import { type ClientMessage, decodeInput, type Pose, type ServerMessage } from '@plaza/shared/protocol';
+import { NET_HZ } from '@shopping-mall/shared/constants';
+import { parseClientMessage } from '@shopping-mall/shared/messages';
+import {
+  type ClientMessage,
+  decodeInput,
+  type Pose,
+  type ServerMessage,
+} from '@shopping-mall/shared/protocol';
 import { type RawData, type WebSocket, WebSocketServer } from 'ws';
 import { issueHostToken, secretMatches, verifyHostToken } from './host.ts';
 import { RateLimit } from './limits.ts';

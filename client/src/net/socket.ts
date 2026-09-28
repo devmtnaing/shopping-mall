@@ -7,7 +7,7 @@ import {
   type Look,
   type Pose,
   type ServerMessage,
-} from '@plaza/shared/protocol';
+} from '@shopping-mall/shared/protocol';
 
 export type NetStatus = 'off' | 'connecting' | 'online' | 'reconnecting' | 'offline';
 
@@ -132,11 +132,11 @@ export class NetClient {
 }
 
 /**
- * Where the server lives: VITE_PLAZA_WS at build time (an absolute wss:// URL, or a path like
+ * Where the server lives: VITE_MALL_WS at build time (an absolute wss:// URL, or a path like
  * "/ws" when the server sits behind the same host), or port 8787 on this host in development.
  */
 export function serverUrl(room: string): string | null {
-  const env = import.meta.env.VITE_PLAZA_WS as string | undefined;
+  const env = import.meta.env.VITE_MALL_WS as string | undefined;
   const base = env || (import.meta.env.DEV ? `ws://${location.hostname}:8787/ws` : null);
   if (!base) return null;
   const sameHost = `${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${location.host}`;

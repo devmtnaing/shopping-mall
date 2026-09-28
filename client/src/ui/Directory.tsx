@@ -1,7 +1,7 @@
 // "Where do you want to go?": searchable list of shops. Picking one travels there.
 
-import config from 'virtual:plaza-config';
-import type { Shop } from '@plaza/shared/config';
+import config from 'virtual:mall-config';
+import type { Shop } from '@shopping-mall/shared/config';
 import { useMemo, useRef, useState } from 'preact/hooks';
 import { commands } from '../commands';
 import { t } from '../i18n';

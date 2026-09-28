@@ -21,7 +21,7 @@ T-104 uses a "floating capsule" (body capsule from step height up, with ground r
 | T-001 | pnpm workspace (`client`, `server`, `shared`), TS strict, Biome, path aliases | S | tooling | `pnpm i && pnpm -r typecheck` passes. `shared` is importable from both client and server |
 | T-002 | Vite client boots Three.js: renderer, resize, one rAF loop, spinning cube | S | client | Canvas fills the viewport. DPR is capped. No console errors |
 | T-003 | `?debug` overlay: fps, frame-time graph, `renderer.info`, heap | S | client perf `good first issue` | Overlay toggles with the query param. Costs < 0.2 ms/frame |
-| T-004 | `shared/config.ts` zod schema + example `plaza.config.ts` with 6 shops | M | shared | An invalid config fails at build time with a readable error path |
+| T-004 | `shared/config.ts` zod schema + example `mall.config.ts` with 6 shops | M | shared | An invalid config fails at build time with a readable error path |
 | T-005 | GitHub Actions: typecheck, lint, vitest, build | S | tooling | Runs on PRs in < 3 min with a pnpm cache |
 | T-006 | `pnpm size` against `budgets.json` | S | tooling perf | Fails when the initial JS is over 220 KB gz. Prints a table |
 | T-007 | Community files: CONTRIBUTING, CoC, issue/PR templates, LICENSE | S | tooling `good first issue` | GitHub's community profile shows 100 % |
@@ -97,8 +97,8 @@ T-104 uses a "floating capsule" (body capsule from step height up, with ground r
 
 | ID | Task | Size | Labels | Acceptance criteria |
 |---|---|---|---|---|
-| T-700 | Rename Plaza → Shopping Mall: packages, Docker images, docs, demo mall name | S | tooling | No "Plaza" left except history. CI green |
-| T-701 | Postgres schema + migrations (mall, shops, products, assets); seed from `plaza.config.ts` on an empty database | M | server shared | `pnpm db:migrate` is idempotent. Seeding twice creates nothing new. Tests run against a real Postgres (CI service) |
+| T-700 | Rename Shopping Mall → Shopping Mall: packages, Docker images, docs, demo mall name | S | tooling | No "Shopping Mall" left except history. CI green |
+| T-701 | Postgres schema + migrations (mall, shops, products, assets); seed from `mall.config.ts` on an empty database | M | server shared | `pnpm db:migrate` is idempotent. Seeding twice creates nothing new. Tests run against a real Postgres (CI service) |
 | T-702 | Content API: `GET /api/content` (public, cached by version), host-only writes for mall, shops and products, with shared zod validation | M | server shared | Writes without a host token get 401. Invalid data gets 400 with field paths. Content version bumps on every write |
 | T-703 | Uploads: presigned PUT to S3-compatible storage, asset records keyed by content hash, size and type limits | M | server | A 5 MB PNG uploads directly to the bucket. Duplicates dedupe by hash. Works with MinIO locally and Railway buckets |
 | T-704 | `/admin` page (host only): list, add, edit, delete and reorder shops, products, slot assignment, and the asset library | L | ui | A new shop with a logo and 3 products takes under 2 minutes. Keyboard accessible. Confirms before deleting |

@@ -1,5 +1,5 @@
-import { STEP } from '@plaza/shared/constants';
-import type { Escalator } from '@plaza/shared/meta';
+import { STEP } from '@shopping-mall/shared/constants';
+import type { Escalator } from '@shopping-mall/shared/meta';
 import { Vector3 } from 'three';
 import { describe, expect, it } from 'vitest';
 import { PlayerController } from '../src/player/controller';

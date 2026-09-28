@@ -5,9 +5,9 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { NodeIO } from '@gltf-transform/core';
-import { PLAYER } from '@plaza/shared/constants';
-import type { MallMeta } from '@plaza/shared/meta';
-import { encodeNavGrid, NavGrid, type NavLink } from '@plaza/shared/navgrid';
+import { PLAYER } from '@shopping-mall/shared/constants';
+import type { MallMeta } from '@shopping-mall/shared/meta';
+import { encodeNavGrid, NavGrid, type NavLink } from '@shopping-mall/shared/navgrid';
 import { Box3, BufferAttribute, BufferGeometry, DoubleSide, Line3, Ray, Vector3 } from 'three';
 import { MeshBVH } from 'three-mesh-bvh';
 

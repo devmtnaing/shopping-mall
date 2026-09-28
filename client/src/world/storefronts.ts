@@ -1,7 +1,7 @@
-// Dresses each shop slot from plaza.config.ts: a painted sign and an accent light strip over the door.
+// Dresses each shop slot from mall.config.ts: a painted sign and an accent light strip over the door.
 // Moving a shop to another slot in the config moves it here; the mall model never changes.
-import type { Shop } from '@plaza/shared/config';
-import type { MallMeta, Slot } from '@plaza/shared/meta';
+import type { Shop } from '@shopping-mall/shared/config';
+import type { MallMeta, Slot } from '@shopping-mall/shared/meta';
 import {
   BoxGeometry,
   CanvasTexture,

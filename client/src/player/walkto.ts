@@ -1,5 +1,5 @@
 // Tap / click to walk: turn a screen point into a destination, find a path, show a marker.
-import type { MallMeta } from '@plaza/shared/meta';
+import type { MallMeta } from '@shopping-mall/shared/meta';
 import {
   Box3,
   DoubleSide,

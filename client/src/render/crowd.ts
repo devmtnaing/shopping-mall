@@ -1,7 +1,7 @@
 // Draws remote players cheaply: all bodies in one instanced mesh (per-player colour), and all name
 // tags as instanced billboards sampling one name atlas. 40 people ≈ 3 draw calls.
-import { PLAYER } from '@plaza/shared/constants';
-import { unpackAnim } from '@plaza/shared/protocol';
+import { PLAYER } from '@shopping-mall/shared/constants';
+import { unpackAnim } from '@shopping-mall/shared/protocol';
 import {
   BoxGeometry,
   type Camera,

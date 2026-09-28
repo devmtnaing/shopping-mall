@@ -1,5 +1,5 @@
 // Moderation hooks: an optional word blocklist, and reports sent to the log and an optional webhook.
-// No word list ships with Plaza; operators provide their own (see server/blocklist.example.txt).
+// No word list ships with Shopping Mall; operators provide their own (see server/blocklist.example.txt).
 import { readFileSync } from 'node:fs';
 
 export type Blocklist = { words: string[] };

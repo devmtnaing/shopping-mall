@@ -3,7 +3,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { Document, NodeIO } from '@gltf-transform/core';
-import { metaSchema } from '@plaza/shared/meta';
+import { metaSchema } from '@shopping-mall/shared/meta';
 import { buildGreybox } from './layout.ts';
 
 const OUT = resolve(import.meta.dirname, '../../client/public/assets/mall');

@@ -1,5 +1,5 @@
 // Escalators as moving surfaces: while you stand on one, it carries you from its bottom to its top.
-import type { Escalator } from '@plaza/shared/meta';
+import type { Escalator } from '@shopping-mall/shared/meta';
 import type { Vector3 } from 'three';
 
 /** How close (vertically) your feet must be to the moving surface to ride it. */

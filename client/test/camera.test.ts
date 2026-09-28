@@ -1,4 +1,4 @@
-import { CAMERA } from '@plaza/shared/constants';
+import { CAMERA } from '@shopping-mall/shared/constants';
 import { DoubleSide, Ray, Vector3 } from 'three';
 import { describe, expect, it } from 'vitest';
 import { OrbitCamera } from '../src/player/camera';

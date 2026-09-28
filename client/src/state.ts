@@ -1,7 +1,8 @@
 // Shared state between the game and the UI. The game writes these only when a value changes;
 // the UI reads them. UI code never imports three.js, game code never touches the DOM (except the canvas).
-import type { MallMeta } from '@plaza/shared/meta';
+
 import { computed, signal } from '@preact/signals';
+import type { MallMeta } from '@shopping-mall/shared/meta';
 import { load, save } from './storage';
 
 /** 'landing' shows the welcome screen over an orbiting view; 'playing' hands over control. */

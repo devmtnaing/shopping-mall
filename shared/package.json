@@ -1,5 +1,5 @@
 {
-  "name": "@plaza/shared",
+  "name": "@shopping-mall/shared",
   "private": true,
   "type": "module",
   "exports": {

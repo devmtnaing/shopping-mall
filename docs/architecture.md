@@ -19,8 +19,8 @@
 ## Repo layout
 
 ```
-plaza/
-├─ plaza.config.ts          # ← the file operators edit
+shopping-mall/
+├─ mall.config.ts          # ← the file operators edit
 ├─ content/                 # shop logos, product JSON, i18n strings
 ├─ assets-src/              # .blend files and raw Higgsfield exports (Git LFS)
 ├─ client/
@@ -104,7 +104,7 @@ The game writes a handful of signals (`zone`, `nearbyShop`, `online`, `chat`, `p
   - `mall.collision.glb`: low-poly collision mesh (≤ 5k tris).
   - `mall.meta.json`: zones (AABBs + names), shop slots (door pose, sign rectangle, window rectangle), seats, spawn points and escalator paths. It's baked from Blender empties.
 - **Streaming:** the atrium + concourse chunk loads first (it's the first playable frame). Shop interiors load when the player comes within 25 m, or when their panel opens. They unload when more than 60 m away and older than LRU size 6.
-- **Shop slots:** `plaza.config.ts` maps `shopId → slotId`. Each slot defines where the sign, window and door go, so shops move around without touching Blender.
+- **Shop slots:** `mall.config.ts` maps `shopId → slotId`. Each slot defines where the sign, window and door go, so shops move around without touching Blender.
 - **Signage:** painted on a canvas from config (text, colours, logo) while the world loads, about 3 ms per sign, then uploaded as a texture. Script fonts (e.g. Burmese) load only when a sign needs them.
 
 ## Avatars
@@ -206,5 +206,5 @@ An adapter is a single function, `(options, locale) => Promise<Product[]>`. Resu
 ## Deployment
 
 - **Static-only:** `pnpm build` produces `dist/`, which can be hosted on any CDN (GitHub Pages, Netlify, Vercel, Cloudflare Pages). Single-player only.
-- **Multiplayer:** the same `dist/` plus `docker run plaza-server` (or `bun server/src/index.ts`). Set `VITE_PLAZA_WS=wss://…` at build time.
+- **Multiplayer:** the same `dist/` plus `docker run shopping-mall-server` (or `bun server/src/index.ts`). Set `VITE_MALL_WS=wss://…` at build time.
 - Asset caching: hashed files get `Cache-Control: public, max-age=31536000, immutable`. `index.html` gets `no-cache`.

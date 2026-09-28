@@ -1,4 +1,4 @@
-import { STEP } from '@plaza/shared/constants';
+import { STEP } from '@shopping-mall/shared/constants';
 import { describe, expect, it } from 'vitest';
 import { FixedStep } from '../src/loop';
 

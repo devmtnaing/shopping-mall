@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import config from '../../plaza.config';
+import config from '../../mall.config';
 import { parseConfig } from '../src/config';
 
 const shop = { id: 'a', slot: 'w0', name: 'A', colors: { bg: '#000000', accent: '#ffffff' } };
 
 describe('parseConfig', () => {
-  it('accepts the example plaza.config.ts', () => {
+  it('accepts the example mall.config.ts', () => {
     expect(parseConfig(config).shops.length).toBeGreaterThan(0);
   });
 

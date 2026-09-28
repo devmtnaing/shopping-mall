@@ -1,4 +1,4 @@
-import { CHAT_MAX, NAME_MAX, NAME_MIN } from '@plaza/shared/protocol';
+import { CHAT_MAX, NAME_MAX, NAME_MIN } from '@shopping-mall/shared/protocol';
 
 /** Clean up a display name: NFC, no control or zero-width characters, single spaces. Null if unusable. */
 export function cleanName(raw: string): string | null {

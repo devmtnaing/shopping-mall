@@ -1,4 +1,4 @@
-import type { Look, PlayerInfo, Pose } from '@plaza/shared/protocol';
+import type { Look, PlayerInfo, Pose } from '@shopping-mall/shared/protocol';
 import type { WebSocket } from 'ws';
 import { RateLimit } from './limits.ts';
 

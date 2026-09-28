@@ -1,4 +1,4 @@
-# Example blocklist for Plaza. Copy it, add the words your community needs, and start the server
+# Example blocklist for Shopping Mall. Copy it, add the words your community needs, and start the server
 # with BLOCKLIST_FILE=/path/to/blocklist.txt. One word per line, matched as a whole word,
 # ignoring case, accents and look-alike digits (so "sp4m" matches "spam").
 #

@@ -1,6 +1,6 @@
 // Speech bubbles and emotes above heads. A small DOM overlay (there are only ever a few, briefly),
 // positioned each frame by projecting the head into screen space. Text is set with textContent.
-import { PLAYER } from '@plaza/shared/constants';
+import { PLAYER } from '@shopping-mall/shared/constants';
 import { type Camera, Vector3 } from 'three';
 
 const SAY_MS = 5000;

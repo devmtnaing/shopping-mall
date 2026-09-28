@@ -1,6 +1,6 @@
-import { parseConfig } from '@plaza/shared/config';
+import { parseConfig } from '@shopping-mall/shared/config';
 import { describe, expect, it } from 'vitest';
-import config from '../../plaza.config';
+import config from '../../mall.config';
 import { renderDirectory } from '../plugins/directory';
 
 const cfg = parseConfig(config);

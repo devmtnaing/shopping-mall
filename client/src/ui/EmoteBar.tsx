@@ -1,5 +1,5 @@
 // Emoji reactions. Desktop: keys 1–6 (shown on the buttons). Phones: opened from the dock.
-import { EMOTES } from '@plaza/shared/protocol';
+import { EMOTES } from '@shopping-mall/shared/protocol';
 import { commands } from '../commands';
 import { t } from '../i18n';
 import { emoteBar } from '../state';

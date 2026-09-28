@@ -1,6 +1,6 @@
 // Everyone else in the room: who they are (welcome / presence) and where they are (snapshots),
 // sampled 100 ms in the past for smooth motion. Pure data; render/crowd.ts draws it.
-import type { PlayerInfo, Pose } from '@plaza/shared/protocol';
+import type { PlayerInfo, Pose } from '@shopping-mall/shared/protocol';
 import { PoseBuffer, ServerClock } from './interp';
 
 /** Hide someone we haven't had a snapshot for in this long (they left our nearest-40). */

@@ -1,5 +1,10 @@
 // One shared space: its players, the snapshot broadcast (nearest players only), and batched presence.
-import { encodeSnapshot, type PlayerInfo, type ServerMessage, snapshotBytes } from '@plaza/shared/protocol';
+import {
+  encodeSnapshot,
+  type PlayerInfo,
+  type ServerMessage,
+  snapshotBytes,
+} from '@shopping-mall/shared/protocol';
 import { stats } from './metrics.ts';
 import type { Player } from './player.ts';
 

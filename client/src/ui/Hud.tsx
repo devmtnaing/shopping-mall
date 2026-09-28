@@ -1,5 +1,5 @@
 // Always-on overlay: brand pill (top left), zone label (top centre), share / language / fullscreen (top right).
-import config from 'virtual:plaza-config';
+import config from 'virtual:mall-config';
 import { locales, nextLocale, setLocale, t, zoneName } from '../i18n';
 import { linkUrl } from '../links';
 import { netStatus, pose, roomCount, zone } from '../state';

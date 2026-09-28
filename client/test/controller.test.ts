@@ -1,4 +1,4 @@
-import { PLAYER, STEP } from '@plaza/shared/constants';
+import { PLAYER, STEP } from '@shopping-mall/shared/constants';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { type Intent, PlayerController } from '../src/player/controller';
 import { collider } from './greybox';

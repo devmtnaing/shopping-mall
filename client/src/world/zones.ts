@@ -1,6 +1,6 @@
 // Which named area is the player in? Highest-priority zone containing them, with hysteresis so the
 // label doesn't flicker when standing on a boundary.
-import type { Zone } from '@plaza/shared/meta';
+import type { Zone } from '@shopping-mall/shared/meta';
 import type { Vector3 } from 'three';
 
 /** Stay in the current zone until you're this far outside it (metres)... */

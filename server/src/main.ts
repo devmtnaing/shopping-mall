@@ -11,7 +11,7 @@ const server = await startServer({
   reportWebhook: process.env.REPORT_WEBHOOK,
   hostSecret: process.env.HOST_SECRET || undefined,
 });
-console.log(`plaza server listening on :${server.port} (ws path /ws, health /health)`);
+console.log(`shopping-mall server listening on :${server.port} (ws path /ws, health /health)`);
 if (process.env.METRICS) {
   startMetrics(5000, () => ({
     rooms: server.rooms.size,

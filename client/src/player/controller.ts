@@ -5,7 +5,7 @@
 // and set the feet height directly. Steps and slopes need no special cases, and nothing slides.
 //
 // Pure simulation (no DOM, no rendering), so it runs in unit tests exactly as in the browser.
-import { PLAYER } from '@plaza/shared/constants';
+import { PLAYER } from '@shopping-mall/shared/constants';
 import { Box3, FrontSide, Line3, Ray, Vector3 } from 'three';
 import type { MeshBVH } from 'three-mesh-bvh';
 

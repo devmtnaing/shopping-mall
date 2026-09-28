@@ -1,7 +1,7 @@
-// Renders /directory/index.html at build time from plaza.config.ts: every shop, its links and
+// Renders /directory/index.html at build time from mall.config.ts: every shop, its links and
 // products, as plain HTML. No JavaScript, so it works for crawlers, screen readers and devices
 // that can't run WebGL. Each shop links back into the 3D mall (?s=<id>).
-import type { PlazaConfig, Shop } from '@plaza/shared/config';
+import type { MallConfig, Shop } from '@shopping-mall/shared/config';
 
 const esc = (s: string) =>
   s.replace(
@@ -47,7 +47,7 @@ function shopSection(shop: Shop, currency: string) {
 </section>`;
 }
 
-export function renderDirectory(config: PlazaConfig): string {
+export function renderDirectory(config: MallConfig): string {
   const { mall, shops } = config;
   const title = `${mall.name}: shop directory`;
   const description = `${shops.length} shops at ${mall.name}. ${mall.tagline}`.trim();

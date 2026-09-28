@@ -1,6 +1,6 @@
 // Third-person orbit camera: follows the player, never goes through walls, drifts back behind
 // you while you walk. Pure maths on vectors (no THREE.Camera), so tests can sweep it around the mall.
-import { CAMERA } from '@plaza/shared/constants';
+import { CAMERA } from '@shopping-mall/shared/constants';
 import { DoubleSide, Ray, Vector3 } from 'three';
 import type { HitPointInfo, MeshBVH } from 'three-mesh-bvh';
 

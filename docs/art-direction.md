@@ -49,10 +49,10 @@ v1 uses **free CC0 kits** (Kenney, Quaternius, Poly Pizza), recorded per asset i
 
 1. Generate the character in Higgsfield (front-facing T-pose, neutral lighting). Keep the prompt in `assets-src/characters/<id>/prompt.md` so anyone can reproduce it.
 2. Import into Blender. Decimate to **≤ 15k tris** (LOD0), **3k** (LOD1) and **600** (LOD2).
-3. Skin to `assets-src/rig/plaza-skeleton.blend` (Mixamo bone names). **Never export animation with the outfit.** All animations live in `anims.glb`.
+3. Skin to `assets-src/rig/mall-skeleton.blend` (Mixamo bone names). **Never export animation with the outfit.** All animations live in `anims.glb`.
 4. Bake all materials into a single **1024² atlas**: base colour plus a packed ORM texture.
 5. Export glTF (no animations, Y-up, +Z forward). Run `pnpm assets`.
-6. Add an entry in `plaza.config.ts → outfits`.
+6. Add an entry in `mall.config.ts → outfits`.
 
 Check the Higgsfield terms of service before committing generated assets to a public repo. Record the license in `assets-src/characters/<id>/LICENSE`.
 

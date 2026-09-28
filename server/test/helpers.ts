@@ -1,5 +1,5 @@
-import type { Pose, ServerMessage } from '@plaza/shared/protocol';
-import { decodeSnapshot } from '@plaza/shared/protocol';
+import type { Pose, ServerMessage } from '@shopping-mall/shared/protocol';
+import { decodeSnapshot } from '@shopping-mall/shared/protocol';
 import WebSocket from 'ws';
 
 /** A scripted test client that records everything it receives. */

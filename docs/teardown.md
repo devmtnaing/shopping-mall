@@ -88,7 +88,7 @@ I didn't test on a real phone. The 390 px viewport check showed the emoji rail c
 - A dark UI with gold accents and pill-shaped buttons. It reads well over a busy 3D scene.
 
 ### Fix
-| Problem | Plaza's answer |
+| Problem | Shopping Mall's answer |
 |---|---|
 | ~1.25 Hz HTTP polling, aborts, 410 → silent re-join, chat spam | WebSocket, 15 Hz binary snapshots, 100 ms interpolation buffer, resume tokens, collapsed join/leave notices |
 | 5 MB of uncompressed GLB fetched on the landing page | Meshopt + KTX2, shared skeleton/animations, load the host model only when the host is online, stream the world by zone |

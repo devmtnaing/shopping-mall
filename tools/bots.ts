@@ -4,9 +4,9 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { parseArgs } from 'node:util';
-import { NET_HZ, PLAYER } from '@plaza/shared/constants';
-import { decodeNavGrid, type NavGrid } from '@plaza/shared/navgrid';
-import { EMOTES, encodeInput, packAnim } from '@plaza/shared/protocol';
+import { NET_HZ, PLAYER } from '@shopping-mall/shared/constants';
+import { decodeNavGrid, type NavGrid } from '@shopping-mall/shared/navgrid';
+import { EMOTES, encodeInput, packAnim } from '@shopping-mall/shared/protocol';
 
 const { values } = parseArgs({
   options: {

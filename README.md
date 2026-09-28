@@ -1,25 +1,24 @@
-# Plaza
+# Shopping Mall
 
 **An open-source, multiplayer 3D shopping mall that runs in the browser.**
-Walk around with friends, visit shops, browse real products, and chat. It loads fast, stays at 60 fps on a mid-range phone, and you set it up by editing one config file.
+Walk around with friends, visit shops, browse real products, and chat. It loads fast, stays at 60 fps on a mid-range phone, and you run it with an admin page for shops and products (or one config file for a static build).
 
 > Status: **Phases 0, 1, 3 and 4 done.** A greybox mall with working shops, directory, minimap, overview, deep links, English and Burmese, and multiplayer: see others move, chat, emote, host announcements. Self-host with `docker compose up`.
-> Next up: real art and avatars (Phase 2, waiting on [#1](https://github.com/devmtnaing/shopping-mall/issues/1)) and performance, accessibility and phone polish (Phase 5), following the [roadmap](docs/roadmap.md).
-> "Plaza" is a working name.
+> Next up: **live content** (shops, products and art editable from an admin page, stored in Postgres and S3-compatible storage, hosted on Railway), then real CC0 art and avatars, then performance and phone polish. See the [roadmap](docs/roadmap.md).
 
 ---
 
 ## Why this exists
 
-[NC Mall](https://punchkonay.tech/mall/) showed that a walkable, social 3D mall in a browser tab is fun and useful. Plaza builds that idea as a reusable open-source project:
+[NC Mall](https://punchkonay.tech/mall/) showed that a walkable, social 3D mall in a browser tab is fun and useful. Shopping Mall builds that idea as a reusable open-source project:
 
-| | NC Mall (reference) | Plaza (target) |
+| | NC Mall (reference) | Shopping Mall (target) |
 |---|---|---|
 | Multiplayer | HTTP polling, ~1.25 updates/s | WebSocket, 15 Hz binary snapshots, interpolated |
 | First load | ~5 MB of uncompressed GLB before you enter | ≤ 2.5 MB to first playable frame (Meshopt + KTX2) |
 | Avatars | 1 GLB of ~2.4 MB per outfit | Shared skeleton + shared animation pack, ≤ 400 KB per outfit |
 | Lighting | Real-time, single light | Baked lightmaps, environment reflections, quality tiers |
-| Content | Edit JS source | `plaza.config.ts` plus a product adapter (JSON, Shopify, …) |
+| Content | Edit JS source | `mall.config.ts` plus a product adapter (JSON, Shopify, …) |
 | Links | One URL | Deep links to every shop (`?s=coffee`) and spot, plus an HTML directory that crawlers can read |
 | Mobile | Joystick | Joystick **and** tap-to-walk with pathfinding |
 | Self-hosting | PHP server | Static site + one small Node/Bun server (Docker), or static-only single-player |
@@ -70,4 +69,3 @@ That runs two containers: nginx serving the built site (and proxying `/ws` to th
 ## License
 
 MIT for code. Assets are CC BY 4.0 unless a file's `LICENSE` says otherwise.
-# shopping-mall

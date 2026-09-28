@@ -1,7 +1,7 @@
 // The greybox mall: geometry + gameplay meta from one description. Dimensions: docs/greybox.md.
 // Coordinates: metres, Y up, the mall runs along −Z from the entrance (z = 0).
 // Side s = −1 is west (left as you walk in), s = +1 is east.
-import type { MallMeta } from '@plaza/shared/meta';
+import type { MallMeta } from '@shopping-mall/shared/meta';
 import { Geo } from './geometry.ts';
 
 const PI = Math.PI;

@@ -1,7 +1,7 @@
 // Directory travel: go to a shop's door. Walk when the route is short, otherwise fade out, move,
 // fade in (instant with reduced motion). The shop's panel opens once you're there.
-import type { Shop } from '@plaza/shared/config';
-import type { MallMeta } from '@plaza/shared/meta';
+import type { Shop } from '@shopping-mall/shared/config';
+import type { MallMeta } from '@shopping-mall/shared/meta';
 import { faded } from '../state';
 import type { OrbitCamera } from './camera';
 import type { PlayerController } from './controller';

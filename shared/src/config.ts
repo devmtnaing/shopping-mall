@@ -1,4 +1,4 @@
-// The schema for plaza.config.ts — the one file operators edit.
+// The schema for mall.config.ts — the one file operators edit.
 // Validated at build time (client/vite.config.ts) so mistakes fail loudly with a readable path.
 import { z } from 'zod';
 
@@ -83,16 +83,16 @@ export const configSchema = z
     });
   });
 
-export type PlazaConfigInput = z.input<typeof configSchema>;
-export type PlazaConfig = z.output<typeof configSchema>;
-export type Shop = PlazaConfig['shops'][number];
+export type MallConfigInput = z.input<typeof configSchema>;
+export type MallConfig = z.output<typeof configSchema>;
+export type Shop = MallConfig['shops'][number];
 
-/** Identity helper that gives plaza.config.ts autocompletion. */
-export const defineConfig = (config: PlazaConfigInput) => config;
+/** Identity helper that gives mall.config.ts autocompletion. */
+export const defineConfig = (config: MallConfigInput) => config;
 
 /** Parse a config, throwing an Error whose message lists every problem with its path. */
-export function parseConfig(input: unknown): PlazaConfig {
+export function parseConfig(input: unknown): MallConfig {
   const result = configSchema.safeParse(input);
-  if (!result.success) throw new Error(`Invalid plaza.config.ts\n${z.prettifyError(result.error)}`);
+  if (!result.success) throw new Error(`Invalid mall.config.ts\n${z.prettifyError(result.error)}`);
   return result.data;
 }

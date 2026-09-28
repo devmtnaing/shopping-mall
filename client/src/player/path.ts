@@ -1,8 +1,8 @@
 // A* over the baked navgrid, then string-pulling so paths are a few straight legs, not a staircase.
 // Nodes are (floor, cell). Neighbours: 8-connected cells whose ground heights differ by at most
 // one step (so planter and bench tops aren't walked onto), plus escalator links between floors.
-import { PLAYER } from '@plaza/shared/constants';
-import type { NavGrid } from '@plaza/shared/navgrid';
+import { PLAYER } from '@shopping-mall/shared/constants';
+import type { NavGrid } from '@shopping-mall/shared/navgrid';
 
 export type Waypoint = { x: number; y: number; z: number };
 

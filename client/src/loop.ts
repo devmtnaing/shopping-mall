@@ -1,6 +1,6 @@
 // The only requestAnimationFrame in the app. Simulation runs at a fixed step so movement is
 // identical at 30, 60 or 144 fps; rendering gets `alpha` (0–1) to interpolate between steps.
-import { STEP } from '@plaza/shared/constants';
+import { STEP } from '@shopping-mall/shared/constants';
 
 /** Longest frame we simulate; anything longer (tab stalls, breakpoints) is dropped, not replayed. */
 const MAX_FRAME = 0.25;

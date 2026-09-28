@@ -3,7 +3,7 @@
 **Status:** Accepted · 2026-09-28
 
 ## Context
-The reference (NC Mall) uses a ~350-line hand-written WebGL2 renderer plus a ~210-line glTF loader. That's lean, but it has one shader, basic skinning and no texture compression. Every new feature (lightmaps, KTX2, LOD, reflections) would have to be written from scratch. Plaza is open source, so contributors need to be able to work on it without learning a private engine.
+The reference (NC Mall) uses a ~350-line hand-written WebGL2 renderer plus a ~210-line glTF loader. That's lean, but it has one shader, basic skinning and no texture compression. Every new feature (lightmaps, KTX2, LOD, reflections) would have to be written from scratch. Shopping Mall is open source, so contributors need to be able to work on it without learning a private engine.
 
 ## Decision
 Use **Three.js** (`WebGLRenderer`, with `WebGPURenderer` behind a flag), importing only the modules we use. Don't use React Three Fiber.

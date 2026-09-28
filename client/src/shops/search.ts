@@ -1,6 +1,6 @@
 // Shop search for the directory: forgiving about case, accents and small typos, and it works
 // for any script (Burmese included) because it compares Unicode-normalised text.
-import type { Shop } from '@plaza/shared/config';
+import type { Shop } from '@shopping-mall/shared/config';
 
 /** Lowercase, strip accents, collapse spaces. Non-Latin scripts pass through (NFC). */
 export function fold(s: string): string {

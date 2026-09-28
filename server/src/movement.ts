@@ -1,8 +1,8 @@
 // Server-side sanity checks on client movement. The client is authoritative for its own position
 // (no combat, nothing to win), so we only stop the obviously impossible: flying across the mall
 // or leaving the world. Directory travel announces itself with a `teleport` message first.
-import { PLAYER } from '@plaza/shared/constants';
-import type { Pose } from '@plaza/shared/protocol';
+import { PLAYER } from '@shopping-mall/shared/constants';
+import type { Pose } from '@shopping-mall/shared/protocol';
 
 /** Fastest legitimate horizontal speed: running on an escalator, plus generous slack. */
 const MAX_SPEED = (PLAYER.runSpeed + 1.2) * 1.3;

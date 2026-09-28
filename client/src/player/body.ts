@@ -1,5 +1,5 @@
 // Placeholder body until avatars land (T-209): a capsule with a "nose" so you can see which way it faces.
-import { PLAYER } from '@plaza/shared/constants';
+import { PLAYER } from '@shopping-mall/shared/constants';
 import { BoxGeometry, CapsuleGeometry, Group, Mesh, MeshStandardMaterial } from 'three';
 
 export function createPlaceholderBody(color = '#e2b857') {

@@ -9,7 +9,7 @@ The mall owner wants to add, edit and move shops without redeploying, upload ima
 - **Content lives in Postgres:** `mall` (name, tagline, colours, locales), `shops` (fields from today's config plus `slot`), `products`, and `assets`.
 - **An asset is a record** `{ id, kind, key, contentType, bytes, hash }` pointing at an object in the bucket. Kinds: `logo`, `product-image`, `mall-model`, `mall-collision`, `mall-meta`, `navgrid`, `avatar`, `animation-pack`, `prop`.
 - **Everything visual references assets by id, never by path.** Swapping art means uploading a new file into the same asset (or pointing a slot at a new asset). The client picks it up by content hash, and nothing in code changes.
-- **`plaza.config.ts` becomes the seed:** on first start with an empty database it's imported. Static builds with no server keep reading it directly, so the "works alone" principle holds.
+- **`mall.config.ts` becomes the seed:** on first start with an empty database it's imported. Static builds with no server keep reading it directly, so the "works alone" principle holds.
 - **Editing is host-only** through `/admin`, unlocked by the existing host sign-in. Writes go through a small JSON API on the server. Uploads use presigned PUT URLs so files go straight to the bucket.
 - **Changes are live:** after a write the server broadcasts `{ t: 'content', version }`. Clients refetch the content and repaint only what changed (signs, panels, directory).
 

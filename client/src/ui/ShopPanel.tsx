@@ -1,8 +1,8 @@
 // The shop panel: who they are, what they sell, where to go next. Plain DOM, no three.js,
 // so it also works for visitors whose device can't run WebGL.
 
-import config from 'virtual:plaza-config';
-import type { Shop } from '@plaza/shared/config';
+import config from 'virtual:mall-config';
+import type { Shop } from '@shopping-mall/shared/config';
 import { useEffect, useState } from 'preact/hooks';
 import { locale, t } from '../i18n';
 import { linkUrl } from '../links';

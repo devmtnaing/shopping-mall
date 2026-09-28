@@ -28,7 +28,7 @@ The dates assume one full-time developer plus one part-time 3D artist. Phases 2 
 
 1. pnpm workspace with `client`, `server` and `shared`, plus TypeScript strict and Biome. (T-001)
 2. Vite client that renders a spinning cube with Three.js, plus the `?debug` stats overlay. (T-002, T-003)
-3. `shared/config.ts` zod schema and an example `plaza.config.ts`. (T-004)
+3. `shared/config.ts` zod schema and an example `mall.config.ts`. (T-004)
 4. CI: typecheck, lint, unit tests, build, size budget. (T-005, T-006)
 5. README, CONTRIBUTING, CODE_OF_CONDUCT, issue templates, MIT license. (T-007)
 
@@ -73,7 +73,7 @@ The dates assume one full-time developer plus one part-time 3D artist. Phases 2 
 8. Deep links `/s/:id` and `/@x,z,yaw`. The static HTML directory page. (T-310, T-311)
 9. i18n: English plus one complex-script locale. (T-312)
 
-**Exit:** a new operator can add a shop with products by editing `plaza.config.ts` alone, in under 10 minutes (timed with a volunteer). All shop content is reachable without WebGL.
+**Exit:** a new operator can add a shop with products by editing `mall.config.ts` alone, in under 10 minutes (timed with a volunteer). All shop content is reachable without WebGL.
 
 ## Phase 4: Multiplayer (weeks 7–8)
 **Goal:** *together*.
@@ -112,7 +112,7 @@ The dates assume one full-time developer plus one part-time 3D artist. Phases 2 
 **Goal:** the mall owner edits shops, products and art from a browser, and changes appear live. See [ADR 0005](adr/0005-railway-postgres-s3.md) and [ADR 0006](adr/0006-live-content-and-swappable-assets.md).
 
 1. Rename the project to **Shopping Mall** (packages, image, docs). (T-700)
-2. Postgres schema and migrations; seed from `plaza.config.ts`. (T-701)
+2. Postgres schema and migrations; seed from `mall.config.ts`. (T-701)
 3. Content API: public read, host-only write; live `content` broadcast. (T-702, T-705)
 4. S3-compatible uploads with presigned URLs; asset records by content hash. (T-703)
 5. `/admin` page: shops, products, slots, assets. (T-704)

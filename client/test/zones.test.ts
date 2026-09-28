@@ -1,4 +1,4 @@
-import { STEP } from '@plaza/shared/constants';
+import { STEP } from '@shopping-mall/shared/constants';
 import { Vector3 } from 'three';
 import { describe, expect, it } from 'vitest';
 import { ZoneTracker } from '../src/world/zones';

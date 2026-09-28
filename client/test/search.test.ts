@@ -1,4 +1,4 @@
-import type { Shop } from '@plaza/shared/config';
+import type { Shop } from '@shopping-mall/shared/config';
 import { describe, expect, it } from 'vitest';
 import { fold, searchShops } from '../src/shops/search';
 

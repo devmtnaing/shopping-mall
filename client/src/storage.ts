@@ -1,6 +1,6 @@
 // Tiny wrapper around localStorage for per-visitor conveniences (name, look). Storage can be
 // missing or throw (private mode, blocked site data), so every access is guarded.
-const PREFIX = 'plaza:';
+const PREFIX = 'shopping-mall:';
 
 export function load<T>(key: string, fallback: T): T {
   try {

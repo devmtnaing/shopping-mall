@@ -1,5 +1,5 @@
 {
-  "name": "@plaza/server",
+  "name": "@shopping-mall/server",
   "private": true,
   "type": "module",
   "scripts": {
@@ -8,7 +8,7 @@
     "typecheck": "tsc -p ."
   },
   "dependencies": {
-    "@plaza/shared": "workspace:*",
+    "@shopping-mall/shared": "workspace:*",
     "ws": "^8.22.0",
     "zod": "^4.6.5"
   },

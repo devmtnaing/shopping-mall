@@ -1,8 +1,8 @@
 // Smooth remote movement: snapshots arrive ~15×/s with jitter and occasional loss, so each remote
 // player is drawn INTERP_DELAY in the past, interpolated between the two snapshots around that
 // moment. If packets are late we extrapolate for up to MAX_EXTRAPOLATE, then hold still.
-import { NET_HZ } from '@plaza/shared/constants';
-import type { Pose } from '@plaza/shared/protocol';
+import { NET_HZ } from '@shopping-mall/shared/constants';
+import type { Pose } from '@shopping-mall/shared/protocol';
 
 export const INTERP_DELAY = 100; // ms
 const MAX_EXTRAPOLATE = 250; // ms

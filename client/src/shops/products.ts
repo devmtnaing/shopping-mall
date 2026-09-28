@@ -1,10 +1,10 @@
 // Product adapters: where a shop's products come from. Each returns the same Product shape.
-//   static   → listed in plaza.config.ts
+//   static   → listed in mall.config.ts
 //   json-url → fetched from a URL returning Product[] or { products: Product[] }
 // Fetched lists are cached in memory for 5 minutes, and the last good copy is kept in
 // localStorage so the panel can still show something (clearly marked) when the store is offline.
 // We never show made-up demo products.
-import type { Shop } from '@plaza/shared/config';
+import type { Shop } from '@shopping-mall/shared/config';
 
 export type Product = {
   id: string;
@@ -63,7 +63,7 @@ export async function loadProducts(shop: Shop, deps: Partial<Deps> = {}): Promis
   if (!src) return { status: 'none' };
   if (src.adapter === 'static') return { status: 'ok', items: normalize(src.items) };
 
-  const key = `plaza:products:${src.url}`;
+  const key = `shopping-mall:products:${src.url}`;
   const hit = memory.get(key);
   if (hit && now() - hit.at < TTL) return { status: 'ok', items: hit.items };
 
