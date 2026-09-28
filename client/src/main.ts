@@ -1,6 +1,7 @@
 import config from 'virtual:plaza-config';
 import { Color, DirectionalLight, Fog, HemisphereLight, Scene } from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { startLoop } from './loop';
 import type { DebugOverlay } from './render/debug';
 import { createRenderer } from './render/renderer';
 import { loadMall } from './world/mall';
@@ -42,10 +43,12 @@ const controls = new OrbitControls(camera, canvas);
 controls.target.set(spawn?.pos[0] ?? 0, 2, (spawn?.pos[2] ?? 0) - 25);
 controls.update();
 
-function frame(now: number) {
-  controls.update();
-  renderer.render(scene, camera);
-  debug?.update(performance.now() - now);
-  requestAnimationFrame(frame);
-}
-requestAnimationFrame(frame);
+startLoop({
+  step: () => {},
+  render: () => {
+    const t0 = performance.now();
+    controls.update();
+    renderer.render(scene, camera);
+    debug?.update(performance.now() - t0);
+  },
+});
