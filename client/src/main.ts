@@ -11,10 +11,11 @@ import { createTouchControls } from './player/touch';
 import { WalkTo } from './player/walkto';
 import type { DebugOverlay } from './render/debug';
 import { createRenderer } from './render/renderer';
-import { toast, uiHasFocus, zone } from './state';
+import { nearbyShop, openShop, toast, uiHasFocus, zone } from './state';
 import { mountUI } from './ui/App';
 import { escalatorCarry } from './world/escalators';
 import { loadMall } from './world/mall';
+import { buildStorefronts } from './world/storefronts';
 import { ZoneTracker } from './world/zones';
 import './style.css';
 
@@ -34,6 +35,8 @@ scene.add(sun);
 
 const mall = await loadMall();
 scene.add(mall.visual);
+const storefronts = await buildStorefronts(mall.meta, config.shops);
+scene.add(storefronts.group);
 
 const input = new Input(canvas);
 if (matchMedia('(pointer: coarse)').matches) createTouchControls(canvas, input);
@@ -76,6 +79,10 @@ startLoop({
     const move = follower.active ? (follower.update(dt, player.pos, orbit.yaw) ?? still) : manual;
     escalatorCarry(mall.meta.escalators, player.pos, player.carry);
     player.step(dt, { x: move.x, y: move.y, run: input.run, jump, yaw: orbit.yaw });
+    const near = storefronts.nearby(player.pos)?.id ?? null;
+    if (near !== nearbyShop.value) nearbyShop.value = near;
+    const visit = input.keys.consume('KeyE'); // always consume, so a stray press can't fire later
+    if (visit && near && !uiHasFocus.value) openShop(near);
     if (zones.update(dt, player.pos) && zones.current) {
       const z = zones.current;
       zone.value = { id: z.id, name: (z.slot && shopBySlot.get(z.slot)) || z.name };

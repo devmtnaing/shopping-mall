@@ -248,3 +248,50 @@ kbd {
     animation: none;
   }
 }
+
+/* ---- shop prompt (T-304) ---- */
+.prompt {
+  position: fixed;
+  left: 50%;
+  bottom: calc(84px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 6px 6px 18px;
+  border-radius: 999px;
+  white-space: nowrap;
+  animation: fade-up-center 0.25s ease-out;
+}
+.prompt-name {
+  font-weight: 600;
+  font-size: 15px;
+}
+.prompt-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #1b1a18;
+  font-weight: 700;
+}
+.prompt-btn kbd {
+  background: rgba(0, 0, 0, 0.12);
+  border-color: rgba(0, 0, 0, 0.2);
+  color: #1b1a18;
+}
+@keyframes fade-up-center {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 6px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .prompt {
+    animation: none;
+  }
+}

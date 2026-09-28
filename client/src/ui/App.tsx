@@ -6,6 +6,7 @@ import { dialog } from '../state';
 import { Dock } from './Dock';
 import { Help } from './Help';
 import { BrandPill, TopRight, ZoneLabel } from './Hud';
+import { ShopPrompt } from './ShopPrompt';
 import { Toasts } from './Toasts';
 import './ui.css';
 
@@ -24,6 +25,7 @@ function App() {
       <BrandPill />
       <ZoneLabel />
       <TopRight />
+      <ShopPrompt />
       <Dock />
       <Toasts />
       {dialog.value === 'help' && <Help />}

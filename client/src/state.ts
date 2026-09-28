@@ -5,6 +5,12 @@ import { computed, signal } from '@preact/signals';
 /** The zone the player is in: its id and display name ("Main hall", a shop's name, …). */
 export const zone = signal<{ id: string; name: string } | null>(null);
 
+/** Id of the shop whose door the player is near (drives the "Visit" prompt). */
+export const nearbyShop = signal<string | null>(null);
+
+/** Id of the shop whose panel is open. */
+export const panel = signal<string | null>(null);
+
 /** Which modal dialog is open. */
 export type DialogId = 'help';
 export const dialog = signal<DialogId | null>(null);
@@ -15,6 +21,10 @@ export const toasts = signal<Toast[]>([]);
 
 /** True while the UI owns the keyboard (a dialog is open), so the player shouldn't move. */
 export const uiHasFocus = computed(() => dialog.value !== null);
+
+export function openShop(id: string) {
+  panel.value = id;
+}
 
 let nextToast = 1;
 /** Show a toast for `ms` milliseconds. */
