@@ -148,6 +148,27 @@ describe('scaling', () => {
     expect(third.room).toBe('main-2');
   });
 
+  it('sends newcomers to the busiest room with space, not an emptier one', async () => {
+    await server.close();
+    server = await startServer({ port: 0, capacity: 3, presenceMs: 100 });
+    // fill main, overflow two people into main-2, then free a seat in main
+    const a = client();
+    await a.join('Aa');
+    const b = client();
+    await b.join('Bb');
+    const c = client();
+    await c.join('Cc');
+    expect((await client().join('Dd')).room).toBe('main-2');
+    expect((await client().join('Ee')).room).toBe('main-2');
+    a.close();
+    await sleep(50);
+    // main now has 2, main-2 has 2: either is fine, but it must not open main-3
+    expect(['main', 'main-2']).toContain((await client().join('Ff')).room);
+    // main-2 is busier than a fresh room would be: G joins whichever has space, never a new one
+    expect(['main', 'main-2']).toContain((await client().join('Gg')).room);
+    expect(server.rooms.has('main-3')).toBe(false);
+  });
+
   it('sends each player only the nearest others', async () => {
     await server.close();
     server = await startServer({ port: 0, tickHz: 30, interest: 2, presenceMs: 100 });

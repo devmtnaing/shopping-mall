@@ -128,16 +128,25 @@ export async function startServer(opts: ServerOptions = {}) {
     wss.handleUpgrade(req, socket, head, (ws) => connect(ws, roomName));
   });
 
-  /** The room called `base`, or its first overflow room with space (base-2, base-3, …). */
+  /**
+   * Where a newcomer to `base` goes: the busiest of base, base-2, base-3… that still has space,
+   * so people end up together instead of spread over half-empty rooms. A new overflow room is
+   * opened only when every existing one is full.
+   */
   function roomFor(base: string) {
+    const family = (name: string) =>
+      name === base || (name.startsWith(`${base}-`) && /^\d+$/.test(name.slice(base.length + 1)));
+    let best: Room | null = null;
+    for (const room of rooms.values()) {
+      if (family(room.name) && !room.full && (!best || room.players.size > best.players.size)) best = room;
+    }
+    if (best) return best;
     for (let n = 1; ; n++) {
       const name = n === 1 ? base : `${base}-${n}`;
-      let room = rooms.get(name);
-      if (!room) {
-        room = new Room(name, capacity, interest);
-        rooms.set(name, room);
-      }
-      if (!room.full) return room;
+      if (rooms.has(name)) continue;
+      const room = new Room(name, capacity, interest);
+      rooms.set(name, room);
+      return room;
     }
   }
 
