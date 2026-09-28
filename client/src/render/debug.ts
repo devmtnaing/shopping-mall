@@ -33,7 +33,10 @@ export function createDebugOverlay(renderer: WebGLRenderer) {
     worst = Math.max(worst, ms);
 
     // scroll the graph one pixel and draw the newest bar
+    // 'copy' replaces pixels instead of blending, so old bars scroll away instead of piling up
+    g.globalCompositeOperation = 'copy';
     g.drawImage(graph, -1, 0);
+    g.globalCompositeOperation = 'source-over';
     g.clearRect(W - 1, 0, 1, H);
     const h = Math.min(ms / MAX_MS, 1) * H;
     g.fillStyle = ms > 16.7 ? '#f66' : '#6d8';
