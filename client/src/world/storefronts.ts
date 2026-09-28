@@ -72,6 +72,16 @@ export async function buildStorefronts(meta: MallMeta, shops: readonly Shop[]): 
     group.add(sign);
 
     if (shop) {
+      // accent-tinted floor: gives each shop an identity inside, and from the overview camera
+      const { min, max } = slot.interior;
+      const floor = new Mesh(
+        new PlaneGeometry(max[0] - min[0] - 0.6, max[2] - min[2] - 0.6),
+        new MeshBasicMaterial({ color: shop.colors.accent, transparent: true, opacity: 0.16, depthWrite: false }),
+      );
+      floor.rotation.x = -Math.PI / 2;
+      floor.position.set((min[0] + max[0]) / 2, min[1] + 0.015, (min[2] + max[2]) / 2);
+      group.add(floor);
+
       const strip = new Mesh(
         new BoxGeometry(w, 0.05, 0.03),
         new MeshBasicMaterial({ color: shop.colors.accent, toneMapped: false }),

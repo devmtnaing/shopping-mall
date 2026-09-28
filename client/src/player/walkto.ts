@@ -48,11 +48,24 @@ export class WalkTo {
   }
 
   /** Handle a tap at client pixel (x, y). Returns false when there's nowhere to walk. */
-  tap(x: number, y: number, player: PlayerController, canvas: HTMLCanvasElement): boolean {
+  tap(
+    x: number,
+    y: number,
+    player: PlayerController,
+    canvas: HTMLCanvasElement,
+    maxY = Number.POSITIVE_INFINITY,
+  ): boolean {
     const rect = canvas.getBoundingClientRect();
     ndc.set(((x - rect.left) / rect.width) * 2 - 1, -((y - rect.top) / rect.height) * 2 + 1);
     raycaster.setFromCamera(ndc, this.camera);
-    const hit = this.collider.raycastFirst(raycaster.ray, DoubleSide);
+    // in the overview the world above maxY is cut away, so ignore hits up there
+    const hit =
+      maxY === Number.POSITIVE_INFINITY
+        ? this.collider.raycastFirst(raycaster.ray, DoubleSide)
+        : this.collider
+            .raycast(raycaster.ray, DoubleSide)
+            .filter((h) => h.point.y <= maxY)
+            .sort((a, b) => a.distance - b.distance)[0];
     if (!hit?.face) return false;
 
     const goal = this.goalFor(hit.point, hit.face.normal.y);

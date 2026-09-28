@@ -7,13 +7,14 @@ import { OrbitCamera } from './player/camera';
 import { PlayerController } from './player/controller';
 import { PathFollower } from './player/follow';
 import { Input } from './player/input';
+import { Overview } from './player/overview';
 import { PathFinder } from './player/path';
 import { createTouchControls } from './player/touch';
 import { Travel } from './player/travel';
 import { WalkTo } from './player/walkto';
 import type { DebugOverlay } from './render/debug';
 import { createRenderer } from './render/renderer';
-import { nearbyShop, openShop, pose, toast, uiHasFocus, zone } from './state';
+import { nearbyShop, openShop, overview, pose, toast, uiHasFocus, zone } from './state';
 import { mountUI } from './ui/App';
 import { escalatorCarry } from './world/escalators';
 import { loadMall } from './world/mall';
@@ -29,7 +30,8 @@ const { renderer, camera } = createRenderer(canvas);
 
 const scene = new Scene();
 scene.background = new Color('#12110f');
-scene.fog = new Fog('#12110f', 60, 140);
+const fog = new Fog('#12110f', 60, 140);
+scene.fog = fog;
 scene.add(new HemisphereLight('#fff6e6', '#6b6152', 2.2));
 const sun = new DirectionalLight('#fff1dc', 1.6);
 sun.position.set(8, 20, 6);
@@ -62,6 +64,18 @@ installCommands({
   },
 });
 let poseAt = 0;
+
+// overview: one global clipping plane, parked far away when unused (so shaders never recompile)
+const over = new Overview();
+renderer.clippingPlanes = [over.clip];
+const inner = mall.meta.slots.map((s) => s.interior);
+const bounds = {
+  minX: Math.min(...inner.map((b) => b.min[0])),
+  maxX: Math.max(...inner.map((b) => b.max[0])),
+  minZ: Math.min(...inner.map((b) => b.min[2])),
+  maxZ: Math.max(...inner.map((b) => b.max[2])) + 4,
+};
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
 const still = { x: 0, y: 0 };
 
 // "You are in …": shop zones show the name of the shop assigned to that slot in plaza.config.ts
@@ -99,6 +113,7 @@ startLoop({
     // arrived after directory travel: open that shop's panel
     const arrived = travel.arrived(near);
     if (arrived) openShop(arrived);
+    if (input.keys.consume('KeyM') && !uiHasFocus.value) overview.value = !overview.value;
     const visit = input.keys.consume('KeyE'); // always consume, so a stray press can't fire later
     if (visit && near && !uiHasFocus.value) openShop(near);
     if (zones.update(dt, player.pos) && zones.current) {
@@ -112,7 +127,7 @@ startLoop({
     body.rotation.y = player.facing;
 
     const tap = input.takeTap();
-    if (tap && !walkTo.tap(tap.x, tap.y, player, canvas)) toast("Can't walk there");
+    if (tap && !walkTo.tap(tap.x, tap.y, player, canvas, over.clipY)) toast("Can't walk there");
     walkTo.update(dt);
     // minimap pose at ≤ 10 Hz
     const now = performance.now();
@@ -127,8 +142,14 @@ startLoop({
     }
     const moving = player.speed > 0.3;
     orbit.update(dt, body.position, player.facing, moving, input.takeLook(), input.takeZoom());
-    camera.position.copy(orbit.position);
-    camera.lookAt(orbit.target);
+    over.active = overview.value;
+    const floorY = mall.meta.floors[mall.nav.floorAt(player.pos.y + 0.1)]?.y ?? 0;
+    over.update(dt, reduceMotion.matches, orbit, bounds, floorY, camera.fov, camera.aspect);
+    camera.position.copy(over.position);
+    camera.lookAt(over.target);
+    // the overview camera is ~70 m up: push the fog back so the mall isn't greyed out
+    fog.near = 60 + 200 * over.t;
+    fog.far = 140 + 200 * over.t;
 
     renderer.render(scene, camera);
     if (debug) {

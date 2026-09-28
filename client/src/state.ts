@@ -18,6 +18,9 @@ export const panel = signal<string | null>(null);
 export type DialogId = 'help' | 'directory';
 export const dialog = signal<DialogId | null>(null);
 
+/** Top-down overview camera on/off. */
+export const overview = signal(false);
+
 /** Full-screen fade used when teleporting (true = faded to black). */
 export const faded = signal(false);
 
