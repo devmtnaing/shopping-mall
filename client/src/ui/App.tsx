@@ -2,7 +2,8 @@
 // commands through ../commands; nothing here imports three.js.
 import { render } from 'preact';
 import { useEffect } from 'preact/hooks';
-import { dialog, mallMeta, panel, phase } from '../state';
+import { chatOpen, dialog, mallMeta, panel, phase } from '../state';
+import { Chat } from './Chat';
 import { Directory } from './Directory';
 import { Dock } from './Dock';
 import { Fade } from './Fade';
@@ -27,6 +28,11 @@ function App() {
         e.metaKey
       )
         return;
+      if (e.key === 'Enter' && !dialog.value && !panel.value && !chatOpen.value) {
+        e.preventDefault();
+        chatOpen.value = true;
+        return;
+      }
       if (e.key === '?') dialog.value = dialog.value === 'help' ? null : 'help';
       if (e.key === '/' && !dialog.value) {
         e.preventDefault(); // don't type the slash into the search box
@@ -54,6 +60,7 @@ function App() {
       <ShopPrompt />
       <Dock />
       {meta && <Minimap meta={meta} />}
+      <Chat />
       <Toasts />
       <Fade />
       {dialog.value === 'help' && <Help />}

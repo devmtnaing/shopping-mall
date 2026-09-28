@@ -49,6 +49,22 @@ export type NetState = 'off' | 'connecting' | 'online' | 'reconnecting' | 'offli
 export const netStatus = signal<NetState>('off');
 export const roomCount = signal(0);
 
+/** Chat log (newest last) and whether the chat box is open. */
+export type ChatLine = {
+  key: number;
+  kind: 'msg' | 'sys';
+  name?: string;
+  text: string;
+  host?: boolean;
+  at: number;
+};
+export const chat = signal<ChatLine[]>([]);
+export const chatOpen = signal(false);
+let chatKey = 1;
+export function addChat(line: Omit<ChatLine, 'key' | 'at'>) {
+  chat.value = [...chat.value, { ...line, key: chatKey++, at: Date.now() }].slice(-50);
+}
+
 /** Top-down overview camera on/off. */
 export const overview = signal(false);
 
@@ -61,7 +77,7 @@ export const toasts = signal<Toast[]>([]);
 
 /** True while the UI owns the keyboard (a dialog is open), so the player shouldn't move. */
 export const uiHasFocus = computed(
-  () => phase.value !== 'playing' || dialog.value !== null || panel.value !== null,
+  () => phase.value !== 'playing' || dialog.value !== null || panel.value !== null || chatOpen.value,
 );
 
 export function openShop(id: string) {

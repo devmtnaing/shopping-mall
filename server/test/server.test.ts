@@ -1,6 +1,7 @@
 import { encodeInput, type Pose } from '@plaza/shared/protocol';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { cleanName } from '../src/names';
+import { RateLimit } from '../src/limits';
+import { cleanChat, cleanName } from '../src/names';
 import { startServer } from '../src/server';
 import { sleep, TestClient, until } from './helpers';
 
@@ -196,6 +197,31 @@ describe('movement checks', () => {
     b.ws.send(encodeInput(1, at(0, -5, -200)));
     await sleep(150);
     expect(a.snapshots.findLast((s) => s.has(wb.id))?.get(wb.id)?.y).toBe(0);
+  });
+});
+
+describe('chat limits', () => {
+  it('lets a burst through, then asks the sender to slow down', async () => {
+    const a = client();
+    await a.join('Aye');
+    const b = client();
+    await b.join('Bo');
+    for (let i = 0; i < 5; i++) b.send({ t: 'chat', text: `msg ${i}` });
+    expect(await b.waitFor((m) => m.t === 'error')).toMatchObject({ code: 'rate' });
+    await sleep(100);
+    expect(a.messages.filter((m) => m.t === 'chat')).toHaveLength(3);
+  });
+
+  it('caps and tidies messages', () => {
+    expect(cleanChat('  hi\u200B   there ')).toBe('hi there');
+    expect([...cleanChat('x'.repeat(500))]).toHaveLength(200);
+  });
+
+  it('refills over time', () => {
+    const r = new RateLimit(1, 1, 0);
+    expect(r.take(0)).toBe(true);
+    expect(r.take(100)).toBe(false);
+    expect(r.take(1100)).toBe(true);
   });
 });
 

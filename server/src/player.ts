@@ -1,5 +1,6 @@
 import type { Look, PlayerInfo, Pose } from '@plaza/shared/protocol';
 import type { WebSocket } from 'ws';
+import { RateLimit } from './limits.ts';
 
 export class Player {
   readonly id: number;
@@ -12,6 +13,9 @@ export class Player {
   placed = false;
   /** Last time (ms) a movement input was accepted, for speed checks. */
   lastMoveAt = 0;
+  /** Chat: a burst of 3, then one message every 1.5 s. Emotes: a burst of 4, then 2 a second. */
+  readonly chatLimit = new RateLimit(3, 1 / 1.5);
+  readonly emoteLimit = new RateLimit(4, 2);
 
   constructor(id: number, name: string, look: Look, socket: WebSocket) {
     this.id = id;

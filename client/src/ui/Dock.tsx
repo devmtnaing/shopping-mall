@@ -1,7 +1,7 @@
 // Bottom-centre dock.
 import { t } from '../i18n';
-import { dialog, overview } from '../state';
-import { IconHelp, IconLayers, IconStore } from './icons';
+import { chatOpen, dialog, netStatus, overview } from '../state';
+import { IconChat, IconHelp, IconLayers, IconStore } from './icons';
 
 export function Dock() {
   return (
@@ -19,6 +19,12 @@ export function Dock() {
         <IconLayers />
         <span>{t('dock.overview')}</span>
       </button>
+      {netStatus.value === 'online' && (
+        <button type="button" class="dock-btn" onClick={() => (chatOpen.value = !chatOpen.value)}>
+          <IconChat />
+          <span>{t('chat.open')}</span>
+        </button>
+      )}
       <button type="button" class="dock-btn" onClick={() => (dialog.value = 'help')}>
         <IconHelp />
         <span>{t('dock.help')}</span>

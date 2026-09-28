@@ -94,6 +94,7 @@ const travel = new Travel(config.shops, mall.meta, player, orbit, finder, follow
 const multi = createMultiplayer({ scene, player, travel, floorAt: (y) => mall.nav.floorAt(y) });
 installCommands({
   travelToShop: (id) => travel.toShop(id),
+  sendChat: (text) => multi.sendChat(text),
   walkTo: (x, z, floor) => {
     const y = mall.meta.floors[floor]?.y ?? 0;
     if (!walkTo.walkToPoint({ x, y, z }, player)) toast(t('toast.cantWalk'));

@@ -10,6 +10,7 @@ const desktop = (): [string, string][] => [
   [t('help.scroll'), t('help.zoom')],
   [t('help.clickFloor'), t('help.walkThere')],
   [t('help.clickShop'), t('help.walkToDoor')],
+  ['Enter', t('chat.open')],
   ['/', t('help.findShop')],
   ['M', t('help.overview')],
   ['E', t('help.visit')],

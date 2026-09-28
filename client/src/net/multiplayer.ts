@@ -4,10 +4,11 @@
 import { ANIM, FLAG_GROUNDED, packAnim } from '@plaza/shared/protocol';
 import { effect } from '@preact/signals';
 import type { Camera, Scene } from 'three';
+import { t } from '../i18n';
 import type { PlayerController } from '../player/controller';
 import type { Travel } from '../player/travel';
 import { Crowd } from '../render/crowd';
-import { netStatus, others, phase, profile, roomCount } from '../state';
+import { addChat, netStatus, others, phase, profile, roomCount, toast } from '../state';
 import { Remotes } from './remotes';
 import { NetClient, serverUrl } from './socket';
 
@@ -36,9 +37,17 @@ export function createMultiplayer(opts: {
       netStatus.value = s;
     },
     message: (m) => {
+      if (m.t === 'chat') return addChat({ kind: 'msg', name: m.name, text: m.text, host: m.host });
+      if (m.t === 'error' && m.code === 'rate') return toast(t('chat.slowDown'));
       if (m.t === 'welcome') remotes.welcome(m.id, m.players);
-      else if (m.t === 'presence') remotes.presence(m.joined, m.left);
-      else return;
+      else if (m.t === 'presence') {
+        const leaving = m.left.map((id) => remotes.players.get(id)?.info.name ?? '');
+        announce(
+          m.joined.map((p) => p.name),
+          leaving,
+        );
+        remotes.presence(m.joined, m.left);
+      } else return;
       roomCount.value = remotes.players.size + 1;
     },
     snapshotStart: (tick) => remotes.beginSnapshot(tick, performance.now()),
@@ -46,6 +55,23 @@ export function createMultiplayer(opts: {
   });
 
   travel.onTeleport = () => net.send({ t: 'teleport' });
+
+  /** One quiet line per batch: "Bo joined", or "5 people joined" when it's busy. */
+  function announce(joined: string[], left: string[]) {
+    const line = (
+      names: string[],
+      one: 'chat.joined' | 'chat.left',
+      many: 'chat.joinedMany' | 'chat.leftMany',
+    ) => {
+      const named = names.filter(Boolean);
+      if (named.length === 0) return;
+      const text =
+        named.length === 1 ? t(one, { name: named[0] as string }) : t(many, { n: String(named.length) });
+      addChat({ kind: 'sys', text });
+    };
+    line(joined, 'chat.joined', 'chat.joinedMany');
+    line(left, 'chat.left', 'chat.leftMany');
+  }
   const connect = () => net.connect(profile.value.name, { color: profile.value.color });
   effect(() => {
     if (phase.value === 'playing') connect();
@@ -61,6 +87,7 @@ export function createMultiplayer(opts: {
 
   return {
     net,
+    sendChat: (text: string) => net.send({ t: 'chat', text }),
     remotes,
     /** Every simulation step: send our movement at 15 Hz (every 4th 60 Hz step). */
     step() {

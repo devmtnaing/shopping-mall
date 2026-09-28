@@ -6,7 +6,7 @@ import { parseClientMessage } from '@plaza/shared/messages';
 import { type ClientMessage, decodeInput, type Pose, type ServerMessage } from '@plaza/shared/protocol';
 import { type RawData, type WebSocket, WebSocketServer } from 'ws';
 import { plausibleMove } from './movement.ts';
-import { cleanName } from './names.ts';
+import { cleanChat, cleanName } from './names.ts';
 import { Player } from './player.ts';
 import { Room } from './room.ts';
 
@@ -188,10 +188,22 @@ export async function startServer(opts: ServerOptions = {}) {
 
   function handle(msg: ClientMessage, player: Player, room: Room) {
     if (msg.t === 'chat') {
-      const text = msg.text.trim();
-      if (text) room.broadcast({ t: 'chat', id: player.id, name: player.name, text, at: Date.now() });
+      const text = cleanChat(msg.text);
+      if (!text) return;
+      if (!player.chatLimit.take()) {
+        player.send({ t: 'error', code: 'rate', message: 'Slow down a little.' } satisfies ServerMessage);
+        return;
+      }
+      room.broadcast({
+        t: 'chat',
+        id: player.id,
+        name: player.name,
+        text,
+        at: Date.now(),
+        host: player.host || undefined,
+      });
     } else if (msg.t === 'emote') {
-      room.broadcast({ t: 'emote', id: player.id, e: msg.e });
+      if (player.emoteLimit.take()) room.broadcast({ t: 'emote', id: player.id, e: msg.e });
     }
   }
 
