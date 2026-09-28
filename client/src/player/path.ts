@@ -49,8 +49,8 @@ export class PathFinder {
    */
   find(from: Waypoint, to: Waypoint): Waypoint[] | null {
     const nav = this.nav;
-    const start = this.nearest(nav.floorAt(from.y + 0.1), from.x, from.z);
-    const goal = this.nearest(nav.floorAt(to.y + 0.1), to.x, to.z);
+    const start = this.nearest(nav.floorAt(from.y + 0.1), from.x, from.y, from.z);
+    const goal = this.nearest(nav.floorAt(to.y + 0.1), to.x, to.y, to.z);
     if (start < 0 || goal < 0) return null;
     const nodes = this.search(start, goal);
     if (!nodes) return null;
@@ -79,11 +79,16 @@ export class PathFinder {
     return Math.floor(node / this.nav.size);
   }
 
-  /** Nearest walkable node to (x, z) on a floor, searching outward up to 2 m. */
-  private nearest(floor: number, x: number, z: number): number {
+  /**
+   * Nearest walkable node to (x, y, z) on a floor, searching outward up to 2 m. Cells more than a
+   * step above or below `y` don't count (so a point beside a bench never snaps onto the bench top).
+   */
+  private nearest(floor: number, x: number, y: number, z: number): number {
     const nav = this.nav;
+    const ok = (j: number) =>
+      nav.walkable(floor, j) && Math.abs(nav.height(floor, j) - y) <= PLAYER.stepHeight;
     const i = nav.index(x, z);
-    if (nav.walkable(floor, i)) return floor * nav.size + i;
+    if (ok(i)) return floor * nav.size + i;
     const c0 = Math.floor((x - nav.originX) / nav.cell);
     const r0 = Math.floor((z - nav.originZ) / nav.cell);
     const maxRing = Math.ceil(2 / nav.cell);
@@ -97,7 +102,7 @@ export class PathFinder {
           const r = r0 + dr;
           if (c < 0 || r < 0 || c >= nav.cols || r >= nav.rows) continue;
           const j = r * nav.cols + c;
-          if (!nav.walkable(floor, j)) continue;
+          if (!ok(j)) continue;
           const d = dr * dr + dc * dc;
           if (d < bestD) {
             bestD = d;

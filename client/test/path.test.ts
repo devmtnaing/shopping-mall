@@ -56,6 +56,13 @@ describe('PathFinder', () => {
     expect(finder.find(spawn, { x: -15.99, y: 0, z: -20 })).not.toBeNull();
   });
 
+  it('never snaps a goal beside a bench onto the bench top', () => {
+    // just outside shop e0's door, right next to the bench at x 4.35-4.85, z -8.9 to -7.1
+    const path = finder.find(spawn, { x: 4.95, y: 0, z: -8 });
+    expect(path).not.toBeNull();
+    expect(path?.[path.length - 1]?.y).toBeCloseTo(0, 2);
+  });
+
   it('is fast: well under 2 ms per path on average', () => {
     const goals: Waypoint[] = [
       { x: -12, y: 0, z: -32 },

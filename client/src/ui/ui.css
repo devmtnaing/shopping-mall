@@ -576,3 +576,54 @@ a.product:hover {
     transition: none;
   }
 }
+
+/* ---- minimap (T-308) ---- */
+.minimap {
+  position: fixed;
+  right: calc(14px + env(safe-area-inset-right));
+  bottom: calc(14px + env(safe-area-inset-bottom));
+  padding: 8px 8px 10px;
+  border-radius: 14px;
+}
+.minimap-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0 2px 6px;
+}
+.minimap svg {
+  display: block;
+  cursor: pointer;
+  pointer-events: auto;
+}
+.map-shop:hover {
+  filter: brightness(1.4);
+}
+.floor-switch {
+  display: flex;
+  gap: 2px;
+}
+#ui .floor-switch button {
+  min-width: 22px;
+  height: 20px;
+  padding: 0 5px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: transparent;
+  font-size: 11px;
+  font-weight: 600;
+}
+#ui .floor-switch button.on {
+  background: var(--accent);
+  color: #1b1a18;
+  border-color: transparent;
+}
+/* phones: smaller, top right under the full-screen button (touch buttons own the bottom right) */
+@media (max-width: 560px), (pointer: coarse) {
+  .minimap {
+    top: calc(66px + env(safe-area-inset-top));
+    bottom: auto;
+    transform: scale(0.62);
+    transform-origin: top right;
+  }
+}

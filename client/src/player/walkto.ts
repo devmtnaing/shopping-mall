@@ -58,12 +58,24 @@ export class WalkTo {
     const goal = this.goalFor(hit.point, hit.face.normal.y);
     const path = this.finder.find(player.pos, goal);
     if (!path) return false;
+    this.start(path, player);
+    return true;
+  }
+
+  /** Walk to a known world point (minimap clicks). Returns false when it can't be reached. */
+  walkToPoint(goal: Waypoint, player: PlayerController): boolean {
+    const path = this.finder.find(player.pos, goal);
+    if (!path) return false;
+    this.start(path, player);
+    return true;
+  }
+
+  private start(path: Waypoint[], player: PlayerController) {
     this.follower.start(path, player.pos);
     const end = path[path.length - 1] as Waypoint;
     this.marker.position.set(end.x, end.y + 0.03, end.z);
     this.marker.visible = true;
     this.pulse = 0;
-    return true;
   }
 
   /** Floor → that spot. A shop's front (sign, wall, window) → its door. Other walls → the floor beside them. */

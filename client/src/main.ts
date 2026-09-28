@@ -13,7 +13,7 @@ import { Travel } from './player/travel';
 import { WalkTo } from './player/walkto';
 import type { DebugOverlay } from './render/debug';
 import { createRenderer } from './render/renderer';
-import { nearbyShop, openShop, toast, uiHasFocus, zone } from './state';
+import { nearbyShop, openShop, pose, toast, uiHasFocus, zone } from './state';
 import { mountUI } from './ui/App';
 import { escalatorCarry } from './world/escalators';
 import { loadMall } from './world/mall';
@@ -54,13 +54,20 @@ const finder = new PathFinder(mall.nav);
 const walkTo = new WalkTo(camera, mall.collider, mall.meta, finder, follower);
 scene.add(walkTo.marker);
 const travel = new Travel(config.shops, mall.meta, player, orbit, finder, follower);
-installCommands({ travelToShop: (id) => travel.toShop(id) });
+installCommands({
+  travelToShop: (id) => travel.toShop(id),
+  walkTo: (x, z, floor) => {
+    const y = mall.meta.floors[floor]?.y ?? 0;
+    if (!walkTo.walkToPoint({ x, y, z }, player)) toast("Can't walk there");
+  },
+});
+let poseAt = 0;
 const still = { x: 0, y: 0 };
 
 // "You are in …": shop zones show the name of the shop assigned to that slot in plaza.config.ts
 const shopBySlot = new Map(config.shops.map((s) => [s.slot, s.name]));
 const zones = new ZoneTracker(mall.meta.zones);
-mountUI();
+mountUI(mall.meta);
 
 let debug: DebugOverlay | undefined;
 if (debugMode) {
@@ -107,6 +114,17 @@ startLoop({
     const tap = input.takeTap();
     if (tap && !walkTo.tap(tap.x, tap.y, player, canvas)) toast("Can't walk there");
     walkTo.update(dt);
+    // minimap pose at ≤ 10 Hz
+    const now = performance.now();
+    if (now - poseAt > 100) {
+      poseAt = now;
+      pose.value = {
+        x: player.pos.x,
+        z: player.pos.z,
+        yaw: player.facing,
+        floor: mall.nav.floorAt(player.pos.y + 0.1),
+      };
+    }
     const moving = player.speed > 0.3;
     orbit.update(dt, body.position, player.facing, moving, input.takeLook(), input.takeZoom());
     camera.position.copy(orbit.position);

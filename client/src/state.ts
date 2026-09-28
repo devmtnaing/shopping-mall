@@ -5,6 +5,9 @@ import { computed, signal } from '@preact/signals';
 /** The zone the player is in: its id and display name ("Main hall", a shop's name, …). */
 export const zone = signal<{ id: string; name: string } | null>(null);
 
+/** Player position for the minimap, updated at most 10× a second. `floor` indexes meta.floors. */
+export const pose = signal({ x: 0, z: 0, yaw: 0, floor: 0 });
+
 /** Id of the shop whose door the player is near (drives the "Visit" prompt). */
 export const nearbyShop = signal<string | null>(null);
 

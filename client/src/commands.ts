@@ -4,10 +4,13 @@
 export type Commands = {
   /** Go to a shop's door (walk if near, fade-teleport if far) and open its panel on arrival. */
   travelToShop: (shopId: string) => void;
+  /** Walk to a point on a floor (index into meta.floors). */
+  walkTo: (x: number, z: number, floor: number) => void;
 };
 
 export const commands: Commands = {
   travelToShop: () => {},
+  walkTo: () => {},
 };
 
 export function installCommands(impl: Partial<Commands>) {
