@@ -3,7 +3,8 @@
 **An open-source, multiplayer 3D shopping mall that runs in the browser.**
 Walk around with friends, visit shops, browse real products, and chat. It loads fast, stays at 60 fps on a mid-range phone, and you set it up by editing one config file.
 
-> Status: **planning**. This repo holds the design and engineering plan. Code lands phase by phase, following the [roadmap](docs/roadmap.md).
+> Status: **Phase 1 of 6 done.** You can walk a greybox mall on desktop or phone: two floors, escalators, tap-to-walk, a collision-aware camera.
+> Next up: real art and avatars (Phase 2) and shops and UI (Phase 3), following the [roadmap](docs/roadmap.md). Open decisions: [#1](https://github.com/devmtnaing/shopping-mall/issues/1).
 > "Plaza" is a working name.
 
 ---
@@ -44,13 +45,18 @@ Walk around with friends, visit shops, browse real products, and chat. It loads 
 4. **Works alone.** `pnpm dev` runs a single-player mall with no server. Multiplayer is an add-on you switch on.
 5. **Looks good on cheap hardware.** We bake lighting into textures instead of computing it in real time.
 
-## Quick start *(once Phase 1 lands)*
+## Quick start
 
 ```bash
 pnpm install
-pnpm dev            # single-player mall at http://localhost:5173
-pnpm dev:server     # optional: multiplayer server on :8787
+pnpm dev            # the mall at http://localhost:5173 (add ?debug for stats, gizmos and the nav grid)
+pnpm check          # typecheck, lint, tests, build, size budget: what CI runs
+pnpm greybox        # regenerate the greybox mall, its meta and the nav grid
 ```
+
+**Controls:** WASD / arrows to walk, Shift to run, Space to jump, drag to look, scroll to zoom, click the floor to walk there, click a shop to go to its door.
+On a phone: left thumb joystick, drag on the right to look, pinch to zoom, tap to walk, Run and Jump buttons.
+The multiplayer server (`pnpm dev:server`) arrives in Phase 4.
 
 ## License
 
