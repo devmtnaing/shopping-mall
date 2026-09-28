@@ -3,11 +3,13 @@
 import { AwsClient } from 'aws4fetch';
 
 export type StorageConfig = {
-  endpoint: string; // e.g. https://storage.railway.app or http://minio:9000
+  endpoint: string; // e.g. https://t3.storageapi.dev or http://localhost:8333
   bucket: string;
   accessKeyId: string;
   secretAccessKey: string;
   region?: string;
+  /** 'virtual' puts the bucket in the hostname (Railway, AWS); 'path' in the path (SeaweedFS, MinIO). */
+  urlStyle?: 'path' | 'virtual';
 };
 
 export class Storage {
@@ -21,13 +23,15 @@ export class Storage {
       service: 's3',
       region: c.region ?? 'auto',
     });
-    // path-style addressing works with every S3-compatible store
-    this.base = `${c.endpoint.replace(/\/$/, '')}/${encodeURIComponent(c.bucket)}`;
+    const endpoint = new URL(c.endpoint);
+    if (c.urlStyle === 'virtual') endpoint.hostname = `${c.bucket}.${endpoint.hostname}`;
+    else endpoint.pathname = `${endpoint.pathname.replace(/\/$/, '')}/${encodeURIComponent(c.bucket)}`;
+    this.base = endpoint.toString().replace(/\/$/, '');
   }
 
   /** Storage from S3_* env vars, or null when they aren't set. */
   static fromEnv(env = process.env): Storage | null {
-    const { S3_ENDPOINT, S3_BUCKET, S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY, S3_REGION } = env;
+    const { S3_ENDPOINT, S3_BUCKET, S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY, S3_REGION, S3_URL_STYLE } = env;
     if (!S3_ENDPOINT || !S3_BUCKET || !S3_ACCESS_KEY_ID || !S3_SECRET_ACCESS_KEY) return null;
     return new Storage({
       endpoint: S3_ENDPOINT,
@@ -35,6 +39,7 @@ export class Storage {
       accessKeyId: S3_ACCESS_KEY_ID,
       secretAccessKey: S3_SECRET_ACCESS_KEY,
       region: S3_REGION,
+      urlStyle: S3_URL_STYLE === 'virtual' ? 'virtual' : 'path',
     });
   }
 
@@ -44,6 +49,8 @@ export class Storage {
 
   /** Create the bucket if it doesn't exist (fine to call on every start). */
   async ensureBucket() {
+    // hosted buckets (Railway) already exist and may not allow creating them
+    if ((await this.aws.fetch(this.base, { method: 'HEAD' })).ok) return;
     const res = await this.aws.fetch(this.base, { method: 'PUT' });
     // 200 created; 409 already exists / owned by you; anything else is a real problem
     if (!res.ok && res.status !== 409)

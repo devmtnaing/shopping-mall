@@ -1,10 +1,16 @@
+# A template: the nginx image fills in ${PORT} and ${API_UPSTREAM} from the environment at start
+# (compose: 80 and server:8787; Railway: its PORT and server.railway.internal:8787).
 server {
-  listen 80;
+  listen ${PORT};
+  listen [::]:${PORT};
   root /usr/share/nginx/html;
+  # look the server up per request (it may start after us, or move), with the container's resolver
+  resolver ${NGINX_LOCAL_RESOLVERS} valid=10s;
+  set $api http://${API_UPSTREAM};
   # asset uploads go through to the server (models are up to 25 MB)
   client_max_body_size 30m;
 
-    # content-hashed build files (name-AbCd1234.js) never change: cache for a year.
+  # content-hashed build files (name-AbCd1234.js) never change: cache for a year.
   # Un-hashed files (the mall model under /assets/mall/) are revalidated instead.
   location ~* "^/assets/[^/]+-[A-Za-z0-9_-]{8}\.(js|css|woff2|png|svg|jpg|webp)$" {
     add_header Cache-Control "public, max-age=31536000, immutable";
@@ -21,7 +27,7 @@ server {
 
   # multiplayer server on the same origin
   location /ws {
-    proxy_pass http://server:8787;
+    proxy_pass $api;
     proxy_http_version 1.1;
     proxy_set_header Upgrade $http_upgrade;
     proxy_set_header Connection "upgrade";
@@ -30,10 +36,10 @@ server {
   }
   # the shop directory is rendered live by the server from the database
   location = /directory/ {
-    proxy_pass http://server:8787;
+    proxy_pass $api;
   }
   location ~ ^/(health|host-token|api/|files/) {
-    proxy_pass http://server:8787;
+    proxy_pass $api;
     proxy_set_header X-Forwarded-For $remote_addr;
   }
 
