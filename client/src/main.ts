@@ -1,8 +1,8 @@
-import config from 'virtual:mall-config';
 import { effect } from '@preact/signals';
 import { EMOTES } from '@shopping-mall/shared/protocol';
 import { Color, DirectionalLight, Fog, HemisphereLight, Scene } from 'three';
 import { installCommands } from './commands';
+import { content, loadContent } from './content';
 import { locale, t } from './i18n';
 import type { Key } from './i18n/en';
 import { parseLink } from './links';
@@ -26,6 +26,7 @@ import {
   nearbyShop,
   openShop,
   overview,
+  panel,
   phase,
   pose,
   profile,
@@ -40,7 +41,9 @@ import { buildStorefronts } from './world/storefronts';
 import { ZoneTracker } from './world/zones';
 import './style.css';
 
-document.title = config.mall.name;
+effect(() => {
+  document.title = content.value.mall.name;
+});
 const debugMode = new URLSearchParams(location.search).has('debug');
 
 const canvas = document.getElementById('gl') as HTMLCanvasElement;
@@ -57,12 +60,11 @@ const sun = new DirectionalLight('#fff1dc', 1.6);
 sun.position.set(8, 20, 6);
 scene.add(sun);
 
-const mall = await loadMall();
+// the mall model and the latest content (from the server, when there is one) load together
+const [mall] = await Promise.all([loadMall(), loadContent()]);
 scene.add(mall.visual);
-const storefronts = await buildStorefronts(mall.meta, config.shops, {
-  title: t('sign.comingSoon'),
-  subtitle: t('sign.available'),
-});
+const vacant = () => ({ title: t('sign.comingSoon'), subtitle: t('sign.available') });
+let storefronts = await buildStorefronts(mall.meta, content.value.shops, vacant());
 // repaint the "Coming soon" signs when the language changes
 locale.subscribe(() => storefronts.setVacantText(t('sign.comingSoon'), t('sign.available')));
 scene.add(storefronts.group);
@@ -89,7 +91,7 @@ const follower = new PathFollower();
 const finder = new PathFinder(mall.nav);
 const walkTo = new WalkTo(camera, mall.collider, mall.meta, finder, follower);
 scene.add(walkTo.marker);
-const travel = new Travel(config.shops, mall.meta, player, orbit, finder, follower);
+const travel = new Travel(() => content.value.shops, mall.meta, player, orbit, finder, follower);
 
 // multiplayer: connects once the visitor enters; without a server the mall stays single-player
 const multi = createMultiplayer({ scene, player, travel, floorAt: (y) => mall.nav.floorAt(y) });
@@ -132,9 +134,34 @@ if (link?.kind === 'at') {
 }
 const still = { x: 0, y: 0 };
 
-// "You are in …": shop zones show the name of the shop assigned to that slot in mall.config.ts
-const shopBySlot = new Map(config.shops.map((s) => [s.slot, s.name]));
+// "You are in …": shop zones show the name of the shop currently assigned to that slot
 const zones = new ZoneTracker(mall.meta.zones);
+function showZone() {
+  const z = zones.current;
+  if (!z) return;
+  const shopName = z.slot ? content.value.shops.find((s) => s.slot === z.slot)?.name : undefined;
+  zone.value = shopName
+    ? { id: z.id, name: shopName, area: null }
+    : { id: z.id, name: z.name, area: z.slot ? 'vacant' : z.id };
+}
+
+// live content: when shops change, rebuild the storefronts (signs, strips, floors) in place
+let buildSeq = 0;
+effect(() => {
+  const shops = content.value.shops;
+  const seq = ++buildSeq;
+  if (seq === 1) return; // the first build happened above
+  void buildStorefronts(mall.meta, shops, vacant()).then((next) => {
+    if (seq !== buildSeq) return next.dispose(); // a newer change already superseded this one
+    scene.remove(storefronts.group);
+    storefronts.dispose();
+    storefronts = next;
+    scene.add(next.group);
+  });
+  // a shop that no longer exists can't keep its panel open
+  if (panel.value && !shops.some((s) => s.id === panel.value)) panel.value = null;
+  showZone();
+});
 
 // landing: a slow dolly down the concourse; on Enter, fly down to the follow camera
 const intro = new Intro();
@@ -182,13 +209,7 @@ startLoop({
     }
     const visit = input.keys.consume('KeyE'); // always consume, so a stray press can't fire later
     if (visit && near && !uiHasFocus.value) openShop(near);
-    if (zones.update(dt, player.pos) && zones.current) {
-      const z = zones.current;
-      const shopName = z.slot ? shopBySlot.get(z.slot) : undefined;
-      zone.value = shopName
-        ? { id: z.id, name: shopName, area: null }
-        : { id: z.id, name: z.name, area: z.slot ? 'vacant' : z.id };
-    }
+    if (zones.update(dt, player.pos)) showZone();
   },
   render: (alpha, dt) => {
     const t0 = performance.now();

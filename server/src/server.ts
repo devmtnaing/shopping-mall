@@ -1,7 +1,9 @@
 // HTTP (health) + WebSocket server. One process, rooms in memory (docs/adr/0003).
 import { randomBytes } from 'node:crypto';
 import { createServer } from 'node:http';
+import type { MallConfig } from '@shopping-mall/shared/config';
 import { NET_HZ } from '@shopping-mall/shared/constants';
+import { renderDirectory } from '@shopping-mall/shared/directory';
 import { parseClientMessage } from '@shopping-mall/shared/messages';
 import {
   type ClientMessage,
@@ -10,6 +12,7 @@ import {
   type ServerMessage,
 } from '@shopping-mall/shared/protocol';
 import { type RawData, type WebSocket, WebSocketServer } from 'ws';
+import { loadContent } from './db/content.ts';
 import type { Sql } from './db/db.ts';
 import { issueHostToken, secretMatches, verifyHostToken } from './host.ts';
 import { contentApi } from './http/content-api.ts';
@@ -47,6 +50,8 @@ export type ServerOptions = {
   assetUrl?: (id: string) => string;
   /** Object storage for uploads (S3-compatible). */
   storage?: Storage | null;
+  /** Content to show when there's no database (the directory page uses it). */
+  fallbackContent?: MallConfig;
 };
 
 const ROOM_NAME = /^[a-z0-9-]{1,32}$/;
@@ -72,6 +77,7 @@ export async function startServer(opts: ServerOptions = {}) {
     db,
     assetUrl = (id: string) => `/assets/${id}`,
     storage = null,
+    fallbackContent,
   } = opts;
   const files = filesHandler(storage);
   /** Host sign-in attempts per IP: 5, then one a minute. */
@@ -106,6 +112,13 @@ export async function startServer(opts: ServerOptions = {}) {
     }
     if (api && (await api(req, res))) return;
     if (await files(req, res)) return;
+    // the plain-HTML shop directory, always current (live from the database when there is one)
+    if ((req.url === '/directory/' || req.url === '/directory') && (db || fallbackContent)) {
+      const cfg = db ? (await loadContent(db, assetUrl)).config : (fallbackContent as MallConfig);
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache' });
+      res.end(renderDirectory(cfg));
+      return;
+    }
     if (req.url === '/health') {
       const list = [...rooms.values()].map((r) => ({ name: r.name, players: r.players.size }));
       const host = [...rooms.values()].some((r) => [...r.players.values()].some((p) => p.host && p.socket));

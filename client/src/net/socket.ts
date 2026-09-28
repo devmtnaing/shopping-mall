@@ -146,7 +146,7 @@ export function serverUrl(room: string): string | null {
 }
 
 /** The server's HTTP address for `path`, or null without a server. */
-function httpUrl(path: string): string | null {
+export function httpUrl(path: string): string | null {
   const ws = serverUrl('main');
   if (!ws) return null;
   const url = new URL(ws);

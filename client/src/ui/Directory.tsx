@@ -1,9 +1,9 @@
 // "Where do you want to go?": searchable list of shops. Picking one travels there.
 
-import config from 'virtual:mall-config';
 import type { Shop } from '@shopping-mall/shared/config';
 import { useMemo, useRef, useState } from 'preact/hooks';
 import { commands } from '../commands';
+import { content } from '../content';
 import { t } from '../i18n';
 import { searchShops } from '../shops/search';
 import { dialog } from '../state';
@@ -20,7 +20,8 @@ function where(shop: Shop) {
 export function Directory() {
   const [query, setQuery] = useState('');
   const list = useRef<HTMLUListElement>(null);
-  const results = useMemo(() => searchShops(config.shops, query), [query]);
+  const shops = content.value.shops;
+  const results = useMemo(() => searchShops(shops, query), [shops, query]);
   const close = () => (dialog.value = null);
   const go = (id: string) => {
     close();

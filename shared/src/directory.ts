@@ -1,7 +1,7 @@
-// Renders /directory/index.html at build time from mall.config.ts: every shop, its links and
-// products, as plain HTML. No JavaScript, so it works for crawlers, screen readers and devices
-// that can't run WebGL. Each shop links back into the 3D mall (?s=<id>).
-import type { MallConfig, Shop } from '@shopping-mall/shared/config';
+// The plain-HTML shop directory: every shop, its links and products, with no JavaScript, so it
+// works for crawlers, screen readers and devices that can't run WebGL. Rendered at build time from
+// mall.config.ts, and live by the server from the database. Each shop links into the 3D mall (?s=<id>).
+import type { MallConfig, Shop } from './config.ts';
 
 const esc = (s: string) =>
   s.replace(

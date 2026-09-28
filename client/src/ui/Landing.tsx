@@ -1,7 +1,7 @@
 // Welcome screen, shown over a slowly orbiting view of the mall while the world loads behind it.
-import config from 'virtual:mall-config';
 import { useSignal } from '@preact/signals';
 import { useEffect, useRef } from 'preact/hooks';
+import { content } from '../content';
 import { t } from '../i18n';
 import { type Health, health } from '../net/socket';
 import { BODY_COLORS, mallMeta, phase, profile, saveProfile } from '../state';
@@ -14,7 +14,7 @@ export function Landing() {
   const waiting = useSignal(false);
   const ready = mallMeta.value !== null;
   const returning = profile.value.name !== '';
-  const [first, ...rest] = config.mall.name.split(' ');
+  const [first, ...rest] = content.value.mall.name.split(' ');
   const status = useSignal<Health | null>(null);
   useEffect(() => {
     health().then((h) => (status.value = h));
@@ -49,7 +49,7 @@ export function Landing() {
         {first}
         {rest.length > 0 && <span> {rest.join(' ')}</span>}
       </h1>
-      {config.mall.tagline && <p class="landing-tagline">{config.mall.tagline}</p>}
+      {content.value.mall.tagline && <p class="landing-tagline">{content.value.mall.tagline}</p>}
 
       <label class="field-label" for="landing-name">
         {t('landing.name')}

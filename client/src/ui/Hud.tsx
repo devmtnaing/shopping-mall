@@ -1,5 +1,6 @@
 // Always-on overlay: brand pill (top left), zone label (top centre), share / language / fullscreen (top right).
-import config from 'virtual:mall-config';
+
+import { content } from '../content';
 import { locales, nextLocale, setLocale, t, zoneName } from '../i18n';
 import { linkUrl } from '../links';
 import { netStatus, pose, roomCount, zone } from '../state';
@@ -18,8 +19,8 @@ function initials(name: string) {
 export function BrandPill() {
   return (
     <div class="brand glass">
-      <span class="brand-mark">{initials(config.mall.name)}</span>
-      <span class="brand-name">{config.mall.name}</span>
+      <span class="brand-mark">{initials(content.value.mall.name)}</span>
+      <span class="brand-name">{content.value.mall.name}</span>
       {netStatus.value === 'online' && (
         <span class="brand-online">
           <i aria-hidden="true" />
@@ -55,7 +56,7 @@ export function NetNotice() {
 
 export function TopRight({ playing }: { playing: boolean }) {
   const canFullscreen = typeof document.documentElement.requestFullscreen === 'function';
-  const shareSpot = () => share(linkUrl({ kind: 'at', ...pose.value }), config.mall.name);
+  const shareSpot = () => share(linkUrl({ kind: 'at', ...pose.value }), content.value.mall.name);
   const toggle = () => {
     if (document.fullscreenElement) document.exitFullscreen();
     else document.documentElement.requestFullscreen().catch(() => {});

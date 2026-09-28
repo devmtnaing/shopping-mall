@@ -1,5 +1,6 @@
 // "Lumen Coffee · Visit [E]" pill that appears when you walk up to a shop.
-import config from 'virtual:mall-config';
+
+import { content } from '../content';
 import { t } from '../i18n';
 import { nearbyShop, openShop } from '../state';
 
@@ -7,7 +8,7 @@ const finePointer = typeof matchMedia === 'function' && matchMedia('(pointer: fi
 
 export function ShopPrompt() {
   const id = nearbyShop.value;
-  const shop = id ? config.shops.find((s) => s.id === id) : undefined;
+  const shop = id ? content.value.shops.find((s) => s.id === id) : undefined;
   // stays mounted while the panel is open (it's under the modal backdrop), so focus can return to it
   if (!shop) return null;
   return (

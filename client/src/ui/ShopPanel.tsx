@@ -1,9 +1,9 @@
 // The shop panel: who they are, what they sell, where to go next. Plain DOM, no three.js,
 // so it also works for visitors whose device can't run WebGL.
 
-import config from 'virtual:mall-config';
 import type { Shop } from '@shopping-mall/shared/config';
 import { useEffect, useState } from 'preact/hooks';
+import { content } from '../content';
 import { locale, t } from '../i18n';
 import { linkUrl } from '../links';
 import { formatPrice, loadProducts, type Product, type ProductsResult } from '../shops/products';
@@ -26,8 +26,8 @@ function ProductCard({ p, accent }: { p: Product; accent: string }) {
       </div>
       <div class="product-name">{p.name}</div>
       <div class="product-price">
-        {formatPrice(p.price, config.mall.currency, locale.value)}
-        {p.compareAt && <s>{formatPrice(p.compareAt, config.mall.currency, locale.value)}</s>}
+        {formatPrice(p.price, content.value.mall.currency, locale.value)}
+        {p.compareAt && <s>{formatPrice(p.compareAt, content.value.mall.currency, locale.value)}</s>}
       </div>
     </>
   );
@@ -74,7 +74,7 @@ function Products({ shop }: { shop: Shop }) {
 }
 
 export function ShopPanel({ id }: { id: string }) {
-  const shop = config.shops.find((s) => s.id === id);
+  const shop = content.value.shops.find((s) => s.id === id);
   if (!shop) return null;
   return (
     <Dialog title={shop.name} eyebrow={shop.category} variant="sheet" onClose={() => (panel.value = null)}>
@@ -107,7 +107,9 @@ export function ShopPanel({ id }: { id: string }) {
         <button
           type="button"
           class="cta cta-ghost"
-          onClick={() => share(linkUrl({ kind: 'shop', id: shop.id }), `${shop.name} · ${config.mall.name}`)}
+          onClick={() =>
+            share(linkUrl({ kind: 'shop', id: shop.id }), `${shop.name} · ${content.value.mall.name}`)
+          }
         >
           {t('shop.share')}
           <IconShare size={18} />

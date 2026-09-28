@@ -1,7 +1,7 @@
 import { parseConfig } from '@shopping-mall/shared/config';
+import { renderDirectory } from '@shopping-mall/shared/directory';
 import { describe, expect, it } from 'vitest';
 import config from '../../mall.config';
-import { renderDirectory } from '../plugins/directory';
 
 const cfg = parseConfig(config);
 

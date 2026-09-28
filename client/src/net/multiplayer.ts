@@ -5,6 +5,7 @@ import { effect } from '@preact/signals';
 import { ANIM, FLAG_GROUNDED, packAnim } from '@shopping-mall/shared/protocol';
 import type { Camera, Scene } from 'three';
 import { Vector3 } from 'three';
+import { loadContent, onContentVersion } from '../content';
 import { t } from '../i18n';
 import type { PlayerController } from '../player/controller';
 import type { Travel } from '../player/travel';
@@ -69,8 +70,11 @@ export function createMultiplayer(opts: {
         announcement.value = { text: m.text, key: Date.now() };
         return addChat({ kind: 'sys', text: `📣 ${m.text}` });
       }
-      if (m.t === 'welcome') remotes.welcome(m.id, m.players);
-      else if (m.t === 'presence') {
+      if (m.t === 'content') return onContentVersion(m.version);
+      if (m.t === 'welcome') {
+        remotes.welcome(m.id, m.players);
+        void loadContent(); // catch up on anything that changed while we were away
+      } else if (m.t === 'presence') {
         const leaving = m.left.map((id) => remotes.players.get(id)?.info.name ?? '');
         announce(
           m.joined.map((p) => p.name),

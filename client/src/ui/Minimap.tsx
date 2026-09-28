@@ -2,15 +2,14 @@
 // mall) is up. Click a shop to travel there, or open floor to walk there. The directory is the
 // accessible way to do the same, so the map itself is hidden from screen readers.
 
-import config from 'virtual:mall-config';
 import { useSignal } from '@preact/signals';
 import type { MallMeta, Slot } from '@shopping-mall/shared/meta';
 import { commands } from '../commands';
+import { content } from '../content';
 import { t } from '../i18n';
 import { others, pose } from '../state';
 
 const PX = 2.6; // pixels per metre
-const bySlot = new Map(config.shops.map((s) => [s.slot, s]));
 
 function floorOf(meta: MallMeta, slot: Slot) {
   return meta.floors.findIndex((f) => f.id === slot.floor);
@@ -52,6 +51,7 @@ function You({ minX, minZ, floor }: { minX: number; minZ: number; floor: number 
 }
 
 export function Minimap({ meta }: { meta: MallMeta }) {
+  const bySlot = new Map(content.value.shops.map((s) => [s.slot, s]));
   const viewFloor = useSignal<number | null>(null); // null = follow the player
   const floor = viewFloor.value ?? pose.value.floor;
   const all = meta.slots.map((s) => s.interior);

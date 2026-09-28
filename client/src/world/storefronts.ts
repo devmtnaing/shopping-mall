@@ -33,6 +33,8 @@ export type Storefronts = {
   nearby(feet: Vector3): Shop | null;
   /** Repaint the shared "Coming soon" sign (e.g. after a language change). */
   setVacantText(title: string, subtitle: string): Promise<void>;
+  /** Free geometries, materials and textures (before replacing it with a rebuilt one). */
+  dispose(): void;
 };
 
 export async function buildStorefronts(
@@ -148,5 +150,16 @@ export async function buildStorefronts(
     vacantTex.needsUpdate = true;
   }
 
-  return { group, nearby, setVacantText };
+  function dispose() {
+    group.traverse((o) => {
+      const mesh = o as Mesh;
+      if (!mesh.isMesh) return;
+      mesh.geometry.dispose();
+      const mat = mesh.material as MeshBasicMaterial;
+      mat.map?.dispose();
+      mat.dispose();
+    });
+  }
+
+  return { group, nearby, setVacantText, dispose };
 }

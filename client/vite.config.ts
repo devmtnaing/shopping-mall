@@ -1,9 +1,9 @@
 import { resolve } from 'node:path';
 import preact from '@preact/preset-vite';
 import { parseConfig } from '@shopping-mall/shared/config';
+import { renderDirectory } from '@shopping-mall/shared/directory';
 import { defineConfig, type Plugin } from 'vite';
 import rawConfig from '../mall.config';
-import { renderDirectory } from './plugins/directory';
 
 const CONFIG_FILE = resolve(__dirname, '../mall.config.ts');
 const VIRTUAL_ID = 'virtual:mall-config';

@@ -21,7 +21,7 @@ export class Travel {
   onTeleport: () => void = () => {};
 
   constructor(
-    private readonly shops: readonly Shop[],
+    private readonly shops: () => readonly Shop[],
     private readonly meta: MallMeta,
     private readonly player: PlayerController,
     private readonly orbit: OrbitCamera,
@@ -31,7 +31,7 @@ export class Travel {
 
   /** Where to stand for a shop: just outside its doorway, facing in. */
   private standFor(id: string) {
-    const shop = this.shops.find((s) => s.id === id);
+    const shop = this.shops().find((s) => s.id === id);
     const slot = shop && this.meta.slots.find((s) => s.id === shop.slot);
     if (!slot) return null;
     // door yaw faces into the shop, so step back along it to stand outside

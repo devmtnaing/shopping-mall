@@ -22,6 +22,7 @@ const server = await startServer({
   reportWebhook: process.env.REPORT_WEBHOOK,
   hostSecret: process.env.HOST_SECRET || undefined,
   db: db ?? undefined,
+  fallbackContent: parseConfig(config),
   storage,
 });
 console.log(`shopping-mall server listening on :${server.port} (ws path /ws, health /health)`);
