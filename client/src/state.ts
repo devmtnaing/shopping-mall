@@ -31,6 +31,9 @@ export const zone = signal<{ id: string; name: string; area: string | null } | n
 /** Player position for the minimap, updated at most 10× a second. `floor` indexes meta.floors. */
 export const pose = signal({ x: 0, z: 0, yaw: 0, floor: 0 });
 
+/** Other visitors for the minimap, refreshed twice a second. */
+export const others = signal<{ x: number; z: number; floor: number; color: string }[]>([]);
+
 /** Id of the shop whose door the player is near (drives the "Visit" prompt). */
 export const nearbyShop = signal<string | null>(null);
 

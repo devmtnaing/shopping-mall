@@ -7,13 +7,33 @@ import type { MallMeta, Slot } from '@plaza/shared/meta';
 import { useSignal } from '@preact/signals';
 import { commands } from '../commands';
 import { t } from '../i18n';
-import { pose } from '../state';
+import { others, pose } from '../state';
 
 const PX = 2.6; // pixels per metre
 const bySlot = new Map(config.shops.map((s) => [s.slot, s]));
 
 function floorOf(meta: MallMeta, slot: Slot) {
   return meta.floors.findIndex((f) => f.id === slot.floor);
+}
+
+function Others({ minX, minZ, floor }: { minX: number; minZ: number; floor: number }) {
+  return (
+    <g>
+      {others.value
+        .filter((o) => o.floor === floor)
+        .map((o, i) => (
+          <circle
+            key={i}
+            cx={(o.x - minX) * PX}
+            cy={(o.z - minZ) * PX}
+            r="2.4"
+            fill={o.color}
+            stroke="#1b1a18"
+            stroke-width="0.8"
+          />
+        ))}
+    </g>
+  );
 }
 
 function You({ minX, minZ, floor }: { minX: number; minZ: number; floor: number }) {
@@ -114,6 +134,7 @@ export function Minimap({ meta }: { meta: MallMeta }) {
             stroke-dasharray="2 2"
           />
         ))}
+        <Others minX={minX} minZ={minZ} floor={floor} />
         <You minX={minX} minZ={minZ} floor={floor} />
       </svg>
     </aside>

@@ -1,5 +1,4 @@
 import config from 'virtual:plaza-config';
-import { ANIM, FLAG_GROUNDED, packAnim } from '@plaza/shared/protocol';
 import { effect } from '@preact/signals';
 import { Color, DirectionalLight, Fog, HemisphereLight, Scene } from 'three';
 import { installCommands } from './commands';
@@ -7,7 +6,7 @@ import { locale, t } from './i18n';
 import type { Key } from './i18n/en';
 import { parseLink } from './links';
 import { startLoop } from './loop';
-import { NetClient, serverUrl } from './net/socket';
+import { createMultiplayer } from './net/multiplayer';
 import { createPlaceholderBody } from './player/body';
 import { OrbitCamera } from './player/camera';
 import { PlayerController } from './player/controller';
@@ -24,13 +23,11 @@ import { createRenderer } from './render/renderer';
 import {
   mallMeta,
   nearbyShop,
-  netStatus,
   openShop,
   overview,
   phase,
   pose,
   profile,
-  roomCount,
   toast,
   uiHasFocus,
   zone,
@@ -41,13 +38,6 @@ import { loadMall } from './world/mall';
 import { buildStorefronts } from './world/storefronts';
 import { ZoneTracker } from './world/zones';
 import './style.css';
-
-/** Coarse animation state for the wire: remote players animate from this. */
-function animState(p: PlayerController) {
-  if (!p.grounded) return p.vel.y > 0 ? ANIM.jump : ANIM.fall;
-  if (p.speed > 4.5) return ANIM.run;
-  return p.speed > 0.3 ? ANIM.walk : ANIM.idle;
-}
 
 document.title = config.mall.name;
 const debugMode = new URLSearchParams(location.search).has('debug');
@@ -100,28 +90,8 @@ const walkTo = new WalkTo(camera, mall.collider, mall.meta, finder, follower);
 scene.add(walkTo.marker);
 const travel = new Travel(config.shops, mall.meta, player, orbit, finder, follower);
 
-// multiplayer: connect once the visitor enters; without a server the mall just stays single-player
-const room = new URLSearchParams(location.search).get('room') ?? 'main';
-const net = new NetClient(serverUrl(room), {
-  status: (s) => {
-    netStatus.value = s;
-  },
-  message: (m) => {
-    if (m.t === 'welcome') roomCount.value = m.players.length + 1;
-    else if (m.t === 'presence')
-      roomCount.value = Math.max(1, roomCount.value + m.joined.length - m.left.length);
-  },
-  snapshot: () => {},
-  snapshotEnd: () => {},
-});
-travel.onTeleport = () => net.send({ t: 'teleport' });
-const connect = () => net.connect(profile.value.name, { color: profile.value.color });
-addEventListener('pagehide', () => net.disconnect()); // leave promptly, don't wait out the grace period
-addEventListener('pageshow', (e) => {
-  if (e.persisted && phase.value === 'playing') connect(); // restored from the back/forward cache
-});
-const wire = { x: 0, y: 0, z: 0, yaw: 0, anim: 0, flags: 0 };
-let netStep = 0;
+// multiplayer: connects once the visitor enters; without a server the mall stays single-player
+const multi = createMultiplayer({ scene, player, travel, floorAt: (y) => mall.nav.floorAt(y) });
 installCommands({
   travelToShop: (id) => travel.toShop(id),
   walkTo: (x, z, floor) => {
@@ -168,7 +138,6 @@ effect(() => {
   if (phase.value !== 'playing' || intro.flying) return;
   intro.begin();
   performance.mark('playable');
-  connect();
   if (linkProblem) toast(t(linkProblem), 4000);
 });
 
@@ -203,16 +172,7 @@ startLoop({
     const arrived = intro.done ? travel.arrived(near) : null;
     if (arrived) openShop(arrived);
     if (input.keys.consume('KeyM') && !uiHasFocus.value) overview.value = !overview.value;
-    // movement to the server at 15 Hz (every 4th 60 Hz step)
-    if (++netStep % 4 === 0 && net.online) {
-      wire.x = player.pos.x;
-      wire.y = player.pos.y;
-      wire.z = player.pos.z;
-      wire.yaw = player.facing;
-      wire.anim = packAnim(animState(player), player.speed);
-      wire.flags = player.grounded ? FLAG_GROUNDED : 0;
-      net.sendInput(wire);
-    }
+    multi.step();
     const visit = input.keys.consume('KeyE'); // always consume, so a stray press can't fire later
     if (visit && near && !uiHasFocus.value) openShop(near);
     if (zones.update(dt, player.pos) && zones.current) {
@@ -256,6 +216,7 @@ startLoop({
     fog.near = 60 + 200 * over.t;
     fog.far = 140 + 200 * over.t;
 
+    multi.render(now, camera);
     renderer.render(scene, camera);
     if (debug) {
       debug.set('pos', `${player.pos.x.toFixed(1)} ${player.pos.y.toFixed(2)} ${player.pos.z.toFixed(1)}`);

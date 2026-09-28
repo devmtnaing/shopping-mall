@@ -36,8 +36,8 @@ describe('NetClient against a real server', () => {
     const net = new NetClient(`ws://127.0.0.1:${port}/ws?room=main`, {
       status: (s) => statuses.push(s),
       message: () => {},
+      snapshotStart: () => {},
       snapshot: () => {},
-      snapshotEnd: () => {},
     });
     return { net, statuses };
   }
@@ -70,8 +70,8 @@ describe('NetClient against a real server', () => {
     const net = new NetClient(null, {
       status: () => {},
       message: () => {},
+      snapshotStart: () => {},
       snapshot: () => {},
-      snapshotEnd: () => {},
     });
     net.connect('Mya', { color: '#e2b857' });
     expect(net.status).toBe('off');

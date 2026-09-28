@@ -23,9 +23,10 @@ const OFFLINE_AFTER = 5; // 0.5 + 1 + 2 + 4 s ≈ 7.5 s of trying before we say 
 export type NetEvents = {
   status: (s: NetStatus) => void;
   message: (m: ServerMessage) => void;
-  /** One call per player in a snapshot; `pose` is reused between calls, so copy it. */
-  snapshot: (tick: number, id: number, pose: Pose) => void;
-  snapshotEnd: (tick: number) => void;
+  /** A snapshot is starting (its server tick); then one `snapshot` call per player in it. */
+  snapshotStart: (tick: number) => void;
+  /** `pose` is reused between calls, so copy what you keep. */
+  snapshot: (id: number, pose: Pose) => void;
 };
 
 export class NetClient {
@@ -92,10 +93,10 @@ export class NetClient {
     };
     ws.onmessage = (e: MessageEvent) => {
       if (typeof e.data === 'string') return this.onText(e.data);
-      const tick = decodeSnapshot(e.data as ArrayBuffer, this.scratch, (id, pose) =>
-        this.on.snapshot(0, id, pose),
-      );
-      if (tick !== null) this.on.snapshotEnd(tick);
+      const data = e.data as ArrayBuffer;
+      if (data.byteLength < 4) return;
+      this.on.snapshotStart(new DataView(data).getUint16(1, true));
+      decodeSnapshot(data, this.scratch, this.on.snapshot);
     };
     ws.onclose = () => {
       if (this.ws !== ws) return; // we closed it on purpose

@@ -84,7 +84,7 @@ T-104 uses a "floating capsule" (body capsule from step height up, with ground r
 | T-403 | Sessions: resume tokens (30 s grace), rooms of 100, auto-shard `main-N`, interest by zone (≤ 40 nearest) | M | server | Reconnecting within 30 s produces no join/leave. The 101st player lands in `main-2` |
 | T-404 | Client socket: backoff 0.5→8 s, resume, offline banner, falls back to single-player | S | client net | Network kill for 10 s → resumes silently. Server down → the mall still works alone |
 | T-405 | Snapshot ring buffer + interpolation at −100 ms, extrapolation ≤ 250 ms | M | client net | Smooth motion at 10 % packet loss (simulated) |
-| T-406 | Remote avatars: pool, LOD tiers, animation throttle, instanced name tags with distance fade | M | client perf | 100 remote players: ≤ 16 ms/frame on Medium with 40 visible |
+| T-406 | Remote avatars: pool, LOD tiers, animation throttle, instanced name tags with distance fade | M | client perf | 100 remote players: ≤ 16 ms/frame on Medium with 40 visible. *(Done for placeholder capsules: one instanced draw for all bodies and one for all tags. LOD tiers and animation throttling move to T-209/T-210, once there are real skinned avatars to throttle.)* |
 | T-407 | Chat: panel, global channel, rate limits, 200 chars, safe rendering, join/leave batched every 2 s | M | client server ui | No `innerHTML` with user text (lint rule). Batching verified by test |
 | T-408 | Emotes + speech bubbles above avatars (5 s) | S | client | Visible only to the interest set |
 | T-409 | Moderation: name/chat filter (pluggable word list), per-user mute (client), report → server log/webhook | M | server ui | Muted user's chat and bubbles hidden. The report includes the last 20 messages |
