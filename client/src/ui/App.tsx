@@ -1,22 +1,39 @@
 // The DOM overlay on top of the 3D canvas. Components read signals from ../state and send
 // commands through ../commands; nothing here imports three.js.
+
+import { useSignal } from '@preact/signals';
 import { render } from 'preact';
 import { useEffect } from 'preact/hooks';
 import { chatOpen, dialog, mallMeta, panel, phase } from '../state';
 import { Chat } from './Chat';
-import { Directory } from './Directory';
 import { Dock } from './Dock';
 import { Fade } from './Fade';
-import { Help } from './Help';
 import { BrandPill, NetNotice, TopRight, ZoneLabel } from './Hud';
 import { Landing } from './Landing';
 import { Minimap } from './Minimap';
-import { ShopPanel } from './ShopPanel';
 import { ShopPrompt } from './ShopPrompt';
 import { Toasts } from './Toasts';
 import './ui.css';
 
+type Dialogs = typeof import('./dialogs');
+let dialogsLoad: Promise<Dialogs> | null = null;
+const loadDialogs = () => {
+  dialogsLoad ??= import('./dialogs');
+  return dialogsLoad;
+};
+
 function App() {
+  const dialogs = useSignal<Dialogs | null>(null);
+  const needDialogs = dialog.value !== null || panel.value !== null;
+  useEffect(() => {
+    if (phase.value !== 'playing' && !needDialogs) return;
+    // fetch when first needed, or quietly once the visitor is in
+    const go = () => loadDialogs().then((m) => (dialogs.value = m));
+    if (needDialogs) go();
+    else if ('requestIdleCallback' in window) requestIdleCallback(go, { timeout: 4000 });
+    else setTimeout(go, 1500);
+  }, [phase.value, needDialogs]);
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement;
@@ -63,9 +80,9 @@ function App() {
       <Chat />
       <Toasts />
       <Fade />
-      {dialog.value === 'help' && <Help />}
-      {dialog.value === 'directory' && <Directory />}
-      {panel.value && <ShopPanel id={panel.value} key={panel.value} />}
+      {dialogs.value && dialog.value === 'help' && <dialogs.value.Help />}
+      {dialogs.value && dialog.value === 'directory' && <dialogs.value.Directory />}
+      {dialogs.value && panel.value && <dialogs.value.ShopPanel id={panel.value} key={panel.value} />}
     </>
   );
 }
