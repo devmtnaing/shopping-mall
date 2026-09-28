@@ -11,7 +11,7 @@
 | Collision | **three-mesh-bvh** capsule vs. a simplified collision mesh | Handles stairs, ramps and escalators with no physics engine |
 | Pathfinding | A* on a baked walkable grid (0.25 m cells) | ~100 lines, no WASM. Enough for a mall |
 | Assets | glTF + **Meshopt** + **KTX2 (Basis)**, processed by `gltf-transform` | Smallest downloads with fast decoders |
-| Server | **Node 22 / Bun** + `ws`, one process, rooms in memory | Anyone can self-host with Docker. [ADR 0003](adr/0003-websocket-server-binary-protocol.md) |
+| Server | **Node 24** + `ws`, one process, rooms in memory, TypeScript run directly (no build step) | Anyone can self-host with Docker. [ADR 0003](adr/0003-websocket-server-binary-protocol.md) |
 | Protocol | Hand-packed binary over WebSocket (`DataView`), JSON for rare messages | ~14 bytes per player per tick |
 | Tests | Vitest (unit), Playwright (e2e + perf smoke) | |
 | Lint/format | Biome | One fast tool |
@@ -38,10 +38,12 @@ plaza/
 │     └─ state.ts           # signals shared by game and UI
 ├─ server/
 │  └─ src/
-│     ├─ index.ts           # http + ws upgrade, health, config
-│     ├─ room.ts            # tick, interest, broadcast
-│     ├─ session.ts         # join, resume, rate limits
-│     └─ moderation.ts      # name/chat filters, mute, kick
+│     ├─ main.ts            # entry: env config, metrics
+│     ├─ server.ts          # http (health, host sign-in) + ws: join, resume, rooms, messages
+│     ├─ room.ts            # tick, nearest-40 interest, broadcast, batched presence
+│     ├─ movement.ts        # speed / bounds checks
+│     ├─ moderation.ts      # blocklist, reports
+│     └─ host.ts            # host tokens
 ├─ shared/
 │  ├─ protocol.ts           # message ids, binary layouts, encode/decode
 │  ├─ config.ts             # config schema (zod) + types
@@ -103,7 +105,7 @@ The game writes a handful of signals (`zone`, `nearbyShop`, `online`, `chat`, `p
   - `mall.meta.json`: zones (AABBs + names), shop slots (door pose, sign rectangle, window rectangle), seats, spawn points and escalator paths. It's baked from Blender empties.
 - **Streaming:** the atrium + concourse chunk loads first (it's the first playable frame). Shop interiors load when the player comes within 25 m, or when their panel opens. They unload when more than 60 m away and older than LRU size 6.
 - **Shop slots:** `plaza.config.ts` maps `shopId → slotId`. Each slot defines where the sign, window and door go, so shops move around without touching Blender.
-- **Signage:** generated on an `OffscreenCanvas` in a worker from config (text, colours, logo), then uploaded as a texture. It's cached in IndexedDB by content hash. The reference already proves this works with complex scripts.
+- **Signage:** painted on a canvas from config (text, colours, logo) while the world loads, about 3 ms per sign, then uploaded as a texture. Script fonts (e.g. Burmese) load only when a sign needs them.
 
 ## Avatars
 
