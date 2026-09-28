@@ -20,7 +20,7 @@ export type Toast = { id: number; text: string };
 export const toasts = signal<Toast[]>([]);
 
 /** True while the UI owns the keyboard (a dialog is open), so the player shouldn't move. */
-export const uiHasFocus = computed(() => dialog.value !== null);
+export const uiHasFocus = computed(() => dialog.value !== null || panel.value !== null);
 
 export function openShop(id: string) {
   panel.value = id;

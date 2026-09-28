@@ -1,0 +1,19 @@
+{
+  "products": [
+    {
+      "id": "nb-a5",
+      "name": "Dot-grid notebook, A5",
+      "price": 16,
+      "url": "https://example.com/paper-trail/notebook"
+    },
+    {
+      "id": "pen",
+      "name": "Brass fountain pen",
+      "price": 48,
+      "compareAt": 60,
+      "url": "https://example.com/paper-trail/pen"
+    },
+    { "id": "novel", "name": "Staff pick: The Long Walk Home", "price": 22 },
+    { "id": "cards", "name": "Letterpress cards, set of 6", "price": 12 }
+  ]
+}

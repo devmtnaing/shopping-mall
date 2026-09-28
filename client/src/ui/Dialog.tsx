@@ -2,12 +2,18 @@
 // background come from the browser, not from us.
 import type { ComponentChildren } from 'preact';
 import { useEffect, useRef } from 'preact/hooks';
-import { dialog } from '../state';
 import { IconClose } from './icons';
 
-type Props = { title: string; eyebrow?: string; children: ComponentChildren };
+type Props = {
+  title: string;
+  eyebrow?: string;
+  /** 'center' for small dialogs, 'sheet' slides in from the right (bottom on phones). */
+  variant?: 'center' | 'sheet';
+  onClose: () => void;
+  children: ComponentChildren;
+};
 
-export function Dialog({ title, eyebrow, children }: Props) {
+export function Dialog({ title, eyebrow, variant = 'center', onClose, children }: Props) {
   const ref = useRef<HTMLDialogElement>(null);
   useEffect(() => {
     const el = ref.current;
@@ -19,14 +25,12 @@ export function Dialog({ title, eyebrow, children }: Props) {
       opener?.focus(); // give focus back to whatever opened the dialog
     };
   }, []);
-  const close = () => {
-    dialog.value = null;
-  };
+  const close = onClose;
   return (
     // biome-ignore lint/a11y/useKeyWithClickEvents: backdrop click is a mouse shortcut; Esc (native to <dialog>) is the keyboard way
     <dialog
       ref={ref}
-      class="dialog"
+      class={`dialog dialog-${variant}`}
       aria-labelledby="dialog-title"
       onCancel={(e) => {
         e.preventDefault();

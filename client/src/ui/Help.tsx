@@ -1,3 +1,4 @@
+import { dialog } from '../state';
 import { Dialog } from './Dialog';
 
 const DESKTOP: [string, string][] = [
@@ -20,7 +21,7 @@ const PHONE: [string, string][] = [
 
 export function Help() {
   return (
-    <Dialog title="Getting around" eyebrow="How to play">
+    <Dialog title="Getting around" eyebrow="How to play" onClose={() => (dialog.value = null)}>
       <div class="help-grid">
         <section>
           <h3>Computer</h3>

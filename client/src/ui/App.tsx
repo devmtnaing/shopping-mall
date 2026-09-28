@@ -2,10 +2,11 @@
 // commands through ../commands; nothing here imports three.js.
 import { render } from 'preact';
 import { useEffect } from 'preact/hooks';
-import { dialog } from '../state';
+import { dialog, panel } from '../state';
 import { Dock } from './Dock';
 import { Help } from './Help';
 import { BrandPill, TopRight, ZoneLabel } from './Hud';
+import { ShopPanel } from './ShopPanel';
 import { ShopPrompt } from './ShopPrompt';
 import { Toasts } from './Toasts';
 import './ui.css';
@@ -29,6 +30,7 @@ function App() {
       <Dock />
       <Toasts />
       {dialog.value === 'help' && <Help />}
+      {panel.value && <ShopPanel id={panel.value} key={panel.value} />}
     </>
   );
 }

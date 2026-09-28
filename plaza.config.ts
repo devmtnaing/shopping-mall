@@ -41,6 +41,8 @@ export default defineConfig({
       colors: { bg: '#1c2a3a', accent: '#9fc6ff' },
       features: ['Staff picks every week', 'Stationery corner'],
       links: [{ label: 'Browse books', url: 'https://example.com/paper-trail' }],
+      // products fetched from a URL (here a demo file in client/public)
+      products: { adapter: 'json-url', url: '/demo/paper-trail.json' },
     },
     {
       id: 'stride',
