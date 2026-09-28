@@ -65,6 +65,9 @@ export function addChat(line: Omit<ChatLine, 'key' | 'at'>) {
   chat.value = [...chat.value, { ...line, key: chatKey++, at: Date.now() }].slice(-50);
 }
 
+/** The emoji bar (phones open it from the dock; desktop has keys 1–6). */
+export const emoteBar = signal(false);
+
 /** Top-down overview camera on/off. */
 export const overview = signal(false);
 

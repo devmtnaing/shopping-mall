@@ -90,6 +90,7 @@ export const my: Partial<Record<Key, string>> = {
   'chat.left': '{name} ထွက်သွားပါပြီ',
   'chat.leftMany': '{n} ယောက် ထွက်သွားပါပြီ',
   'chat.slowDown': 'နည်းနည်း ဖြည်းဖြည်း ပို့ပါ။',
+  'emote.label': 'တုံ့ပြန်မယ်',
   'sign.comingSoon': 'မကြာမီ ဖွင့်မည်',
   'sign.available': 'ဆိုင်ခန်း ငှားရန် ရှိသည်',
 };

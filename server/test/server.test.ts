@@ -200,6 +200,25 @@ describe('movement checks', () => {
   });
 });
 
+describe('emotes', () => {
+  it('reach people nearby, not the whole room', async () => {
+    const near = client();
+    await near.join('Near');
+    const far = client();
+    await far.join('Far');
+    const me = client();
+    await me.join('Me');
+    near.ws.send(encodeInput(0, at(1, 0)));
+    far.ws.send(encodeInput(0, at(0, -100)));
+    me.ws.send(encodeInput(0, at(0, 0)));
+    await sleep(100);
+    me.send({ t: 'emote', e: '👋' });
+    expect(await near.waitFor((m) => m.t === 'emote')).toMatchObject({ e: '👋' });
+    await sleep(150);
+    expect(far.messages.some((m) => m.t === 'emote')).toBe(false);
+  });
+});
+
 describe('chat limits', () => {
   it('lets a burst through, then asks the sender to slow down', async () => {
     const a = client();

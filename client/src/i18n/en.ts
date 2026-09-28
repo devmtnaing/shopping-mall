@@ -89,6 +89,7 @@ export const en = {
   'chat.left': '{name} left',
   'chat.leftMany': '{n} people left',
   'chat.slowDown': 'Slow down a little.',
+  'emote.label': 'React',
   'sign.comingSoon': 'Coming soon',
   'sign.available': 'This unit is available',
 } as const;

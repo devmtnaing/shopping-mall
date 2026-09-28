@@ -18,6 +18,12 @@ const GAME_KEYS = new Set([
   'KeyC',
   'KeyE',
   'KeyM',
+  'Digit1',
+  'Digit2',
+  'Digit3',
+  'Digit4',
+  'Digit5',
+  'Digit6',
 ]);
 
 type KeyEventLike = {

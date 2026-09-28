@@ -7,6 +7,7 @@ import { useEffect } from 'preact/hooks';
 import { chatOpen, dialog, mallMeta, panel, phase } from '../state';
 import { Chat } from './Chat';
 import { Dock } from './Dock';
+import { EmoteBar } from './EmoteBar';
 import { Fade } from './Fade';
 import { BrandPill, NetNotice, TopRight, ZoneLabel } from './Hud';
 import { Landing } from './Landing';
@@ -78,6 +79,7 @@ function App() {
       <Dock />
       {meta && <Minimap meta={meta} />}
       <Chat />
+      <EmoteBar />
       <Toasts />
       <Fade />
       {dialogs.value && dialog.value === 'help' && <dialogs.value.Help />}

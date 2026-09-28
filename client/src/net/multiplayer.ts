@@ -4,9 +4,11 @@
 import { ANIM, FLAG_GROUNDED, packAnim } from '@plaza/shared/protocol';
 import { effect } from '@preact/signals';
 import type { Camera, Scene } from 'three';
+import { Vector3 } from 'three';
 import { t } from '../i18n';
 import type { PlayerController } from '../player/controller';
 import type { Travel } from '../player/travel';
+import { Bubbles } from '../render/bubbles';
 import { Crowd } from '../render/crowd';
 import { addChat, netStatus, others, phase, profile, roomCount, toast } from '../state';
 import { Remotes } from './remotes';
@@ -31,13 +33,18 @@ export function createMultiplayer(opts: {
   const remotes = new Remotes();
   const crowd = new Crowd();
   scene.add(crowd.group);
+  const bubbles = new Bubbles();
 
   const net = new NetClient(serverUrl(room), {
     status: (s) => {
       netStatus.value = s;
     },
     message: (m) => {
-      if (m.t === 'chat') return addChat({ kind: 'msg', name: m.name, text: m.text, host: m.host });
+      if (m.t === 'chat') {
+        bubbles.show(m.id === net.selfId ? 'me' : m.id, m.text);
+        return addChat({ kind: 'msg', name: m.name, text: m.text, host: m.host });
+      }
+      if (m.t === 'emote') return bubbles.show(m.id === net.selfId ? 'me' : m.id, m.e, true);
       if (m.t === 'error' && m.code === 'rate') return toast(t('chat.slowDown'));
       if (m.t === 'welcome') remotes.welcome(m.id, m.players);
       else if (m.t === 'presence') {
@@ -84,10 +91,16 @@ export function createMultiplayer(opts: {
   const wire = { x: 0, y: 0, z: 0, yaw: 0, anim: 0, flags: 0 };
   let steps = 0;
   let dotsAt = 0;
+  const feet = new Vector3();
 
   return {
     net,
     sendChat: (text: string) => net.send({ t: 'chat', text }),
+    /** Emote: shown right away for you, and sent to people nearby when online. */
+    emote(e: string) {
+      if (net.online) net.send({ t: 'emote', e });
+      else bubbles.show('me', e, true);
+    },
     remotes,
     /** Every simulation step: send our movement at 15 Hz (every 4th 60 Hz step). */
     step() {
@@ -101,9 +114,14 @@ export function createMultiplayer(opts: {
       net.sendInput(wire);
     },
     /** Every frame: move everyone else, and refresh minimap dots twice a second. */
-    render(now: number, camera: Camera) {
+    render(now: number, camera: Camera, me: Vector3, width: number, height: number) {
       remotes.update(now);
       crowd.update(remotes, camera, now / 1000);
+      bubbles.update(camera, width, height, (key) => {
+        if (key === 'me') return me;
+        const r = remotes.players.get(key);
+        return r?.visible ? (feet.set(r.pose.x, r.pose.y, r.pose.z) as Vector3) : null;
+      });
       if (now - dotsAt < 500) return;
       dotsAt = now;
       const list: { x: number; z: number; floor: number; color: string }[] = [];

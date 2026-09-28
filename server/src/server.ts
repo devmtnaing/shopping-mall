@@ -27,6 +27,8 @@ export type ServerOptions = {
 const ROOM_NAME = /^[a-z0-9-]{1,32}$/;
 const TELEPORT_WINDOW = 3000;
 const TELEPORT_COOLDOWN = 2000;
+/** Emotes reach people within this many metres. */
+const EMOTE_RADIUS = 40;
 
 type Session = { player: Player; room: Room; timer: NodeJS.Timeout | null };
 
@@ -203,7 +205,8 @@ export async function startServer(opts: ServerOptions = {}) {
         host: player.host || undefined,
       });
     } else if (msg.t === 'emote') {
-      if (player.emoteLimit.take()) room.broadcast({ t: 'emote', id: player.id, e: msg.e });
+      if (player.emoteLimit.take())
+        room.nearby(player, EMOTE_RADIUS, { t: 'emote', id: player.id, e: msg.e });
     }
   }
 

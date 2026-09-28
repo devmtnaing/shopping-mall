@@ -41,6 +41,17 @@ export class Room {
     }
   }
 
+  /** Send to everyone within `radius` metres of `from` (and `from` itself): emotes are local. */
+  nearby(from: Player, radius: number, msg: ServerMessage) {
+    const text = JSON.stringify(msg);
+    const { x, y, z } = from.pose;
+    for (const p of this.players.values()) {
+      if (p.socket?.readyState !== 1) continue;
+      const d = Math.hypot(p.pose.x - x, (p.pose.y - y) * 2, p.pose.z - z);
+      if (p === from || d <= radius) p.socket.send(text);
+    }
+  }
+
   /** Send the batched joins and leaves (called every couple of seconds). */
   flushPresence() {
     if (this.joined.size === 0 && this.left.size === 0) return;

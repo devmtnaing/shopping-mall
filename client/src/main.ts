@@ -1,4 +1,5 @@
 import config from 'virtual:plaza-config';
+import { EMOTES } from '@plaza/shared/protocol';
 import { effect } from '@preact/signals';
 import { Color, DirectionalLight, Fog, HemisphereLight, Scene } from 'three';
 import { installCommands } from './commands';
@@ -95,6 +96,7 @@ const multi = createMultiplayer({ scene, player, travel, floorAt: (y) => mall.na
 installCommands({
   travelToShop: (id) => travel.toShop(id),
   sendChat: (text) => multi.sendChat(text),
+  emote: (e) => multi.emote(e),
   walkTo: (x, z, floor) => {
     const y = mall.meta.floors[floor]?.y ?? 0;
     if (!walkTo.walkToPoint({ x, y, z }, player)) toast(t('toast.cantWalk'));
@@ -174,6 +176,9 @@ startLoop({
     if (arrived) openShop(arrived);
     if (input.keys.consume('KeyM') && !uiHasFocus.value) overview.value = !overview.value;
     multi.step();
+    for (let i = 0; i < EMOTES.length; i++) {
+      if (input.keys.consume(`Digit${i + 1}`) && !uiHasFocus.value) multi.emote(EMOTES[i] as string);
+    }
     const visit = input.keys.consume('KeyE'); // always consume, so a stray press can't fire later
     if (visit && near && !uiHasFocus.value) openShop(near);
     if (zones.update(dt, player.pos) && zones.current) {
@@ -217,7 +222,7 @@ startLoop({
     fog.near = 60 + 200 * over.t;
     fog.far = 140 + 200 * over.t;
 
-    multi.render(now, camera);
+    multi.render(now, camera, body.position, canvas.clientWidth, canvas.clientHeight);
     renderer.render(scene, camera);
     if (debug) {
       debug.set('pos', `${player.pos.x.toFixed(1)} ${player.pos.y.toFixed(2)} ${player.pos.z.toFixed(1)}`);
