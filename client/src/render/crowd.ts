@@ -51,10 +51,11 @@ export class Crowd {
   private readonly alpha: InstancedBufferAttribute;
   private readonly atlas: HTMLCanvasElement;
   private readonly atlasTex: CanvasTexture;
-  /** Atlas cell per player id; freed cells are reused. */
+  /** Atlas cell per player id, only for people currently in view; cells are reused. */
   private readonly cells = new Map<number, number>();
-  private readonly drawn = new Map<number, string>();
-  private version = -1;
+  /** Label currently painted in each cell. */
+  private readonly painted: string[] = [];
+  private atlasDirty = false;
 
   constructor(max = COLS * ROWS) {
     this.max = max;
@@ -97,7 +98,7 @@ export class Crowd {
   }
 
   update(remotes: Remotes, camera: Camera, time: number) {
-    if (remotes.version !== this.version) this.syncTags(remotes);
+    this.releaseHidden(remotes);
     let n = 0;
     for (const r of remotes.players.values()) {
       if (!r.visible || n >= this.max) continue;
@@ -118,46 +119,52 @@ export class Crowd {
     this.bodies.instanceMatrix.needsUpdate = this.noses.instanceMatrix.needsUpdate = true;
     if (this.bodies.instanceColor) this.bodies.instanceColor.needsUpdate = true;
     this.offset.needsUpdate = this.cell.needsUpdate = this.alpha.needsUpdate = true;
+    if (this.atlasDirty) {
+      this.atlasTex.needsUpdate = true;
+      this.atlasDirty = false;
+    }
   }
 
   private writeTag(i: number, r: Remote, camera: Camera) {
     const p = r.pose;
     this.offset.setXYZ(i, p.x, p.y + TAG_Y, p.z);
-    const c = this.cells.get(r.id) ?? 0;
+    const c = this.cellFor(r);
+    if (c < 0) {
+      this.alpha.setX(i, 0); // no free cell (more people in view than the atlas holds): no tag
+      return;
+    }
     this.cell.setXY(i, (c % COLS) / COLS, 1 - (Math.floor(c / COLS) + 1) / ROWS);
     const d = camera.position.distanceTo(pos.set(p.x, p.y + TAG_Y, p.z));
     const fade = 1 - Math.min(1, Math.max(0, (d - FADE_START) / (FADE_END - FADE_START)));
     this.alpha.setX(i, r.info.name ? fade : 0);
   }
 
-  /** Give new players an atlas cell and draw their names; free cells of those who left. */
-  private syncTags(remotes: Remotes) {
-    this.version = remotes.version;
-    for (const id of [...this.cells.keys()]) {
-      if (!remotes.players.has(id)) {
-        this.cells.delete(id);
-        this.drawn.delete(id);
-      }
+  /** Free the cells of people who left or went out of view, so newcomers can use them. */
+  private releaseHidden(remotes: Remotes) {
+    for (const id of this.cells.keys()) {
+      // the pixels stay painted; the cell is repainted only if someone else takes it
+      if (!remotes.players.get(id)?.visible) this.cells.delete(id);
     }
-    const used = new Set(this.cells.values());
-    const g = this.atlas.getContext('2d') as CanvasRenderingContext2D;
-    let changed = false;
-    for (const r of remotes.players.values()) {
-      let c = this.cells.get(r.id);
-      if (c === undefined) {
-        c = 0;
-        while (used.has(c) && c < COLS * ROWS) c++;
-        if (c >= COLS * ROWS) continue; // atlas full: this player just has no tag
-        this.cells.set(r.id, c);
-        used.add(c);
-      }
-      const label = `${r.info.host ? '★ ' : ''}${r.info.name}`;
-      if (this.drawn.get(r.id) === label) continue;
-      drawTag(g, c, label, !!r.info.host);
-      this.drawn.set(r.id, label);
-      changed = true;
+  }
+
+  /** This person's atlas cell, painting their name into a free one if needed. -1 if none free. */
+  private cellFor(r: Remote): number {
+    const label = `${r.info.host ? '★ ' : ''}${r.info.name}`;
+    let c = this.cells.get(r.id);
+    if (c === undefined) {
+      const used = new Set(this.cells.values());
+      // prefer a free cell that already shows this label (someone stepping back into view)
+      c = this.painted.findIndex((l, i) => l === label && !used.has(i));
+      if (c < 0) for (c = 0; c < COLS * ROWS && used.has(c); c++);
+      if (c >= COLS * ROWS) return -1;
+      this.cells.set(r.id, c);
     }
-    if (changed) this.atlasTex.needsUpdate = true;
+    if (this.painted[c] !== label) {
+      drawTag(this.atlas.getContext('2d') as CanvasRenderingContext2D, c, label, !!r.info.host);
+      this.painted[c] = label;
+      this.atlasDirty = true;
+    }
+    return c;
   }
 }
 
@@ -202,7 +209,9 @@ function tagMaterial(map: CanvasTexture) {
         // billboard: spread the quad along the camera's right and up axes
         vec3 right = vec3(viewMatrix[0][0], viewMatrix[1][0], viewMatrix[2][0]);
         vec3 camUp = vec3(viewMatrix[0][1], viewMatrix[1][1], viewMatrix[2][1]);
-        vec3 world = offset + right * position.x * size.x + camUp * position.y * size.y;
+        // shrink tags close to the camera so they never fill the screen
+        float near = clamp(distance(offset, cameraPosition) / 9.0, 0.3, 1.0);
+        vec3 world = offset + (right * position.x * size.x + camUp * position.y * size.y) * near;
         vec4 mvPosition = viewMatrix * vec4(world, 1.0);
         gl_Position = projectionMatrix * mvPosition;
         vUv = cell + uv * cellSize;
