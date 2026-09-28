@@ -1,14 +1,12 @@
 import { STEP } from '@plaza/shared/constants';
 import type { Escalator } from '@plaza/shared/meta';
-import { BufferAttribute, BufferGeometry, Vector3 } from 'three';
+import { Vector3 } from 'three';
 import { describe, expect, it } from 'vitest';
-import { buildGreybox } from '../../tools/greybox/layout';
 import { PlayerController } from '../src/player/controller';
 import { escalatorCarry } from '../src/world/escalators';
+import { collider, greybox } from './greybox';
 
-const { geo, meta } = buildGreybox();
-const collision = new BufferGeometry();
-collision.setAttribute('position', new BufferAttribute(new Float32Array(geo.collision), 3));
+const { meta } = greybox;
 const idle = { x: 0, y: 0, run: false, jump: false, yaw: 0 };
 
 function ride(p: PlayerController, seconds: number, intent = idle) {
@@ -38,7 +36,7 @@ describe('escalatorCarry', () => {
 
 describe('riding the greybox escalators', () => {
   it('carries a player who stands still from the bottom of A to the sky bridge', () => {
-    const p = new PlayerController(collision);
+    const p = new PlayerController(collider);
     p.place(-2, 0, -12.3);
     ride(p, 0.3, { ...idle, y: 1 }); // step on
     ride(p, 16);
@@ -48,7 +46,7 @@ describe('riding the greybox escalators', () => {
   });
 
   it('carries you up B too, which runs the other way (toward +z)', () => {
-    const p = new PlayerController(collision);
+    const p = new PlayerController(collider);
     p.place(2, 0, -45.3, Math.PI);
     ride(p, 0.3, { ...idle, y: 1, yaw: Math.PI });
     ride(p, 16);
@@ -57,12 +55,12 @@ describe('riding the greybox escalators', () => {
   });
 
   it('lets you walk up faster than it moves, and walk down against it', () => {
-    const up = new PlayerController(collision);
+    const up = new PlayerController(collider);
     up.place(-2, 0, -12.3);
     ride(up, 4, { ...idle, y: 1 });
     expect(up.pos.y).toBeGreaterThan(7.5);
 
-    const down = new PlayerController(collision);
+    const down = new PlayerController(collider);
     down.place(-2, 7.6, -26);
     ride(down, 0.2);
     ride(down, 12, { ...idle, y: -1 }); // walk backwards (+z) = down A, against its motion
@@ -70,7 +68,7 @@ describe('riding the greybox escalators', () => {
   });
 
   it('moves smoothly: no step changes height by more than the carry allows', () => {
-    const p = new PlayerController(collision);
+    const p = new PlayerController(collider);
     p.place(-2, 0, -12.3);
     ride(p, 0.3, { ...idle, y: 1 });
     let maxJump = 0;

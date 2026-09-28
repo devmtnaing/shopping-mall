@@ -1,12 +1,7 @@
 import { PLAYER, STEP } from '@plaza/shared/constants';
-import { BufferAttribute, BufferGeometry } from 'three';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { buildGreybox } from '../../tools/greybox/layout';
 import { type Intent, PlayerController } from '../src/player/controller';
-
-const { geo } = buildGreybox();
-const collision = new BufferGeometry();
-collision.setAttribute('position', new BufferAttribute(new Float32Array(geo.collision), 3));
+import { collider } from './greybox';
 
 const idle: Intent = { x: 0, y: 0, run: false, jump: false, yaw: 0 };
 /** Run `seconds` of simulation with a fixed intent. Returns the lowest and highest y seen. */
@@ -23,7 +18,7 @@ function sim(p: PlayerController, seconds: number, intent: Partial<Intent> = {})
 
 let p: PlayerController;
 beforeEach(() => {
-  p = new PlayerController(collision);
+  p = new PlayerController(collider);
 });
 
 describe('PlayerController on the greybox', () => {

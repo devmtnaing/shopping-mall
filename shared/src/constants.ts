@@ -27,3 +27,27 @@ export const PLAYER = {
   /** Below this height you fell out of the world and respawn. */
   killY: -20,
 } as const;
+
+/** Third-person camera. Metres, radians, 1/s rates. */
+export const CAMERA = {
+  /** Height of the point the camera orbits, above the feet. */
+  pivotHeight: 1.55,
+  /** Sideways offset so the character sits a little left of centre. */
+  shoulder: 0.35,
+  minDistance: 2,
+  maxDistance: 9,
+  startDistance: 4.5,
+  startPitch: -0.28,
+  minPitch: -1.2,
+  maxPitch: 0.5,
+  /** How fast the pivot follows the player horizontally / vertically (vertical is softer, for stairs). */
+  followRate: 16,
+  verticalRate: 9,
+  /** How fast the camera eases back out after a wall pushed it in. Pushing in is instant. */
+  zoomOutRate: 4,
+  /** Camera collision radius: how close it may get to a wall. */
+  radius: 0.22,
+  /** After this long without looking around, walking swings the camera back behind you. */
+  recenterDelay: 1.5,
+  recenterRate: 1.6,
+} as const;

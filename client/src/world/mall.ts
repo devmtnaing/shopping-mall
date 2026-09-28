@@ -1,11 +1,13 @@
 // Loads the mall: visual model, collision mesh and gameplay meta (slots, seats, zones, escalators).
 import type { MallMeta } from '@plaza/shared/meta';
-import type { BufferGeometry, Group, Mesh } from 'three';
+import type { Group, Mesh } from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { MeshBVH } from 'three-mesh-bvh';
 
 const BASE = `${import.meta.env.BASE_URL}assets/mall/`;
 
-export type Mall = { visual: Group; collision: BufferGeometry; meta: MallMeta };
+/** `collider` is the BVH over the collision mesh, shared by the player controller and the camera. */
+export type Mall = { visual: Group; collider: MeshBVH; meta: MallMeta };
 
 export async function loadMall(): Promise<Mall> {
   const loader = new GLTFLoader();
@@ -23,5 +25,5 @@ export async function loadMall(): Promise<Mall> {
     o.matrixAutoUpdate = false; // static world: matrices never change
     o.updateMatrix();
   });
-  return { visual: visual.scene, collision: mesh.geometry, meta };
+  return { visual: visual.scene, collider: new MeshBVH(mesh.geometry), meta };
 }

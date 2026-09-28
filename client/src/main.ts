@@ -1,7 +1,8 @@
 import config from 'virtual:plaza-config';
-import { Color, DirectionalLight, Fog, HemisphereLight, Scene, Vector3 } from 'three';
+import { Color, DirectionalLight, Fog, HemisphereLight, Scene } from 'three';
 import { startLoop } from './loop';
 import { createPlaceholderBody } from './player/body';
+import { OrbitCamera } from './player/camera';
 import { PlayerController } from './player/controller';
 import { Input } from './player/input';
 import type { DebugOverlay } from './render/debug';
@@ -28,15 +29,13 @@ const mall = await loadMall();
 scene.add(mall.visual);
 
 const input = new Input(canvas);
-const player = new PlayerController(mall.collision);
+const player = new PlayerController(mall.collider);
 const spawn = mall.meta.spawns[0] ?? { pos: [0, 0, 0], yaw: 0 };
 player.place(spawn.pos[0], spawn.pos[1], spawn.pos[2], spawn.yaw);
 const body = createPlaceholderBody();
 scene.add(body);
 
-// Simple follow camera until the real one lands (T-106).
-const cam = { yaw: spawn.yaw, pitch: -0.25, distance: 5 };
-const target = new Vector3();
+const orbit = new OrbitCamera(mall.collider, spawn.yaw);
 canvas.addEventListener('click', () => {
   if (matchMedia('(pointer: fine)').matches) input.lockMouse();
 });
@@ -63,26 +62,19 @@ startLoop({
       y: move.y,
       run: k.isDown('ShiftLeft') || k.isDown('ShiftRight'),
       jump: k.consume('Space'),
-      yaw: cam.yaw,
+      yaw: orbit.yaw,
     });
   },
-  render: (alpha) => {
+  render: (alpha, dt) => {
     const t0 = performance.now();
     body.position.lerpVectors(player.prev, player.pos, alpha);
     body.rotation.y = player.facing;
 
-    const look = input.takeLook();
-    cam.yaw += look.yaw;
-    cam.pitch = Math.min(0.9, Math.max(-1.2, cam.pitch + look.pitch));
-    cam.distance = Math.min(9, Math.max(2, cam.distance + input.takeZoom()));
-    target.copy(body.position).setY(body.position.y + 1.5);
-    const flat = Math.cos(cam.pitch) * cam.distance;
-    camera.position.set(
-      target.x + Math.sin(cam.yaw) * flat,
-      target.y - Math.sin(cam.pitch) * cam.distance,
-      target.z + Math.cos(cam.yaw) * flat,
-    );
-    camera.lookAt(target);
+    const m = input.move();
+    const moving = m.x !== 0 || m.y !== 0;
+    orbit.update(dt, body.position, player.facing, moving, input.takeLook(), input.takeZoom());
+    camera.position.copy(orbit.position);
+    camera.lookAt(orbit.target);
 
     renderer.render(scene, camera);
     if (debug) {

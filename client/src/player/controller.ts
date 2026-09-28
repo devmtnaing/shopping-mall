@@ -6,8 +6,8 @@
 //
 // Pure simulation (no DOM, no rendering), so it runs in unit tests exactly as in the browser.
 import { PLAYER } from '@plaza/shared/constants';
-import { Box3, type BufferGeometry, FrontSide, Line3, Ray, Vector3 } from 'three';
-import { MeshBVH } from 'three-mesh-bvh';
+import { Box3, FrontSide, Line3, Ray, Vector3 } from 'three';
+import type { MeshBVH } from 'three-mesh-bvh';
 
 /** What the player wants this step. x = strafe right, y = forward, both relative to `yaw`. */
 export type Intent = { x: number; y: number; run: boolean; jump: boolean; yaw: number };
@@ -47,13 +47,10 @@ export class PlayerController {
   /** Extra velocity from moving surfaces (escalators, T-105), applied while grounded. */
   readonly carry = new Vector3();
 
-  private readonly bvh: MeshBVH;
   private readonly spawn = new Vector3();
   private spawnYaw = 0;
 
-  constructor(collision: BufferGeometry) {
-    this.bvh = new MeshBVH(collision);
-  }
+  constructor(private readonly bvh: MeshBVH) {}
 
   place(x: number, y: number, z: number, yaw = 0) {
     this.spawn.set(x, y, z);
