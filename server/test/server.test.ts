@@ -1,8 +1,8 @@
-import { encodeInput } from '@plaza/shared/protocol';
+import { encodeInput, type Pose } from '@plaza/shared/protocol';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { cleanName } from '../src/names';
 import { startServer } from '../src/server';
-import { TestClient, until } from './helpers';
+import { sleep, TestClient, until } from './helpers';
 
 let server: Awaited<ReturnType<typeof startServer>>;
 const clients: TestClient[] = [];
@@ -13,7 +13,7 @@ const client = (room?: string) => {
 };
 
 beforeEach(async () => {
-  server = await startServer({ port: 0, tickHz: 30, joinTimeoutMs: 300 });
+  server = await startServer({ port: 0, tickHz: 30, joinTimeoutMs: 300, graceMs: 300, presenceMs: 100 });
 });
 afterEach(async () => {
   for (const c of clients.splice(0)) c.close();
@@ -57,6 +57,7 @@ describe('server', () => {
     await a.join('Aye');
     const b = client();
     const wb = await b.join('Bo');
+    await a.waitFor((m) => m.t === 'presence' && m.joined.length > 0); // Bo's arrival is announced first
     b.close();
     const presence = await a.waitFor((m) => m.t === 'presence' && m.left.length > 0);
     expect(presence).toMatchObject({ left: [wb.id] });
@@ -89,6 +90,112 @@ describe('server', () => {
     const wb = await b.join('Bo');
     expect(wb.room).toBe('friends');
     expect(wb.players).toEqual([]);
+  });
+});
+
+const at = (x: number, z: number, y = 0): Pose => ({ x, y, z, yaw: 0, anim: 0, flags: 1 });
+
+describe('sessions', () => {
+  it('resumes a dropped player silently: same id, no leave or join for the others', async () => {
+    const a = client();
+    await a.join('Aye');
+    const b = client();
+    const wb = await b.join('Bo');
+    await a.waitFor((m) => m.t === 'presence');
+    const before = a.messages.length;
+    b.ws.terminate(); // network drop, no clean goodbye
+    await sleep(100);
+    const b2 = client();
+    const again = await b2.join('ignored', { resume: wb.resume });
+    expect(again.id).toBe(wb.id);
+    await sleep(500); // longer than the grace period
+    expect(a.messages.slice(before).filter((m) => m.t === 'presence')).toEqual([]);
+  });
+
+  it('removes a dropped player once the grace period runs out', async () => {
+    const a = client();
+    await a.join('Aye');
+    const b = client();
+    const wb = await b.join('Bo');
+    b.ws.terminate();
+    const presence = await a.waitFor((m) => m.t === 'presence' && m.left.includes(wb.id), 1500);
+    expect(presence.t).toBe('presence');
+  });
+
+  it('says nothing about someone who joins and leaves within one batch', async () => {
+    await server.close();
+    server = await startServer({ port: 0, presenceMs: 1000 }); // wide window: join and leave land in one batch
+    const a = client();
+    await a.join('Aye');
+    await sleep(1100); // let Aye's own join flush
+    const before = a.messages.length;
+    const b = client();
+    await b.join('Bo');
+    b.close(); // a clean goodbye leaves immediately, inside the same batch
+    await sleep(1200);
+    expect(a.messages.slice(before).filter((m) => m.t === 'presence')).toEqual([]);
+  });
+});
+
+describe('scaling', () => {
+  it('overflows a full room into room-2', async () => {
+    await server.close();
+    server = await startServer({ port: 0, capacity: 2, presenceMs: 100 });
+    await client().join('Aye');
+    await client().join('Bo');
+    const third = await client().join('Cee');
+    expect(third.room).toBe('main-2');
+  });
+
+  it('sends each player only the nearest others', async () => {
+    await server.close();
+    server = await startServer({ port: 0, tickHz: 30, interest: 2, presenceMs: 100 });
+    const me = client();
+    await me.join('Me');
+    me.ws.send(encodeInput(0, at(0, 0)));
+    const ids: number[] = [];
+    for (const [i, x] of [1, 2, 50, 60].entries()) {
+      const c = client();
+      const w = await c.join(`P${i}`);
+      ids.push(w.id);
+      c.ws.send(encodeInput(0, at(x, 0)));
+    }
+    await until(() => me.snapshots.some((s) => s.size === 2));
+    const last = me.snapshots.findLast((s) => s.size === 2);
+    expect([...(last?.keys() ?? [])].sort()).toEqual([ids[0], ids[1]].sort());
+  });
+});
+
+describe('movement checks', () => {
+  it('ignores an impossible jump across the mall, but allows an announced teleport', async () => {
+    const a = client();
+    await a.join('Aye');
+    const b = client();
+    const wb = await b.join('Bo');
+    const last = () => a.snapshots.findLast((s) => s.has(wb.id))?.get(wb.id);
+    b.ws.send(encodeInput(0, at(0, -5)));
+    await until(() => last()?.z === -5);
+    b.ws.send(encodeInput(1, at(0, -60))); // 55 m in one tick
+    await sleep(150);
+    expect(last()?.z).toBe(-5);
+    b.send({ t: 'teleport' });
+    await sleep(30);
+    b.ws.send(encodeInput(2, at(0, -60)));
+    await until(() => last()?.z === -60);
+  });
+
+  it('ignores positions far below or above the world', async () => {
+    const a = client();
+    await a.join('Aye');
+    const b = client();
+    const wb = await b.join('Bo');
+    b.ws.send(encodeInput(0, at(0, -5)));
+    await until(() => a.snapshots.some((s) => s.has(wb.id)));
+    b.send({ t: 'teleport' });
+    await sleep(30);
+    b.ws.send(encodeInput(1, at(0, -5, -200)));
+    await sleep(150);
+    expect(a.snapshots.findLast((s) => s.has(wb.id))?.get(wb.id)?.y).toBe(0);
   });
 });
 
