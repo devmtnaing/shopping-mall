@@ -1,7 +1,9 @@
 import config from 'virtual:plaza-config';
-import { Color, DirectionalLight, Fog, HemisphereLight, Scene } from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { Color, DirectionalLight, Fog, HemisphereLight, Scene, Vector3 } from 'three';
 import { startLoop } from './loop';
+import { createPlaceholderBody } from './player/body';
+import { PlayerController } from './player/controller';
+import { Input } from './player/input';
 import type { DebugOverlay } from './render/debug';
 import { createRenderer } from './render/renderer';
 import { loadMall } from './world/mall';
@@ -24,6 +26,20 @@ scene.add(sun);
 const mall = await loadMall();
 scene.add(mall.visual);
 
+const input = new Input(canvas);
+const player = new PlayerController(mall.collision);
+const spawn = mall.meta.spawns[0] ?? { pos: [0, 0, 0], yaw: 0 };
+player.place(spawn.pos[0], spawn.pos[1], spawn.pos[2], spawn.yaw);
+const body = createPlaceholderBody();
+scene.add(body);
+
+// Simple follow camera until the real one lands (T-106).
+const cam = { yaw: spawn.yaw, pitch: -0.25, distance: 5 };
+const target = new Vector3();
+canvas.addEventListener('click', () => {
+  if (matchMedia('(pointer: fine)').matches) input.lockMouse();
+});
+
 let debug: DebugOverlay | undefined;
 if (debugMode) {
   const [{ createDebugOverlay }, { createGizmos }] = await Promise.all([
@@ -33,22 +49,44 @@ if (debugMode) {
   debug = createDebugOverlay(renderer);
   scene.add(createGizmos(mall.meta));
   // handle for Playwright tests and console poking; never present without ?debug
-  Object.assign(window, { plaza: { scene, camera, renderer, mall } });
+  Object.assign(window, { plaza: { scene, camera, renderer, mall, player, input } });
 }
 
-// Temporary free camera until the player controller lands (T-104).
-const spawn = mall.meta.spawns[0];
-camera.position.set(0, 18, 12);
-const controls = new OrbitControls(camera, canvas);
-controls.target.set(spawn?.pos[0] ?? 0, 2, (spawn?.pos[2] ?? 0) - 25);
-controls.update();
-
 startLoop({
-  step: () => {},
-  render: () => {
+  step: (dt) => {
+    const move = input.move();
+    const k = input.keys;
+    player.step(dt, {
+      x: move.x,
+      y: move.y,
+      run: k.isDown('ShiftLeft') || k.isDown('ShiftRight'),
+      jump: k.consume('Space'),
+      yaw: cam.yaw,
+    });
+  },
+  render: (alpha) => {
     const t0 = performance.now();
-    controls.update();
+    body.position.lerpVectors(player.prev, player.pos, alpha);
+    body.rotation.y = player.facing;
+
+    const look = input.takeLook();
+    cam.yaw += look.yaw;
+    cam.pitch = Math.min(0.9, Math.max(-1.2, cam.pitch + look.pitch));
+    cam.distance = Math.min(9, Math.max(2, cam.distance + input.takeZoom()));
+    target.copy(body.position).setY(body.position.y + 1.5);
+    const flat = Math.cos(cam.pitch) * cam.distance;
+    camera.position.set(
+      target.x + Math.sin(cam.yaw) * flat,
+      target.y - Math.sin(cam.pitch) * cam.distance,
+      target.z + Math.cos(cam.yaw) * flat,
+    );
+    camera.lookAt(target);
+
     renderer.render(scene, camera);
-    debug?.update(performance.now() - t0);
+    if (debug) {
+      debug.set('pos', `${player.pos.x.toFixed(1)} ${player.pos.y.toFixed(2)} ${player.pos.z.toFixed(1)}`);
+      debug.set('ground', player.grounded ? 'yes' : 'no');
+      debug.update(performance.now() - t0);
+    }
   },
 });

@@ -14,7 +14,10 @@ export async function loadMall(): Promise<Mall> {
     loader.loadAsync(`${BASE}greybox.collision.glb`),
     fetch(`${BASE}mall.meta.json`).then((r) => r.json() as Promise<MallMeta>),
   ]);
-  const mesh = collision.scene.getObjectByName('collision') as Mesh | undefined;
+  let mesh: Mesh | undefined;
+  collision.scene.traverse((o) => {
+    if (!mesh && (o as Mesh).isMesh) mesh = o as Mesh;
+  });
   if (!mesh) throw new Error('mall: collision mesh missing');
   visual.scene.traverse((o) => {
     o.matrixAutoUpdate = false; // static world: matrices never change
