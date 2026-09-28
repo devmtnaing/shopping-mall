@@ -1,36 +1,49 @@
 import config from 'virtual:plaza-config';
-import { BoxGeometry, Color, HemisphereLight, Mesh, MeshStandardMaterial, Scene } from 'three';
-import { createRenderer } from './render/renderer';
-import './style.css';
+import { Color, DirectionalLight, Fog, HemisphereLight, Scene } from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import type { DebugOverlay } from './render/debug';
+import { createRenderer } from './render/renderer';
+import { loadMall } from './world/mall';
+import './style.css';
 
 document.title = config.mall.name;
+const debugMode = new URLSearchParams(location.search).has('debug');
 
 const canvas = document.getElementById('gl') as HTMLCanvasElement;
 const { renderer, camera } = createRenderer(canvas);
 
 const scene = new Scene();
 scene.background = new Color('#12110f');
-scene.add(new HemisphereLight('#fff6e6', '#3a3326', 2.5));
+scene.fog = new Fog('#12110f', 60, 140);
+scene.add(new HemisphereLight('#fff6e6', '#6b6152', 2.2));
+const sun = new DirectionalLight('#fff1dc', 1.6);
+sun.position.set(8, 20, 6);
+scene.add(sun);
 
-const cube = new Mesh(new BoxGeometry(1, 1, 1), new MeshStandardMaterial({ color: '#e2b857' }));
-scene.add(cube);
-camera.position.set(0, 1.2, 3);
-camera.lookAt(0, 0, 0);
+const mall = await loadMall();
+scene.add(mall.visual);
 
 let debug: DebugOverlay | undefined;
-if (new URLSearchParams(location.search).has('debug')) {
-  import('./render/debug').then((m) => {
-    debug = m.createDebugOverlay(renderer);
-  });
+if (debugMode) {
+  const [{ createDebugOverlay }, { createGizmos }] = await Promise.all([
+    import('./render/debug'),
+    import('./world/gizmos'),
+  ]);
+  debug = createDebugOverlay(renderer);
+  scene.add(createGizmos(mall.meta));
+  // handle for Playwright tests and console poking; never present without ?debug
+  Object.assign(window, { plaza: { scene, camera, renderer, mall } });
 }
 
-let last = performance.now();
+// Temporary free camera until the player controller lands (T-104).
+const spawn = mall.meta.spawns[0];
+camera.position.set(0, 18, 12);
+const controls = new OrbitControls(camera, canvas);
+controls.target.set(spawn?.pos[0] ?? 0, 2, (spawn?.pos[2] ?? 0) - 25);
+controls.update();
+
 function frame(now: number) {
-  const dt = Math.min((now - last) / 1000, 0.1);
-  last = now;
-  cube.rotation.y += dt * 0.8;
-  cube.rotation.x += dt * 0.3;
+  controls.update();
   renderer.render(scene, camera);
   debug?.update(performance.now() - now);
   requestAnimationFrame(frame);
