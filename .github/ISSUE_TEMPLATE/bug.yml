@@ -1,0 +1,27 @@
+name: Bug report
+description: Something is broken or slow
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: "1. Open /?debug\n2. Walk to …"
+  - type: input
+    id: device
+    attributes:
+      label: Device, OS and browser
+      placeholder: Pixel 7a, Android 16, Chrome 141
+    validations:
+      required: true
+  - type: textarea
+    id: debug
+    attributes:
+      label: Debug overlay numbers (open with ?debug)
+      description: fps, calls, tris, heap. Especially useful for performance bugs.

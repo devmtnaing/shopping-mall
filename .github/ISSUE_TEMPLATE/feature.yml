@@ -1,0 +1,19 @@
+name: Feature idea
+description: Suggest something new
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve, and for whom?
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: Your idea
+  - type: textarea
+    id: cost
+    attributes:
+      label: Performance cost
+      description: Download size, frame time, network. Rough guesses are fine.
