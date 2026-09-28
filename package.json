@@ -16,13 +16,17 @@
     "test": "vitest run",
     "size": "node tools/size.ts",
     "check": "pnpm typecheck && pnpm lint && pnpm test && pnpm build && pnpm size",
-    "greybox": "node tools/greybox/build.ts"
+    "greybox": "node tools/greybox/build.ts && node tools/bake-navgrid.ts",
+    "navgrid": "node tools/bake-navgrid.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.14",
     "@gltf-transform/core": "^4.5.0",
     "@plaza/shared": "workspace:*",
     "@types/node": "^24.19.0",
+    "@types/three": "^0.186.0",
+    "three": "^0.186.1",
+    "three-mesh-bvh": "^0.9.15",
     "typescript": "^5.9.3",
     "vitest": "^5.0.2",
     "zod": "^4.6.5"

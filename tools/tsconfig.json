@@ -1,1 +1,6 @@
-{ "extends": "../tsconfig.base.json", "compilerOptions": { "types": ["node"] }, "include": ["."] }
+{
+  "extends": "../tsconfig.base.json",
+  // Node runs these files directly (type stripping), so only erasable TypeScript syntax is allowed.
+  "compilerOptions": { "types": ["node"], "erasableSyntaxOnly": true },
+  "include": ["."]
+}

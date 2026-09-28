@@ -49,7 +49,7 @@ if (debugMode) {
     import('./world/gizmos'),
   ]);
   debug = createDebugOverlay(renderer);
-  scene.add(createGizmos(mall.meta));
+  scene.add(createGizmos(mall.meta, mall.nav));
   // handle for Playwright tests and console poking; never present without ?debug
   Object.assign(window, { plaza: { scene, camera, renderer, mall, player, input } });
 }
