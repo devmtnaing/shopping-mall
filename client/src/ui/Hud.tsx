@@ -1,8 +1,9 @@
-// Always-on overlay: brand pill (top left), zone label (top centre), fullscreen (top right).
+// Always-on overlay: brand pill (top left), zone label (top centre), share / language / fullscreen (top right).
 import config from 'virtual:plaza-config';
+import { locales, nextLocale, setLocale, t, zoneName } from '../i18n';
 import { linkUrl } from '../links';
 import { pose, zone } from '../state';
-import { IconExpand, IconShare } from './icons';
+import { IconExpand, IconGlobe, IconShare } from './icons';
 import { share } from './share';
 
 function initials(name: string) {
@@ -29,18 +30,15 @@ export function ZoneLabel() {
   // keyed by id so the fade-in replays on every change
   return (
     <div class="zone glass" key={z.id} aria-live="polite">
-      <div class="eyebrow">You are in</div>
-      <div class="zone-name">{z.name}</div>
+      <div class="eyebrow">{t('hud.youAreIn')}</div>
+      <div class="zone-name">{z.area ? zoneName(z.area, z.name) : z.name}</div>
     </div>
   );
 }
 
 export function TopRight({ playing }: { playing: boolean }) {
   const canFullscreen = typeof document.documentElement.requestFullscreen === 'function';
-  const shareSpot = () => {
-    const p = pose.value;
-    share(linkUrl({ kind: 'at', ...p }), `Meet me in ${config.mall.name}`);
-  };
+  const shareSpot = () => share(linkUrl({ kind: 'at', ...pose.value }), config.mall.name);
   const toggle = () => {
     if (document.fullscreenElement) document.exitFullscreen();
     else document.documentElement.requestFullscreen().catch(() => {});
@@ -48,12 +46,22 @@ export function TopRight({ playing }: { playing: boolean }) {
   return (
     <div class="top-right">
       {playing && (
-        <button type="button" class="icon-btn glass" aria-label="Share where you are" onClick={shareSpot}>
+        <button type="button" class="icon-btn glass" aria-label={t('hud.shareSpot')} onClick={shareSpot}>
           <IconShare />
         </button>
       )}
+      {locales.length > 1 && (
+        <button
+          type="button"
+          class="icon-btn glass"
+          aria-label={`${t('language')}: ${nextLocale().toUpperCase()}`}
+          onClick={() => setLocale(nextLocale())}
+        >
+          <IconGlobe />
+        </button>
+      )}
       {canFullscreen && (
-        <button type="button" class="icon-btn glass" aria-label="Full screen" onClick={toggle}>
+        <button type="button" class="icon-btn glass" aria-label={t('hud.fullscreen')} onClick={toggle}>
           <IconExpand />
         </button>
       )}

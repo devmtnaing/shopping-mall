@@ -22,8 +22,11 @@ export function saveProfile(p: Profile) {
   save('profile', p);
 }
 
-/** The zone the player is in: its id and display name ("Main hall", a shop's name, …). */
-export const zone = signal<{ id: string; name: string } | null>(null);
+/**
+ * The zone the player is in. `area` is the translation id for mall areas ("main-hall", "vacant");
+ * null means a shop, whose `name` is shown as written in the config.
+ */
+export const zone = signal<{ id: string; name: string; area: string | null } | null>(null);
 
 /** Player position for the minimap, updated at most 10× a second. `floor` indexes meta.floors. */
 export const pose = signal({ x: 0, z: 0, yaw: 0, floor: 0 });

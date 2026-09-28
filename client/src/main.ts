@@ -2,6 +2,8 @@ import config from 'virtual:plaza-config';
 import { effect } from '@preact/signals';
 import { Color, DirectionalLight, Fog, HemisphereLight, Scene } from 'three';
 import { installCommands } from './commands';
+import { locale, t } from './i18n';
+import type { Key } from './i18n/en';
 import { parseLink } from './links';
 import { startLoop } from './loop';
 import { createPlaceholderBody } from './player/body';
@@ -55,7 +57,12 @@ scene.add(sun);
 
 const mall = await loadMall();
 scene.add(mall.visual);
-const storefronts = await buildStorefronts(mall.meta, config.shops);
+const storefronts = await buildStorefronts(mall.meta, config.shops, {
+  title: t('sign.comingSoon'),
+  subtitle: t('sign.available'),
+});
+// repaint the "Coming soon" signs when the language changes
+locale.subscribe(() => storefronts.setVacantText(t('sign.comingSoon'), t('sign.available')));
 scene.add(storefronts.group);
 mallMeta.value = mall.meta;
 
@@ -85,7 +92,7 @@ installCommands({
   travelToShop: (id) => travel.toShop(id),
   walkTo: (x, z, floor) => {
     const y = mall.meta.floors[floor]?.y ?? 0;
-    if (!walkTo.walkToPoint({ x, y, z }, player)) toast("Can't walk there");
+    if (!walkTo.walkToPoint({ x, y, z }, player)) toast(t('toast.cantWalk'));
   },
 });
 let poseAt = 0;
@@ -104,12 +111,12 @@ const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
 
 // shared links: start at a shop (its panel opens after the fly-in) or at an exact spot
 const link = parseLink(location.search);
-let linkProblem = '';
-if (link?.kind === 'shop' && !travel.placeAt(link.id)) linkProblem = "That shop isn't in this mall any more.";
+let linkProblem: Key | null = null;
+if (link?.kind === 'shop' && !travel.placeAt(link.id)) linkProblem = 'toast.noShop';
 if (link?.kind === 'at') {
   const y = mall.meta.floors[link.floor]?.y;
   const inside = link.x > bounds.minX && link.x < bounds.maxX && link.z > bounds.minZ && link.z < bounds.maxZ;
-  if (y === undefined || !inside) linkProblem = "That spot isn't in this mall.";
+  if (y === undefined || !inside) linkProblem = 'toast.noSpot';
   else {
     player.place(link.x, y + 0.05, link.z, link.yaw);
     orbit.yaw = link.yaw;
@@ -127,7 +134,7 @@ effect(() => {
   if (phase.value !== 'playing' || intro.flying) return;
   intro.begin();
   performance.mark('playable');
-  if (linkProblem) toast(linkProblem, 4000);
+  if (linkProblem) toast(t(linkProblem), 4000);
 });
 
 let debug: DebugOverlay | undefined;
@@ -165,7 +172,10 @@ startLoop({
     if (visit && near && !uiHasFocus.value) openShop(near);
     if (zones.update(dt, player.pos) && zones.current) {
       const z = zones.current;
-      zone.value = { id: z.id, name: (z.slot && shopBySlot.get(z.slot)) || z.name };
+      const shopName = z.slot ? shopBySlot.get(z.slot) : undefined;
+      zone.value = shopName
+        ? { id: z.id, name: shopName, area: null }
+        : { id: z.id, name: z.name, area: z.slot ? 'vacant' : z.id };
     }
   },
   render: (alpha, dt) => {
@@ -175,7 +185,7 @@ startLoop({
 
     const tap = input.takeTap();
     if (tap && phase.value === 'playing' && !walkTo.tap(tap.x, tap.y, player, canvas, over.clipY))
-      toast("Can't walk there");
+      toast(t('toast.cantWalk'));
     walkTo.update(dt);
     // minimap pose at ≤ 10 Hz
     const now = performance.now();

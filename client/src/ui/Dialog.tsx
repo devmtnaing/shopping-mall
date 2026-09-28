@@ -2,6 +2,7 @@
 // background come from the browser, not from us.
 import type { ComponentChildren } from 'preact';
 import { useEffect, useRef } from 'preact/hooks';
+import { t } from '../i18n';
 import { IconClose } from './icons';
 
 type Props = {
@@ -43,7 +44,7 @@ export function Dialog({ title, eyebrow, variant = 'center', onClose, children }
           {eyebrow && <div class="eyebrow">{eyebrow}</div>}
           <h2 id="dialog-title">{title}</h2>
         </div>
-        <button type="button" class="icon-btn" aria-label="Close" onClick={close}>
+        <button type="button" class="icon-btn" aria-label={t('close')} onClick={close}>
           <IconClose />
         </button>
       </header>

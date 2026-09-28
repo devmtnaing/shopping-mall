@@ -10,7 +10,8 @@ export default defineConfig({
     name: 'Plaza',
     tagline: 'Walk the mall together.',
     currency: 'USD',
-    locales: ['en'],
+    // UI languages offered (first is the default). Strings live in client/src/i18n.
+    locales: ['en', 'my'],
   },
   shops: [
     {

@@ -4,6 +4,7 @@
 import config from 'virtual:plaza-config';
 import type { Shop } from '@plaza/shared/config';
 import { useEffect, useState } from 'preact/hooks';
+import { locale, t } from '../i18n';
 import { linkUrl } from '../links';
 import { formatPrice, loadProducts, type Product, type ProductsResult } from '../shops/products';
 import { panel } from '../state';
@@ -25,8 +26,8 @@ function ProductCard({ p, accent }: { p: Product; accent: string }) {
       </div>
       <div class="product-name">{p.name}</div>
       <div class="product-price">
-        {formatPrice(p.price, config.mall.currency)}
-        {p.compareAt && <s>{formatPrice(p.compareAt, config.mall.currency)}</s>}
+        {formatPrice(p.price, config.mall.currency, locale.value)}
+        {p.compareAt && <s>{formatPrice(p.compareAt, config.mall.currency, locale.value)}</s>}
       </div>
     </>
   );
@@ -58,12 +59,11 @@ function Products({ shop }: { shop: Shop }) {
       </div>
     );
   if (result.status === 'none') return null;
-  if (result.status === 'error')
-    return <p class="note">{result.message} Try the shop's own website below.</p>;
-  if (result.items.length === 0) return <p class="note">No products listed yet.</p>;
+  if (result.status === 'error') return <p class="note">{t('shop.productsError')}</p>;
+  if (result.items.length === 0) return <p class="note">{t('shop.noProducts')}</p>;
   return (
     <>
-      {result.stale && <p class="note">Showing the last saved list; the shop is offline right now.</p>}
+      {result.stale && <p class="note">{t('shop.stale')}</p>}
       <div class="products">
         {result.items.map((p) => (
           <ProductCard key={p.id} p={p} accent={shop.colors.accent} />
@@ -90,7 +90,7 @@ export function ShopPanel({ id }: { id: string }) {
         )}
         {shop.products && (
           <section aria-label="Products">
-            <h3 class="section-title">In the shop</h3>
+            <h3 class="section-title">{t('shop.inTheShop')}</h3>
             <Products shop={shop} />
           </section>
         )}
@@ -109,7 +109,7 @@ export function ShopPanel({ id }: { id: string }) {
           class="cta cta-ghost"
           onClick={() => share(linkUrl({ kind: 'shop', id: shop.id }), `${shop.name} · ${config.mall.name}`)}
         >
-          Share this shop
+          {t('shop.share')}
           <IconShare size={18} />
         </button>
       </div>

@@ -1,6 +1,7 @@
 // Paints shop signs onto canvases from config data (name, tagline, colours, logo).
 // Runs on the main thread during loading: ~1 ms per sign, and it uses the page's web fonts
 // directly, including complex scripts like Burmese (the browser does the text shaping).
+import { loadFontsFor } from '../fonts';
 
 export type SignSpec = {
   title: string;
@@ -14,15 +15,6 @@ export type SignSpec = {
 };
 
 const FAMILY = '"Outfit", "Noto Sans Myanmar", system-ui, sans-serif';
-/** Scripts that need an extra web font, loaded only when some sign uses them. */
-const EXTRA_FONTS: { test: RegExp; family: string; css: string }[] = [
-  {
-    test: /[က-႟ꩠ-ꩿ]/,
-    family: 'Noto Sans Myanmar',
-    css: 'https://fonts.googleapis.com/css2?family=Noto+Sans+Myanmar:wght@400;700&display=swap',
-  },
-];
-
 /**
  * Largest font size in [min, max] whose text fits `maxWidth`, given a measuring function.
  * Binary search: ~6 measurements instead of trying every size.
@@ -44,25 +36,6 @@ export function fitFontSize(
   return lo;
 }
 
-/** Make sure every font the given texts need is loaded before painting. */
-export async function loadSignFonts(texts: string[]) {
-  const all = texts.join(' ');
-  const loads = [document.fonts.load(`700 64px "Outfit"`, 'Aa')];
-  for (const f of EXTRA_FONTS) {
-    if (!f.test.test(all)) continue;
-    if (!document.querySelector(`link[data-font="${f.family}"]`)) {
-      const link = document.createElement('link');
-      link.rel = 'stylesheet';
-      link.href = f.css;
-      link.dataset.font = f.family;
-      document.head.append(link);
-      await new Promise((r) => link.addEventListener('load', r, { once: true }));
-    }
-    loads.push(document.fonts.load(`700 64px "${f.family}"`, all));
-  }
-  await Promise.all(loads).catch(() => {}); // offline: fall back to system fonts
-}
-
 /** Relative luminance (0 = black, 1 = white) of a #rrggbb colour. */
 export function luminance(hex: string): number {
   const c = [1, 3, 5].map((i) => {
@@ -71,6 +44,9 @@ export function luminance(hex: string): number {
   });
   return 0.2126 * (c[0] ?? 0) + 0.7152 * (c[1] ?? 0) + 0.0722 * (c[2] ?? 0);
 }
+
+/** Load the fonts some sign texts need before painting them. */
+export const loadSignFonts = loadFontsFor;
 
 export function paintSign(spec: SignSpec): HTMLCanvasElement {
   const w = spec.width;

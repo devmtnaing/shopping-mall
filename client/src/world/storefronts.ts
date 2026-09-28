@@ -18,9 +18,9 @@ import { loadSignFonts, paintSign } from '../render/signs';
 const SIGN_PX = 1024;
 /** How close (m) to a door you need to be for the "Visit" prompt. */
 const PROMPT_RANGE = 2.6;
-const VACANT = { title: 'Coming soon', subtitle: 'This unit is available', bg: '#2a2926', accent: '#8e8b86' };
+const VACANT_COLORS = { bg: '#2a2926', accent: '#8e8b86' };
 
-function texture(canvas: HTMLCanvasElement): Texture {
+function texture(canvas: HTMLCanvasElement): CanvasTexture {
   const t = new CanvasTexture(canvas);
   t.colorSpace = SRGBColorSpace;
   t.anisotropy = 4;
@@ -31,15 +31,22 @@ export type Storefronts = {
   group: Group;
   /** The shop whose door the player is standing near (or inside), if any. */
   nearby(feet: Vector3): Shop | null;
+  /** Repaint the shared "Coming soon" sign (e.g. after a language change). */
+  setVacantText(title: string, subtitle: string): Promise<void>;
 };
 
-export async function buildStorefronts(meta: MallMeta, shops: readonly Shop[]): Promise<Storefronts> {
+export async function buildStorefronts(
+  meta: MallMeta,
+  shops: readonly Shop[],
+  vacant: { title: string; subtitle: string },
+): Promise<Storefronts> {
   const group = new Group();
   group.name = 'storefronts';
   const bySlot = new Map(shops.map((s) => [s.slot, s]));
-  await loadSignFonts(shops.flatMap((s) => [s.name, s.tagline ?? '']).concat(VACANT.title, VACANT.subtitle));
+  await loadSignFonts(shops.flatMap((s) => [s.name, s.tagline ?? '']).concat(vacant.title, vacant.subtitle));
 
-  let vacantTex: Texture | null = null;
+  let vacantTex: CanvasTexture | null = null;
+  let vacantAspect = 4;
   const placed: { slot: Slot; shop: Shop }[] = [];
   for (const slot of meta.slots) {
     const shop = bySlot.get(slot.id);
@@ -59,7 +66,10 @@ export async function buildStorefronts(meta: MallMeta, shops: readonly Shop[]): 
       placed.push({ slot, shop });
     } else {
       // every vacant unit shares one texture (they all say the same thing)
-      vacantTex ??= texture(paintSign({ ...VACANT, width: SIGN_PX / 2, aspect: w / h }));
+      vacantAspect = w / h;
+      vacantTex ??= texture(
+        paintSign({ ...vacant, ...VACANT_COLORS, width: SIGN_PX / 2, aspect: vacantAspect }),
+      );
       map = vacantTex;
     }
     // unlit and not tone-mapped: signs read as glowing panels
@@ -125,5 +135,18 @@ export async function buildStorefronts(meta: MallMeta, shops: readonly Shop[]): 
     return best;
   }
 
-  return { group, nearby };
+  async function setVacantText(title: string, subtitle: string) {
+    if (!vacantTex) return;
+    await loadSignFonts([title, subtitle]);
+    vacantTex.image = paintSign({
+      title,
+      subtitle,
+      ...VACANT_COLORS,
+      width: SIGN_PX / 2,
+      aspect: vacantAspect,
+    });
+    vacantTex.needsUpdate = true;
+  }
+
+  return { group, nearby, setVacantText };
 }

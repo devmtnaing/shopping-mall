@@ -1,3 +1,4 @@
+import { t } from '../i18n';
 import { toast } from '../state';
 
 /** Native share sheet on phones, clipboard elsewhere. */
@@ -12,7 +13,7 @@ export async function share(url: string, title: string) {
   }
   try {
     await navigator.clipboard.writeText(url);
-    toast('Link copied');
+    toast(t('toast.copied'));
   } catch {
     toast(url, 6000); // no clipboard access: show it so it can be copied by hand
   }

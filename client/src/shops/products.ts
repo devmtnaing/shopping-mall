@@ -18,7 +18,7 @@ export type Product = {
 export type ProductsResult =
   | { status: 'none' }
   | { status: 'ok'; items: Product[]; stale?: boolean }
-  | { status: 'error'; message: string };
+  | { status: 'error' };
 
 type Storage = Pick<globalThis.Storage, 'getItem' | 'setItem'>;
 type Deps = { fetch: typeof fetch; now: () => number; storage: Storage | null };
@@ -90,7 +90,7 @@ export async function loadProducts(shop: Shop, deps: Partial<Deps> = {}): Promis
         /* corrupt copy: fall through */
       }
     }
-    return { status: 'error', message: 'Products are unavailable right now.' };
+    return { status: 'error' };
   }
 }
 

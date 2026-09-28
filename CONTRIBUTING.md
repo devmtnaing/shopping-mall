@@ -33,6 +33,15 @@ Requirements: Node 22+ and pnpm 10.
 - Describe how you tested it. For anything visual, attach a screenshot or clip, ideally on a phone too.
 - Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/) (`feat(client): …`, `fix(server): …`).
 
+## Translations
+
+UI strings live in `client/src/i18n/`. `en.ts` is the source of truth; every other locale is typed against it, and a test fails if a translation is missing or drops a `{placeholder}`.
+
+- **Improve a language:** edit its file, e.g. `my.ts`. The Burmese strings were drafted without a native speaker, so review is very welcome.
+- **Add a language:** copy `my.ts`, translate it, register it in `i18n/index.ts` (`TABLES` and `NAMES`), and add its code to `mall.locales` in `plaza.config.ts`. If it needs a script font, add it to `client/src/fonts.ts`.
+
+Shop names, taglines and descriptions come from `plaza.config.ts` and aren't translated by the UI.
+
 ## Good first issues
 
 Look for the `good first issue` label, or the tasks tagged that way in `docs/tasks.md`.

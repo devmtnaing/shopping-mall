@@ -6,6 +6,7 @@ import config from 'virtual:plaza-config';
 import type { MallMeta, Slot } from '@plaza/shared/meta';
 import { useSignal } from '@preact/signals';
 import { commands } from '../commands';
+import { t } from '../i18n';
 import { pose } from '../state';
 
 const PX = 2.6; // pixels per metre
@@ -61,7 +62,7 @@ export function Minimap({ meta }: { meta: MallMeta }) {
   return (
     <aside class="minimap glass" aria-hidden="true">
       <div class="minimap-head">
-        <span class="eyebrow">Map</span>
+        <span class="eyebrow">{t('map.title')}</span>
         {meta.floors.length > 1 && (
           <span class="floor-switch">
             {meta.floors.map((f, i) => (

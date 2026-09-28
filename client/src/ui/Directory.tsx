@@ -4,15 +4,16 @@ import config from 'virtual:plaza-config';
 import type { Shop } from '@plaza/shared/config';
 import { useMemo, useRef, useState } from 'preact/hooks';
 import { commands } from '../commands';
+import { t } from '../i18n';
 import { searchShops } from '../shops/search';
 import { dialog } from '../state';
 import { Dialog } from './Dialog';
 
 /** "Ground floor", "Upper floor"… from the slot id convention (u- prefix = upstairs). */
 function where(shop: Shop) {
-  if (shop.slot === 'flagship') return 'Far end · ground floor';
-  const floor = shop.slot.startsWith('u-') ? 'Upper floor' : 'Ground floor';
-  const side = shop.slot.replace('u-', '').startsWith('w') ? 'left' : 'right';
+  if (shop.slot === 'flagship') return t('where.flagship');
+  const floor = shop.slot.startsWith('u-') ? t('where.upper') : t('where.ground');
+  const side = shop.slot.replace('u-', '').startsWith('w') ? t('where.left') : t('where.right');
   return `${floor} · ${side}`;
 }
 
@@ -31,7 +32,7 @@ export function Directory() {
     if (query.trim()) return [{ name: '', shops: results }];
     const map = new Map<string, Shop[]>();
     for (const s of results) {
-      const key = s.category ?? 'Shops';
+      const key = s.category ?? t('dir.shops');
       map.set(key, [...(map.get(key) ?? []), s]);
     }
     return [...map].map(([name, shops]) => ({ name, shops }));
@@ -48,14 +49,14 @@ export function Directory() {
   };
 
   return (
-    <Dialog title="Where do you want to go?" eyebrow="Directory" onClose={close}>
+    <Dialog title={t('dir.title')} eyebrow={t('dir.eyebrow')} onClose={close}>
       {/* biome-ignore lint/a11y/noStaticElementInteractions: arrow-key navigation between the search box and results */}
       <div class="directory" onKeyDown={move}>
         <input
           class="search"
           type="search"
-          placeholder="Search shops"
-          aria-label="Search shops"
+          placeholder={t('dir.search')}
+          aria-label={t('dir.search')}
           autoFocus
           value={query}
           onInput={(e) => setQuery((e.target as HTMLInputElement).value)}
@@ -86,7 +87,7 @@ export function Directory() {
             </li>
           ))}
         </ul>
-        {results.length === 0 && <p class="note">No shops match “{query}”.</p>}
+        {results.length === 0 && <p class="note">{t('dir.none', { q: query })}</p>}
       </div>
     </Dialog>
   );

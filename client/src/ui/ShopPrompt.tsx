@@ -1,5 +1,6 @@
 // "Lumen Coffee · Visit [E]" pill that appears when you walk up to a shop.
 import config from 'virtual:plaza-config';
+import { t } from '../i18n';
 import { nearbyShop, openShop } from '../state';
 
 const finePointer = typeof matchMedia === 'function' && matchMedia('(pointer: fine)').matches;
@@ -13,7 +14,8 @@ export function ShopPrompt() {
     <div class="prompt glass" key={shop.id}>
       <span class="prompt-name">{shop.name}</span>
       <button type="button" class="prompt-btn" onClick={() => openShop(shop.id)}>
-        Visit{finePointer && <kbd>E</kbd>}
+        {t('prompt.visit')}
+        {finePointer && <kbd>E</kbd>}
       </button>
     </div>
   );
