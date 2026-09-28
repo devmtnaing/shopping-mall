@@ -1,7 +1,10 @@
+import config from 'virtual:plaza-config';
 import { BoxGeometry, Color, HemisphereLight, Mesh, MeshStandardMaterial, Scene } from 'three';
 import { createRenderer } from './render/renderer';
 import './style.css';
 import type { DebugOverlay } from './render/debug';
+
+document.title = config.mall.name;
 
 const canvas = document.getElementById('gl') as HTMLCanvasElement;
 const { renderer, camera } = createRenderer(canvas);

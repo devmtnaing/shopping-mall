@@ -11,6 +11,9 @@ importers:
       '@biomejs/biome':
         specifier: ^2.5.14
         version: 2.5.14
+      '@plaza/shared':
+        specifier: workspace:*
+        version: link:shared
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -47,7 +50,11 @@ importers:
         specifier: ^4.23.15
         version: 4.23.15
 
-  shared: {}
+  shared:
+    dependencies:
+      zod:
+        specifier: ^4.6.5
+        version: 4.6.5
 
 packages:
 
@@ -690,6 +697,9 @@ packages:
     engines: {node: '>=20.11'}
     hasBin: true
 
+  zod@4.6.5:
+    resolution: {integrity: sha512-v5l/aFXZQeai4awLbOpSoHecE9UiMrnfx75tEXLjNonXVARxQ5mOeipTjROUchszUNCqnE+hqAMujRsRHsut2Q==}
+
 snapshots:
 
   '@biomejs/biome@2.5.14':
@@ -1106,3 +1116,5 @@ snapshots:
       - msw
 
   why-is-node-running@3.2.2: {}
+
+  zod@4.6.5: {}
