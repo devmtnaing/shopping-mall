@@ -3,7 +3,7 @@ import { parseConfig } from '@plaza/shared/config';
 import preact from '@preact/preset-vite';
 import { defineConfig, type Plugin } from 'vite';
 import rawConfig from '../plaza.config';
-import { renderDirectory } from './build/directory';
+import { renderDirectory } from './plugins/directory';
 
 const CONFIG_FILE = resolve(__dirname, '../plaza.config.ts');
 const VIRTUAL_ID = 'virtual:plaza-config';

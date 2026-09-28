@@ -1,7 +1,7 @@
 import { parseConfig } from '@plaza/shared/config';
 import { describe, expect, it } from 'vitest';
 import config from '../../plaza.config';
-import { renderDirectory } from '../build/directory';
+import { renderDirectory } from '../plugins/directory';
 
 const cfg = parseConfig(config);
 
