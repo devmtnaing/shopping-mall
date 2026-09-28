@@ -3,8 +3,9 @@
 **An open-source, multiplayer 3D shopping mall that runs in the browser.**
 Walk around with friends, visit shops, browse real products, and chat. It loads fast, stays at 60 fps on a mid-range phone, and you run it with an admin page for shops and products (or one config file for a static build).
 
-> Status: **Phases 0, 1, 3 and 4 done.** A greybox mall with working shops, directory, minimap, overview, deep links, English and Burmese, and multiplayer: see others move, chat, emote, host announcements. Self-host with `docker compose up`.
-> Next up: **live content** (shops, products and art editable from an admin page, stored in Postgres and S3-compatible storage, hosted on Railway), then real CC0 art and avatars, then performance and phone polish. See the [roadmap](docs/roadmap.md).
+> Status: **Phases 0, 1, 3, 3b and 4 done.** A greybox mall with working shops, directory, minimap, overview, deep links, English and Burmese, multiplayer (see others move, chat, emote, host announcements), and live content: shops, products, uploads and even the building are edited from `/admin/` and show up for everyone within seconds.
+> **Live demo:** <https://web-production-cc219.up.railway.app> (Railway, Singapore). Self-host with `docker compose up`.
+> Next up: real CC0 art and avatars, then performance and phone polish. See the [roadmap](docs/roadmap.md).
 
 ---
 
@@ -64,7 +65,7 @@ cp .env.example .env        # optional: HOST_SECRET, REPORT_WEBHOOK, WEB_PORT…
 docker compose up --build   # → http://localhost:8080
 ```
 
-That runs two containers: nginx serving the built site (and proxying `/ws` to the server), and the multiplayer server. For a static-only deployment (single-player), `pnpm build` and upload `client/dist/` anywhere.
+That runs nginx serving the built site (and proxying `/ws`, `/api` and `/files` to the server), the server, Postgres and S3-compatible storage (SeaweedFS). Sign in at `/admin/` with `HOST_SECRET` to edit the mall. Deploying to Railway, settings and backups: [docs/deploy.md](docs/deploy.md). For a static-only deployment (single-player, content from `mall.config.ts`), `pnpm build` and upload `client/dist/` anywhere.
 
 ## License
 

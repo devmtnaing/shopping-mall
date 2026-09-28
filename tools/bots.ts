@@ -1,4 +1,4 @@
-// pnpm bots -- [--count 100] [--url ws://localhost:8787/ws?room=main] [--chat 0.02] [--seconds 0]
+// pnpm bots [--count 100] [--url ws://localhost:8787/ws?room=main] [--chat 0.02] [--seconds 0]
 // Headless visitors for load testing: they walk between random reachable spots on the mall's
 // navgrid, chat and emote now and then, and report how much data each one receives.
 import { readFileSync } from 'node:fs';
