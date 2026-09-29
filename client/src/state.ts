@@ -41,6 +41,9 @@ export const pose = signal({ x: 0, z: 0, yaw: 0, floor: 0 });
 /** Other visitors for the minimap, refreshed twice a second. */
 export const others = signal<{ x: number; z: number; floor: number; color: string }[]>([]);
 
+/** 'sit' when a bench is within reach, 'stand' while sitting (drives the seat prompt). */
+export const seatPrompt = signal<'sit' | 'stand' | null>(null);
+
 /** Id of the shop whose door the player is near (drives the "Visit" prompt). */
 export const nearbyShop = signal<string | null>(null);
 

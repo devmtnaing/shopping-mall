@@ -63,6 +63,8 @@ export const my: Partial<Record<Key, string>> = {
   'help.visit': 'ရှေ့က ဆိုင်ထဲ ဝင်',
   'help.overview': 'အထပ်တစ်ခုလုံးကို မြင်ကွင်းကျယ်နဲ့ ကြည့်',
   'help.thisHelp': 'ဒီအကူအညီ',
+  'prompt.sit': 'ထိုင်မယ်',
+  'prompt.stand': 'ထမယ်',
   'sound.title': 'အသံ',
   'sound.ambience': 'နောက်ခံအသံ',
   'sound.effects': 'ခလုတ်နှင့် တံခါးသံ',

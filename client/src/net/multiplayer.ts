@@ -36,8 +36,10 @@ export function createMultiplayer(opts: {
   floorAt: (y: number) => number;
   /** Your own emote went out (play its gesture on your avatar). */
   onSelfEmote: (e: string) => void;
+  /** Whether you're sitting on a bench (others see you sit). */
+  seated: () => boolean;
 }) {
-  const { scene, player, travel, floorAt, onSelfEmote } = opts;
+  const { scene, player, travel, floorAt, onSelfEmote, seated } = opts;
   const room = new URLSearchParams(location.search).get('room') ?? 'main';
   const remotes = new Remotes();
   const crowd = new Crowd();
@@ -153,7 +155,7 @@ export function createMultiplayer(opts: {
       wire.y = player.pos.y;
       wire.z = player.pos.z;
       wire.yaw = player.facing;
-      wire.anim = packAnim(animState(player), player.speed);
+      wire.anim = packAnim(animState(player, seated()), player.speed);
       wire.flags = player.grounded ? FLAG_GROUNDED : 0;
       net.sendInput(wire);
     },

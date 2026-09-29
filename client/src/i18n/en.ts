@@ -62,6 +62,8 @@ export const en = {
   'help.visit': 'Visit the shop in front of you',
   'help.overview': 'Overview of the whole floor',
   'help.thisHelp': 'This help',
+  'prompt.sit': 'Sit down',
+  'prompt.stand': 'Stand up',
   'sound.title': 'Sound',
   'sound.ambience': 'Ambience',
   'sound.effects': 'Buttons and doors',

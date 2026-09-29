@@ -13,6 +13,7 @@ import { Fade } from './Fade';
 import { BrandPill, NetNotice, TopRight, ZoneLabel } from './Hud';
 import { Landing } from './Landing';
 import { Minimap } from './Minimap';
+import { SeatPrompt } from './SeatPrompt';
 import { ShopPrompt } from './ShopPrompt';
 import { Toasts } from './Toasts';
 import './ui.css';
@@ -78,6 +79,7 @@ function App() {
       <Announcement />
       <TopRight playing />
       <ShopPrompt />
+      <SeatPrompt />
       <Dock />
       {meta && <Minimap meta={meta} />}
       <Chat />

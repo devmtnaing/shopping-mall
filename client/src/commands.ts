@@ -12,6 +12,8 @@ export type Commands = {
   sendChat: (text: string) => void;
   /** Walk to a point on a floor (index into meta.floors). */
   walkTo: (x: number, z: number, floor: number) => void;
+  /** Sit on the bench you're next to, or stand up. */
+  toggleSeat: () => void;
 };
 
 export const commands: Commands = {
@@ -20,6 +22,7 @@ export const commands: Commands = {
   report: () => {},
   emote: () => {},
   walkTo: () => {},
+  toggleSeat: () => {},
 };
 
 export function installCommands(impl: Partial<Commands>) {

@@ -19,6 +19,7 @@ import { Input } from './player/input';
 import { Intro } from './player/intro';
 import { Overview } from './player/overview';
 import { PathFinder } from './player/path';
+import { nearestSpot, type SeatSpot, seatSpots, standSpot } from './player/seats';
 import { createTouchControls } from './player/touch';
 import { Travel } from './player/travel';
 import { WalkTo } from './player/walkto';
@@ -36,6 +37,7 @@ import {
   phase,
   pose,
   profile,
+  seatPrompt,
   toast,
   uiHasFocus,
   zone,
@@ -115,6 +117,23 @@ const follower = new PathFollower();
 const finder = new PathFinder(mall.nav);
 const walkTo = new WalkTo(camera, mall.collider, mall.meta, finder, follower);
 scene.add(walkTo.marker);
+// benches: sit with E, stand up by moving
+const spots = seatSpots(mall.meta);
+let seated: SeatSpot | null = null;
+function toggleSeat() {
+  if (seated) {
+    const up = standSpot(seated);
+    seated = null;
+    player.place(up.x, up.y + 0.05, up.z, up.yaw);
+    return;
+  }
+  const spot = nearestSpot(spots, player.pos);
+  if (!spot) return;
+  follower.stop();
+  travel.cancel();
+  seated = spot;
+  player.place(spot.x, spot.y, spot.z, spot.yaw);
+}
 const travel = new Travel(() => content.value.shops, mall.meta, player, orbit, finder, follower);
 
 // multiplayer: connects once the visitor enters; without a server the mall stays single-player
@@ -124,6 +143,7 @@ const multi = createMultiplayer({
   travel,
   floorAt: (y) => mall.nav.floorAt(y),
   onSelfEmote: (e) => avatar?.emote(e),
+  seated: () => seated !== null,
 });
 // avatars load after the world (capsules until then); a failure just keeps the capsules
 import('./avatars/kit')
@@ -147,6 +167,7 @@ installCommands({
   sendChat: (text) => multi.sendChat(text),
   emote: (e) => multi.emote(e),
   report: (id) => multi.report(id),
+  toggleSeat,
   walkTo: (x, z, floor) => {
     const y = mall.meta.floors[floor]?.y ?? 0;
     if (!walkTo.walkToPoint({ x, y, z }, player)) toast(t('toast.cantWalk'));
@@ -266,8 +287,12 @@ startLoop({
       travel.cancel();
     }
     const move = follower.active ? (follower.update(dt, player.pos, orbit.yaw) ?? still) : manual;
-    escalatorCarry(mall.meta.escalators, player.pos, player.carry);
-    player.step(dt, { x: move.x, y: move.y, run: input.run, jump, yaw: orbit.yaw });
+    // sitting: moving or jumping stands you up; otherwise the body stays put
+    if (seated && (move.x !== 0 || move.y !== 0 || jump)) toggleSeat();
+    if (!seated) {
+      escalatorCarry(mall.meta.escalators, player.pos, player.carry);
+      player.step(dt, { x: move.x, y: move.y, run: input.run, jump, yaw: orbit.yaw });
+    }
     const near = storefronts.nearby(player.pos)?.id ?? null;
     if (near !== nearbyShop.value) nearbyShop.value = near;
     // arrived after directory travel: open that shop's panel
@@ -279,7 +304,12 @@ startLoop({
       if (input.keys.consume(`Digit${i + 1}`) && !uiHasFocus.value) multi.emote(EMOTES[i] as string);
     }
     const visit = input.keys.consume('KeyE'); // always consume, so a stray press can't fire later
-    if (visit && near && !uiHasFocus.value) openShop(near);
+    const seat = seated ? 'stand' : !near && nearestSpot(spots, player.pos) ? 'sit' : null;
+    if (seat !== seatPrompt.value) seatPrompt.value = seat;
+    if (visit && !uiHasFocus.value) {
+      if (near && !seated) openShop(near);
+      else if (seat) toggleSeat();
+    }
     if (zones.update(dt, player.pos)) showZone();
   },
   render: (alpha, dt) => {
@@ -291,7 +321,7 @@ startLoop({
     body.position.lerpVectors(player.prev, player.pos, alpha);
     body.rotation.y = player.facing;
     if (avatar) {
-      avatar.setState(animState(player), player.speed);
+      avatar.setState(animState(player, seated !== null), player.speed);
       avatar.update(dt);
     }
     shoppers?.update(dt, camera.position);
