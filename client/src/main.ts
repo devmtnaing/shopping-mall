@@ -47,8 +47,10 @@ import {
 import { mountUI } from './ui/App';
 import { Apples } from './world/apples';
 import { escalatorCarry } from './world/escalators';
+import { type FountainWater, fountainWater } from './world/fountain';
 import { loadMall } from './world/mall';
 import { Shoppers } from './world/shoppers';
+import { installSky } from './world/sky';
 import { buildStorefronts } from './world/storefronts';
 import { ZoneTracker } from './world/zones';
 import './style.css';
@@ -80,6 +82,7 @@ scene.add(sun);
 await loadContent();
 const mall = await loadMall(art ?? undefined);
 scene.add(mall.visual);
+const sky = installSky(mall.visual); // drifting clouds in the skylight
 const vacant = () => ({ title: t('sign.comingSoon'), subtitle: t('sign.available') });
 let storefronts = await buildStorefronts(mall.meta, content.value.shops, vacant());
 // repaint the "Coming soon" signs when the language changes
@@ -90,10 +93,16 @@ mallMeta.value = mall.meta;
 const start = mall.meta.spawns[0]?.pos ?? [0, 0, 0];
 const propsLib = import('./world/props').then(async (m) => ({ ...m, lib: await m.PropLibrary.load() }));
 let props: import('./world/props').PropLayer | null = null;
+let water: FountainWater | null = null;
 propsLib
   .then(async ({ lib, propLayer }) => {
     props = propLayer(lib, mall.meta.props ?? [], new Vector3(...start));
     scene.add(props.group);
+    // moving water, once the fountain itself is in
+    void props.whenLoaded('fountain').then(() => {
+      water = fountainWater(mall.meta.props ?? []);
+      scene.add(water.group);
+    });
     await props.near;
     // reflections: capture the mall once it's furnished, from eye height in the middle of the hall
     installEnvironment(renderer, scene, new Vector3(start[0], start[1] + 2, start[2] - 20));
@@ -401,6 +410,8 @@ startLoop({
     }
     shoppers?.update(dt, camera.position);
     apples.update(dt);
+    sky.update(dt);
+    water?.update(dt);
 
     const tap = input.takeTap();
     if (tap && phase.value === 'playing' && !walkTo.tap(tap.x, tap.y, player, canvas, over.clipY))

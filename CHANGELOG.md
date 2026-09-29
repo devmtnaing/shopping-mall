@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- The fountain has moving water, and the skylight shows a sky with drifting clouds (T-213).
+
 ## 1.1.0 (2026-09-30)
 
 The mall gets furnished, dressed and a bit more social: shops you can see into, a character set that looks like Myanmar, dancing and hugging, apples to throw, real textures and sound, and a smaller first load.

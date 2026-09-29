@@ -58,6 +58,8 @@ export type PropLayer = {
   near: Promise<void>;
   /** Call with the visitor's position; starts loading any pack that's now close enough. */
   update(pos: Vector3): void;
+  /** Resolves once the pack holding `kind` has loaded in this layer (never, if nothing places it). */
+  whenLoaded(kind: string): Promise<void>;
   /** Remove it from the scene and stop loading (the packs stay cached in the library). */
   dispose(): void;
 };
@@ -73,12 +75,27 @@ export function propLayer(lib: PropLibrary, placements: readonly Placement[], st
   }
   let pending: Pending[] = [...byPack].map(([pack, placements]) => ({ pack, placements }));
   let disposed = false;
+  const done = new Map<string, { promise: Promise<void>; resolve: () => void }>();
+  const signal = (pack: string) => {
+    let d = done.get(pack);
+    if (!d) {
+      let resolve = () => {};
+      const promise = new Promise<void>((r) => {
+        resolve = r;
+      });
+      d = { promise, resolve };
+      done.set(pack, d);
+    }
+    return d;
+  };
 
   const load = (p: Pending) =>
     lib
       .model(p.pack)
       .then((scene) => {
-        if (!disposed) group.add(instance(scene, p.placements));
+        if (disposed) return;
+        group.add(instance(scene, p.placements));
+        signal(p.pack).resolve();
       })
       .catch((e) => console.warn(`props/${p.pack}:`, e));
   const at = new Vector3();
@@ -109,6 +126,10 @@ export function propLayer(lib: PropLibrary, placements: readonly Placement[], st
       if (!pending.length || ++wait < 30) return; // every half second or so is plenty
       wait = 0;
       reach(pos);
+    },
+    whenLoaded(kind) {
+      const pack = lib.pack(kind);
+      return pack ? signal(pack).promise : new Promise(() => {});
     },
     dispose() {
       disposed = true;
