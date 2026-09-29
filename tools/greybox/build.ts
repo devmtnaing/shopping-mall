@@ -10,7 +10,7 @@ const OUT = resolve(import.meta.dirname, '../../client/public/assets/mall');
 
 /** sRGB hex, roughness, metalness, [opacity], [emissive]. glTF wants linear colour. */
 const MATERIALS: Record<string, [string, number, number, number?, boolean?]> = {
-  floor: ['#d9d3c7', 0.35, 0],
+  floor: ['#d9d3c7', 0.22, 0], // polished stone: picks up the environment reflection
   wall: ['#ece7df', 0.9, 0],
   ceiling: ['#f4f1ec', 0.95, 0],
   shopfloor: ['#b9b0a1', 0.6, 0],

@@ -1,6 +1,6 @@
 import { effect } from '@preact/signals';
 import { EMOTES } from '@shopping-mall/shared/protocol';
-import { Color, DirectionalLight, Fog, HemisphereLight, Scene } from 'three';
+import { Color, DirectionalLight, Fog, HemisphereLight, Scene, Vector3 } from 'three';
 import type { Avatar } from './avatars/kit';
 import { installCommands } from './commands';
 import { art, content, loadContent } from './content';
@@ -23,6 +23,7 @@ import { Travel } from './player/travel';
 import { WalkTo } from './player/walkto';
 import { AutoQuality, TIERS } from './quality';
 import type { DebugOverlay } from './render/debug';
+import { installEnvironment } from './render/environment';
 import { createRenderer } from './render/renderer';
 import {
   mallMeta,
@@ -78,7 +79,12 @@ mallMeta.value = mall.meta;
 // benches, plants, lamps…: after the mall, never blocking it
 import('./world/props')
   .then(({ loadProps }) => loadProps(mall.meta))
-  .then((props) => scene.add(props))
+  .then((props) => {
+    scene.add(props);
+    // reflections: capture the mall once it's furnished, from eye height in the middle of the hall
+    const spawn = mall.meta.spawns[0]?.pos ?? [0, 0, 0];
+    installEnvironment(renderer, scene, new Vector3(spawn[0], spawn[1] + 2, spawn[2] - 20));
+  })
   .catch((e) => console.warn('props:', e));
 
 const input = new Input(canvas);
