@@ -51,3 +51,13 @@ export const CAMERA = {
   recenterDelay: 1.5,
   recenterRate: 1.6,
 } as const;
+
+/**
+ * Sound loops (T-506, #3): each file is `seconds` of seamless loop plus the first LOOP_OVERLAP
+ * seconds again, so the client can overlap passes on identical audio (tools/assets/audio.ts).
+ */
+export const AUDIO_LOOPS = {
+  ambient: { seconds: 20, stereo: true },
+  fountain: { seconds: 6, stereo: false },
+} as const;
+export const LOOP_OVERLAP = 0.5;

@@ -1,9 +1,10 @@
 // Sound (T-506). Nothing loads or plays until the visitor's first click, tap or key press (browsers
 // require it, and a silent start is kinder). Then: a soft ambience loop, the fountain as a positional
 // source you can walk up to, a gentle tap for buttons and a door chime when a shop opens. The tap
-// and chime are short generated clips (16 KB together); until they load, or if they can't, they're
+// and chime are short generated clips (11 KB together); until they load, or if they can't, they're
 // synthesized. Volumes live in `volume` (Help dialog).
 import { effect, signal } from '@preact/signals';
+import { AUDIO_LOOPS, LOOP_OVERLAP } from '@shopping-mall/shared/constants';
 import { load, save } from './storage';
 
 export type Volume = { ambience: number; effects: number };
@@ -17,8 +18,8 @@ export function setVolume(v: Partial<Volume>) {
 const BASE = `${import.meta.env.BASE_URL}assets/audio/`;
 /** Loudness the loops are normalized to (RMS). The sources are generated quiet and uneven. */
 const TARGET_RMS = 0.05;
-/** Crossfade at the loop point (s): the clips are trimmed, not made seamless. */
-const FADE = 1.5;
+/** LAME's encoder delay: silence some browsers' MP3 decoders leave at the start of the file. */
+const MP3_DELAY = 1105;
 /** Peak level of the one-shots: the generated clips come out at very different levels. */
 const PEAK = { chime: 0.3, tap: 0.15 };
 
@@ -64,7 +65,7 @@ async function start(fountain: Vec | null): Promise<Sound> {
     return { buf, gain: TARGET_RMS / rms(buf) };
   };
   const [amb, water] = await Promise.all([decode('ambient'), decode('fountain')]);
-  loop(ctx, amb.buf, amb.gain, ambience);
+  loop(ctx, amb.buf, AUDIO_LOOPS.ambient.seconds, amb.gain, ambience);
   if (fountain) {
     const panner = new PannerNode(ctx, {
       panningModel: 'equalpower',
@@ -77,7 +78,7 @@ async function start(fountain: Vec | null): Promise<Sound> {
       positionZ: fountain.z,
     });
     panner.connect(ambience);
-    loop(ctx, water.buf, water.gain * 1.5, panner);
+    loop(ctx, water.buf, AUDIO_LOOPS.fountain.seconds, water.gain * 1.5, panner);
   }
 
   // the one-shots, after the loops (nothing waits on them): synthesized until they're in
@@ -151,29 +152,34 @@ function rms(buf: AudioBuffer): number {
   return Math.sqrt(s / d.length) || 1;
 }
 
-/** Loop a buffer forever, overlapping each pass by FADE seconds with equal-power fades. */
-function loop(ctx: AudioContext, buf: AudioBuffer, level: number, out: AudioNode) {
-  const period = buf.duration - FADE;
+/**
+ * Loop a buffer forever. The file is `seconds` of seamless loop plus its first LOOP_OVERLAP seconds
+ * again (tools/assets/audio.ts), so each pass overlaps the next on identical audio: a linear
+ * crossfade there sums back to exactly the signal, whatever padding the MP3 decoder added.
+ */
+function loop(ctx: AudioContext, buf: AudioBuffer, seconds: number, level: number, out: AudioNode) {
+  // a decoder that keeps the encoder's delay leaves ~46 ms of near-silence first: skip it
+  const d = buf.getChannelData(0);
+  let quiet = 0;
+  while (quiet < MP3_DELAY && Math.abs(d[quiet] ?? 1) < 1e-3) quiet++;
+  const offset = quiet >= MP3_DELAY * 0.8 ? MP3_DELAY / buf.sampleRate : 0;
   let next = ctx.currentTime + 0.05;
   const schedule = () => {
     while (next < ctx.currentTime + 4) {
       const src = new AudioBufferSourceNode(ctx, { buffer: buf });
       const g = new GainNode(ctx, { gain: 0 });
       src.connect(g).connect(out);
-      g.gain.setValueCurveAtTime(fadeIn(level), next, FADE);
-      g.gain.setValueCurveAtTime(fadeOut(level), next + period, FADE);
-      src.start(next);
-      src.stop(next + buf.duration);
-      next += period;
+      g.gain.setValueAtTime(0, next);
+      g.gain.linearRampToValueAtTime(level, next + LOOP_OVERLAP);
+      g.gain.setValueAtTime(level, next + seconds);
+      g.gain.linearRampToValueAtTime(0, next + seconds + LOOP_OVERLAP);
+      src.start(next, offset, seconds + LOOP_OVERLAP);
+      next += seconds;
     }
   };
   schedule();
   setInterval(schedule, 1000);
 }
-const curve = (level: number, f: (x: number) => number) =>
-  Float32Array.from({ length: 32 }, (_, i) => level * f(i / 31));
-const fadeIn = (level: number) => curve(level, (x) => Math.sin((x * Math.PI) / 2));
-const fadeOut = (level: number) => curve(level, (x) => Math.cos((x * Math.PI) / 2));
 
 /** A soft bell: sine partials with a quick attack and exponential decay. [frequency, delay] pairs. */
 function tone(ctx: AudioContext, out: AudioNode, notes: [number, number][], decay: number, peak: number) {
