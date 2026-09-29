@@ -222,7 +222,7 @@ function escalator(g: Geo, meta: MallMeta, id: string, xc: number, zBottom: numb
   meta.escalators.push({ id, from: [xc, 0, zBottom], to: [xc, UP, zTop], width: w, speed: 1.2 });
 }
 
-/** Benches (seats), bins, lamps, plants, café tables, sofas, planters and a fountain. */
+/** Benches (seats), recycling stations, lamps, plants, lanterns, café tables, sofas, planters and a fountain. */
 function props(g: Geo, meta: MallMeta) {
   const placed: NonNullable<MallMeta['props']> = [];
   meta.props = placed;
@@ -242,12 +242,10 @@ function props(g: Geo, meta: MallMeta) {
     place('bench', x, y, z, faceIn);
     meta.seats.push({ id: `bench-${meta.seats.length}`, kind: 'bench', pos: [x, y + 0.45, z], yaw: faceIn });
   };
-  for (const z of [-8, -20, -36, -48]) {
-    for (const x of [-4.6, 4.6]) {
-      bench(x, 0, z);
-      place('bin', x, 0, z + 1.5);
-    }
-  }
+  for (const z of [-8, -20, -36, -48]) for (const x of [-4.6, 4.6]) bench(x, 0, z);
+  // recycling stations beside some of the benches, facing the concourse (#4, batch 2)
+  for (const z of [-8, -36])
+    for (const x of [-4.9, 4.9]) place('recycling', x, 0, z + 1.9, x > 0 ? PI / 2 : -PI / 2);
   for (const z of [-16, -40]) for (const x of [-4.5, 4.5]) bench(x, UP, z);
 
   // floor lamps between the benches, plants either side of the entrance and upstairs
@@ -277,7 +275,21 @@ function props(g: Geo, meta: MallMeta) {
     place('tree', x, 0.6, z);
   };
   planter(-3, -4.5); // off the centre line, so the view from the spawn is clear
-  planter(-2, -38);
+  // a round seating island with a tree in the middle, seats either side (#4, batch 2)
+  place('island', -2, 0, -38);
+  place('tree', -2, 0.45, -38);
+  for (const dx of [-1.05, 1.05]) {
+    const yaw = dx > 0 ? -PI / 2 : PI / 2; // facing out
+    meta.seats.push({ id: `bench-${meta.seats.length}`, kind: 'bench', pos: [-2 + dx, 0.45, -38], yaw });
+  }
+  // Myanmar festival lanterns hung in the atrium, clear of the bridge (#4, batch 2)
+  for (const [x, z] of [
+    [-1.2, -14],
+    [1.2, -20],
+    [-1.2, -38],
+    [1.2, -44],
+  ] as const)
+    place('lanterns', x, 10.3, z);
 
   place('fountain', 0, 0, -49);
 }

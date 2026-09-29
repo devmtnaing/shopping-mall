@@ -1,6 +1,7 @@
 {
   "entrance": ["kiosk", "welcome", "palm"],
-  "concourse": ["bench", "tree", "plant", "bin", "lamp", "sofa"],
+  "concourse": ["bench", "tree", "recycling", "plant", "lamp", "sofa"],
+  "atrium": ["lanterns", "island"],
   "court": ["fountain", "table", "chair"],
   "shops": ["shelf", "shelf-bags", "register", "cart", "fruit"]
 }

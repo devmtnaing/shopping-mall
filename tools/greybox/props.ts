@@ -5,7 +5,7 @@
  * Props ship in packs by area (props/<pack>.glb), and the client loads a pack once a visitor comes
  * near any of its placements, so a new batch of props doesn't grow what everyone downloads up front.
  */
-export const PACKS = ['entrance', 'concourse', 'court', 'shops'] as const;
+export const PACKS = ['entrance', 'concourse', 'atrium', 'court', 'shops'] as const;
 export type Pack = (typeof PACKS)[number];
 
 export type PropSpec = {
@@ -62,6 +62,25 @@ export const PROPS: Record<string, PropSpec> = {
     footprint: [0.7, 2.3, 0.5],
   },
   palm: { pack: 'entrance', src: `${H}/palm.glb`, axis: 'y', size: 2.3, turn: 0, footprint: [0.8, 1, 0.8] },
+  /** Hangs in the atrium: placed by its lowest point. */
+  lanterns: { pack: 'atrium', src: `${H}/lanterns.glb`, axis: 'y', size: 2.6, turn: 0, footprint: null },
+  /** A ring bench around a low planter (a tree stands on it); seat height, so you can step onto it. */
+  island: {
+    pack: 'atrium',
+    src: `${H}/island.glb`,
+    axis: 'y',
+    size: 0.45,
+    turn: 0,
+    footprint: [2.6, 0.45, 3.2],
+  },
+  recycling: {
+    pack: 'concourse',
+    src: `${H}/recycling.glb`,
+    axis: 'x',
+    size: 1.2,
+    turn: Math.PI / 2,
+    footprint: [1.2, 1.1, 0.45],
+  },
   plant: {
     pack: 'concourse',
     src: `${F}/pottedPlant.glb`,
@@ -69,14 +88,6 @@ export const PROPS: Record<string, PropSpec> = {
     size: 1.5,
     turn: 0,
     footprint: [0.6, 1, 0.6],
-  },
-  bin: {
-    pack: 'concourse',
-    src: `${F}/trashcan.glb`,
-    axis: 'y',
-    size: 0.85,
-    turn: 0,
-    footprint: [0.45, 0.85, 0.45],
   },
   lamp: {
     pack: 'concourse',

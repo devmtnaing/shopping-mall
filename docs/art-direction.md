@@ -100,14 +100,15 @@ Furniture and decoration come in **props packs** by area, `client/public/assets/
 
 | Kind | Source |
 |---|---|
-| `bench`, `fountain`, `tree`, `kiosk`, `welcome`, `palm` | Generated with Higgsfield (prompts in `assets-src/props/higgsfield/prompts.md`) |
-| `plant`, `bin`, `lamp`, `sofa`, `table`, `chair` | Kenney Furniture Kit (CC0) |
+| `bench`, `fountain`, `tree`, `kiosk`, `welcome`, `palm`, `lanterns`, `recycling`, `island` | Generated with Higgsfield (prompts in `assets-src/props/higgsfield/prompts.md`) |
+| `plant`, `lamp`, `sofa`, `table`, `chair` | Kenney Furniture Kit (CC0) |
 | `shelf`, `shelf-bags`, `register`, `cart`, `fruit` | Kenney Mini Market (CC0), for shop interiors |
 
 | Pack | Kinds | Size |
 |---|---|---|
 | `entrance` | `kiosk`, `welcome`, `palm` | 133 KB |
-| `concourse` | `bench`, `tree`, `plant`, `bin`, `lamp`, `sofa` | 139 KB |
+| `concourse` | `bench`, `recycling`, `tree`, `plant`, `lamp`, `sofa` | 178 KB |
+| `atrium` | `lanterns`, `island` | 75 KB |
 | `court` | `fountain`, `table`, `chair` | 60 KB |
 | `shops` | `shelf`, `shelf-bags`, `register`, `cart`, `fruit` | 47 KB |
 
@@ -133,7 +134,7 @@ dedup → prune → join (per material, static only) → weld → simplify (LOD 
 | Collision mesh | 50k | 1.5 MB | 2.2k tris, 91 KB |
 | Navgrid | — | 60 KB | 9 KB |
 | Avatar pack (all characters and clips) | 15k | 250 KB | 11k tris, 179 KB |
-| Props pack (each area) | 20k | 200 KB | 139 KB (largest, `concourse`); loaded as you approach |
+| Props pack (each area) | 20k | 200 KB | 178 KB (largest, `concourse`); loaded nearest first |
 | Avatar preview | — | 8 KB | 2 KB |
 | Audio loop (each / all) | — | 170 KB / 250 KB | 156 + 47 KB |
 

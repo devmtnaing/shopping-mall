@@ -1,7 +1,7 @@
 # Higgsfield props
 
 Generated on 2026-09-29 with Higgsfield's Text to 3D (`tripo_3d`), `face_limit` as noted, `pbr false`, `texture true`. 5 credits each.
-`pnpm assets` scales them, turns them to face −Z and shrinks their textures to 512 px WebP.
+`pnpm assets` scales them, turns them to face −Z and shrinks their textures to 384 px WebP.
 
 | File | face_limit | Prompt |
 |---|---|---|
@@ -15,4 +15,12 @@ Generated on 2026-09-29 with Higgsfield's Text to 3D (`tripo_3d`), `face_limit` 
 
 Batch 1 of #4 (the entrance), 2026-09-29: 15 credits.
 
-(The bench came out with a backrest despite the prompt. It looks right in the mall, so it stays.)
+| File | face_limit | Prompt |
+|---|---|---|
+| `lanterns.glb` | 2000 | A hanging cluster of seven round Myanmar festival paper lanterns in warm red, orange and gold, hung at different heights from thin cords joined to one small ring at the top, glowing warm, for decorating a shopping mall atrium, stylized low-poly game asset, flat colors, isolated |
+| `recycling.glb` | 2000 | A modern waste and recycling station for an indoor shopping mall: three bins side by side in one light wood and white housing, with green, blue and grey lids and simple recycling symbols, clean modern design, stylized low-poly game asset, flat colors, isolated |
+| `island.glb` | 2000 | A round seating island for an indoor shopping mall: a circular upholstered bench in warm terracotta fabric wrapped around a raised round white planter in the middle, no plant, clean modern design, stylized low-poly game asset, flat colors, isolated |
+
+Batch 2 of #4 (the atrium), 2026-09-29: 15 credits.
+
+(The bench came out with a backrest despite the prompt, and the island as a split, spiralling ring. Both look right in the mall, so they stay.)
