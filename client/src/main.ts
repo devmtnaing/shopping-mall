@@ -21,6 +21,7 @@ import { PathFinder } from './player/path';
 import { createTouchControls } from './player/touch';
 import { Travel } from './player/travel';
 import { WalkTo } from './player/walkto';
+import { AutoQuality, TIERS } from './quality';
 import type { DebugOverlay } from './render/debug';
 import { createRenderer } from './render/renderer';
 import {
@@ -118,7 +119,7 @@ import('./avatars/kit')
   .then(({ loadAvatarKit }) => loadAvatarKit())
   .then((kit) => {
     multi.setAvatarKit(kit);
-    shoppers = new Shoppers(kit, mall.meta, finder, 6);
+    shoppers = new Shoppers(kit, mall.meta, finder, TIERS.high.shoppers);
     scene.add(shoppers.group);
     effect(() => {
       const id = profile.value.avatar;
@@ -153,6 +154,7 @@ const bounds = {
   maxZ: Math.max(...inner.map((b) => b.max[2])) + 4,
 };
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
+const autoQuality = new AutoQuality();
 
 // shared links: start at a shop (its panel opens after the fly-in) or at an exact spot
 const link = parseLink(location.search);
@@ -248,6 +250,7 @@ startLoop({
   },
   render: (alpha, dt) => {
     const t0 = performance.now();
+    if (phase.value === 'playing' && intro.done) autoQuality.frame(dt * 1000);
     body.position.lerpVectors(player.prev, player.pos, alpha);
     body.rotation.y = player.facing;
     if (avatar) {

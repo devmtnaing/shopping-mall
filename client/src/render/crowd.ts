@@ -1,7 +1,7 @@
 // Draws remote players: an animated avatar each once the avatar kit has loaded (capsules in one
 // instanced mesh until then), and all name tags as instanced billboards sampling one name atlas.
 // The server sends at most the nearest 40 people, so that's at most 40 skinned meshes; the ones far
-// away animate at a third of the rate.
+// away (by quality tier) animate at a third of the rate.
 import { PLAYER } from '@shopping-mall/shared/constants';
 import { unpackAnim } from '@shopping-mall/shared/protocol';
 import {
@@ -26,6 +26,7 @@ import {
 } from 'three';
 import type { Avatar, AvatarKit } from '../avatars/kit';
 import type { Remote, Remotes } from '../net/remotes';
+import { TIERS, tier } from '../quality';
 
 const COLS = 4;
 const ROWS = 16;
@@ -35,8 +36,6 @@ const CELL_H = 64;
 const FADE_START = 14;
 const FADE_END = 24;
 const TAG_Y = PLAYER.height + 0.42;
-/** Beyond this distance (m) avatars animate every third frame. */
-const FAR = 20;
 
 const m = new Matrix4();
 const q = new Quaternion();
@@ -136,7 +135,9 @@ export class Crowd {
         avatar.object.position.set(p.x, p.y, p.z);
         avatar.object.rotation.y = p.yaw;
         avatar.setState(state, speed);
-        const far = camera.position.distanceToSquared(avatar.object.position) > FAR * FAR;
+        // beyond the tier's distance, animate every third frame
+        const far =
+          camera.position.distanceToSquared(avatar.object.position) > TIERS[tier.value].animateWithin ** 2;
         if (!far) avatar.update(dt);
         else if ((this.frame + r.id) % 3 === 0) avatar.update(dt * 3);
       } else {

@@ -1,4 +1,5 @@
 import { t } from '../i18n';
+import { type QualitySetting, qualitySetting, setQuality, tier } from '../quality';
 import { dialog } from '../state';
 import { Dialog } from './Dialog';
 
@@ -54,6 +55,25 @@ export function Help() {
           </dl>
         </section>
       </div>
+      <fieldset class="quality">
+        <legend>{t('quality.title')}</legend>
+        <div class="segmented" role="radiogroup">
+          {(['auto', 'low', 'medium', 'high'] as QualitySetting[]).map((q) => (
+            <label key={q} class={qualitySetting.value === q ? 'on' : undefined}>
+              <input
+                type="radio"
+                name="quality"
+                value={q}
+                checked={qualitySetting.value === q}
+                onChange={() => setQuality(q)}
+              />
+              {t(`quality.${q}`)}
+              {q === 'auto' && qualitySetting.value === 'auto' && ` · ${t(`quality.${tier.value}`)}`}
+            </label>
+          ))}
+        </div>
+        <p class="hint">{t('quality.hint')}</p>
+      </fieldset>
     </Dialog>
   );
 }

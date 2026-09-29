@@ -1,16 +1,17 @@
 // Ambient life (T-213): a few shoppers who wander the mall on their own, in every visitor's view
 // (they're local, not multiplayer). They walk the navgrid from shop window to shop window, stop to
 // look, and sit on free benches for a while. Kinematic (no physics); animated only when nearby.
+// How many are shown, and how far away they animate, follow the quality tier.
 import { AVATARS } from '@shopping-mall/shared/avatars';
 import type { MallMeta } from '@shopping-mall/shared/meta';
 import { ANIM } from '@shopping-mall/shared/protocol';
 import { Group, type Vector3 } from 'three';
 import type { Avatar, AvatarKit } from '../avatars/kit';
 import type { PathFinder, Waypoint } from '../player/path';
+import { TIERS, tier } from '../quality';
 
 const SPEED = 1.3; // m/s: an unhurried stroll
 const TURN = 6; // how quickly they turn to face where they're going (1/s)
-const ANIMATE_WITHIN = 30; // m from the camera
 
 type Spot = { x: number; y: number; z: number; yaw: number; seat?: string };
 type Shopper = {
@@ -62,7 +63,9 @@ export class Shoppers {
   }
 
   update(dt: number, camera: Vector3) {
-    for (const s of this.list) {
+    const { shoppers: visible, animateWithin } = TIERS[tier.value];
+    for (const [i, s] of this.list.entries()) {
+      s.avatar.object.visible = i < visible; // lower tiers show fewer (they keep strolling unseen)
       if (s.wait > 0) {
         s.wait -= dt;
         if (s.wait <= 0) this.leave(s);
@@ -70,7 +73,7 @@ export class Shoppers {
       const o = s.avatar.object;
       o.position.set(s.x, s.y, s.z);
       o.rotation.y = s.yaw;
-      if (o.position.distanceToSquared(camera) < ANIMATE_WITHIN * ANIMATE_WITHIN) s.avatar.update(dt);
+      if (o.visible && o.position.distanceToSquared(camera) < animateWithin ** 2) s.avatar.update(dt);
     }
   }
 

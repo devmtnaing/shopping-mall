@@ -1,13 +1,11 @@
+import { effect } from '@preact/signals';
 import { ACESFilmicToneMapping, PerspectiveCamera, SRGBColorSpace, WebGLRenderer } from 'three';
-
-/** Max device pixel ratio. Quality tiers lower this later (docs/architecture.md § Quality tiers). */
-const MAX_DPR = 2;
+import { TIERS, tier } from '../quality';
 
 export function createRenderer(canvas: HTMLCanvasElement) {
   const renderer = new WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
   renderer.outputColorSpace = SRGBColorSpace;
   renderer.toneMapping = ACESFilmicToneMapping;
-  renderer.setPixelRatio(Math.min(devicePixelRatio, MAX_DPR));
 
   const camera = new PerspectiveCamera(60, 1, 0.1, 400);
 
@@ -18,7 +16,11 @@ export function createRenderer(canvas: HTMLCanvasElement) {
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
   }
-  resize();
+  // the quality tier caps the pixel ratio, live
+  effect(() => {
+    renderer.setPixelRatio(Math.min(devicePixelRatio, TIERS[tier.value].dpr));
+    resize();
+  });
   new ResizeObserver(resize).observe(canvas);
 
   return { renderer, camera };

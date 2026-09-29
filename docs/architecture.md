@@ -201,6 +201,11 @@ An adapter is a single function, `(options, locale) => Promise<Product[]>`. Resu
 | Post | none | FXAA | SMAA + subtle bloom on signs |
 | Visible avatars (full LOD) | 8 | 16 | 24 |
 
+| Full-rate avatar animation within | 12 m | 20 m | 30 m |
+| Ambient shoppers | 3 | 6 | 8 |
+
+*(Built so far, in `client/src/quality.ts`: pixel ratio, animation distance and shoppers. The rest arrives with the features it tunes.)*
+
 **Auto** starts at Medium, samples frame time for 3 s after spawning, then steps down if p90 frame time is above 20 ms or up if it's below 10 ms. The choice is saved.
 
 ## Deployment
