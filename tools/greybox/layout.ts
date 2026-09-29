@@ -217,8 +217,8 @@ function escalator(g: Geo, meta: MallMeta, id: string, xc: number, zBottom: numb
         [zl, 1],
       ];
   g.xprism('escalator', x0, x1, wedge);
-  g.xprism('rail', x0 - 0.1, x0, panel);
-  g.xprism('rail', x1, x1 + 0.1, panel);
+  g.xprism('panel', x0 - 0.1, x0, panel);
+  g.xprism('panel', x1, x1 + 0.1, panel);
   meta.escalators.push({ id, from: [xc, 0, zBottom], to: [xc, UP, zTop], width: w, speed: 1.2 });
 }
 

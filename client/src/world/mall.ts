@@ -70,6 +70,8 @@ function bakedMaterial(m: Material): Material {
     lightMap: map,
     lightMapIntensity: scale * Math.PI, // MeshBasicMaterial divides the lightmap by π
   });
+  // polished surfaces also mirror the environment faintly, once render/environment.ts has captured it
+  baked.userData.reflect = (m.userData as { reflect?: number }).reflect;
   m.dispose();
   return baked;
 }

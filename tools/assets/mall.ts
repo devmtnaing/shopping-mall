@@ -17,7 +17,9 @@ const OUT = resolve(import.meta.dirname, '../../client/public/assets/mall');
 /** Must match LIGHT_SCALE in tools/blender/build.py. */
 const LIGHT_SCALE = 2;
 /** Surfaces that make their own light or are see-through: no lightmap. */
-const UNLIT = new Set(['glass', 'skylight', 'lightpanel']);
+const UNLIT = new Set(['glass', 'railglass', 'skylight', 'lightpanel']);
+/** Lightmapped surfaces that also show a faint reflection of the mall (polished stone). */
+const REFLECT: Record<string, number> = { floor: 0.12 };
 
 if (!existsSync(`${SRC}/mall.glb`)) {
   console.log(
@@ -27,7 +29,8 @@ if (!existsSync(`${SRC}/mall.glb`)) {
 }
 const io = new NodeIO().registerExtensions(ALL_EXTENSIONS);
 const doc = await io.read(`${SRC}/mall.glb`);
-const png = await sharp(`${SRC}/lightmap.png`).webp({ quality: 88 }).toBuffer();
+// quality 80: smooth lighting survives it well, and it keeps the model under its 1.5 MB budget
+const png = await sharp(`${SRC}/lightmap.png`).webp({ quality: 80 }).toBuffer();
 const lightmap = doc.createTexture('lightmap').setImage(new Uint8Array(png)).setMimeType('image/webp');
 
 let lit = 0;
@@ -36,7 +39,11 @@ for (const m of doc.getRoot().listMaterials()) {
   if (UNLIT.has(name)) continue;
   m.setOcclusionTexture(lightmap);
   m.getOcclusionTextureInfo()?.setTexCoord(1);
-  m.setExtras({ ...m.getExtras(), lightmap: LIGHT_SCALE });
+  m.setExtras({
+    ...m.getExtras(),
+    lightmap: LIGHT_SCALE,
+    ...(REFLECT[name] ? { reflect: REFLECT[name] } : {}),
+  });
   lit++;
 }
 await doc.transform(dedup(), prune({ keepAttributes: true }), weld());

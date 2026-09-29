@@ -6,6 +6,9 @@ import { effect } from '@preact/signals';
 import {
   CubeCamera,
   HalfFloatType,
+  type Mesh,
+  type MeshBasicMaterial,
+  MixOperation,
   PMREMGenerator,
   type Scene,
   type Texture,
@@ -34,12 +37,21 @@ export function installEnvironment(renderer: WebGLRenderer, scene: Scene, at: Ve
     target.dispose();
   };
   scene.environmentIntensity = INTENSITY;
+  // unlit baked surfaces don't see scene.environment; the reflective ones get it as their envMap
+  const reflective: MeshBasicMaterial[] = [];
+  scene.traverse((o) => {
+    const m = (o as Mesh).material as MeshBasicMaterial | undefined;
+    if ((o as Mesh).isMesh && m?.isMeshBasicMaterial && m.userData.reflect) reflective.push(m);
+  });
   effect(() => {
-    if (tier.value === 'low') {
-      scene.environment = null;
-      return;
+    const on = tier.value !== 'low';
+    if (on && !env) capture();
+    scene.environment = on ? env : null;
+    for (const m of reflective) {
+      m.envMap = on ? env : null;
+      m.combine = MixOperation;
+      m.reflectivity = m.userData.reflect as number;
+      m.needsUpdate = true;
     }
-    if (!env) capture();
-    scene.environment = env;
   });
 }

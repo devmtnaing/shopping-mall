@@ -122,11 +122,17 @@ LOOK = {
     'trim': ('#b8955e', 0.35, 1.0, 0),
     'dark': ('#3a3732', 0.6, 0.0, 0),
     'rail': ('#9c9892', 0.3, 0.8, 0),
+    'panel': ('#8f8b85', 0.35, 0.0, 0),  # escalator side panels
     'escalator': ('#5f5c57', 0.45, 0.4, 0),
     'planter': ('#e9e2d6', 0.8, 0.0, 0),
     'glass': ('#bcd4dc', 0.05, 0.0, 0),
     'skylight': ('#fff8ea', 1.0, 0.0, 6),
     'lightpanel': ('#fffaf0', 1.0, 0.0, 10),
+    'frame': ('#3b3129', 0.4, 0.7, 0),  # door frames: dark bronze
+    'skirting': ('#6f665b', 0.5, 0.0, 0),  # stone skirting
+    'cornice': ('#e6dfd2', 0.7, 0.0, 0),
+    'handrail': ('#b8955e', 0.3, 1.0, 0),  # brass, like the trim
+    'railglass': ('#d7e6ea', 0.05, 0.0, 0),
 }
 
 
@@ -200,12 +206,14 @@ def material(name):
     col, rough, metal, emit = LOOK[name]
     bsdf.inputs['Base Color'].default_value = srgb(col)
     bsdf.inputs['Roughness'].default_value = rough
-    bsdf.inputs['Metallic'].default_value = metal
+    # baked surfaces render unlit (base colour × light), so metalness does nothing in the mall, and
+    # a metallic surface has no diffuse at all: it would bake black. Bake everything as dielectric.
+    bsdf.inputs['Metallic'].default_value = 0  # (LOOK's metallic column documents intent only)
     if emit:
         bsdf.inputs['Emission Color'].default_value = srgb(col)
         bsdf.inputs['Emission Strength'].default_value = emit * EXPOSURE / 0.25  # tuned at 0.25
-    if name == 'glass':
-        bsdf.inputs['Alpha'].default_value = 0.25
+    if name in ('glass', 'railglass'):
+        bsdf.inputs['Alpha'].default_value = 0.25 if name == 'glass' else 0.18
         m.surface_render_method = 'BLENDED'
     if name in TILED and not any(n.type == 'TEX_IMAGE' for n in m.node_tree.nodes):
         t = m.node_tree.nodes.new('ShaderNodeTexImage')
@@ -260,6 +268,60 @@ for z in [-6 - 8 * i for i in range(6)]:
     for x in (-4.5, 4.5):
         panels.append(box('lightpanel', 'lightpanel', (x - 0.6, ROOF - 0.04, z - 1.6), (x + 0.6, ROOF - 0.01, z + 1.6)))
 
+# ---- architectural detail (issue #2) ----------------------------------------------------------
+X_CON, DOOR_W, DOOR_H, RAIL_H = 6.0, 6.0, 4.0, 1.1
+PILLAR = (SLOT_LEN - DOOR_W) / 2
+VOID_X, VOID_Z0, VOID_Z1 = 3.0, -8.0, SLOT_Z0 - SLOTS * SLOT_LEN
+BRIDGE_Z0, BRIDGE_Z1 = -25.0, -32.0
+details = []
+
+
+def side_box(mat, s, x_in, x_out, y0, y1, z0, z1):
+    """A box on side s (−1 west, +1 east) spanning |x| from x_in to x_out."""
+    xa, xb = (-x_out, -x_in) if s < 0 else (x_in, x_out)
+    details.append(box(mat, mat, (xa, y0, min(z0, z1)), (xb, y1, max(z0, z1))))
+
+
+for s in (-1, 1):
+    for upper in (False, True):
+        y0 = UP if upper else 0.0
+        top = ROOF if upper else CEIL
+        for i in range(SLOTS):
+            za = SLOT_Z0 - i * SLOT_LEN
+            zb = za - SLOT_LEN
+            d0, d1 = zb + PILLAR, za - PILLAR  # the doorway
+            # door frames: jambs that wrap the doorway's edges (overlapping them, never coplanar)
+            for e in (d0, d1):
+                side_box('frame', s, X_CON - 0.05, X_CON + T + 0.02, y0, y0 + DOOR_H - 0.12, e - 0.06, e + 0.06)
+            # skirting along the storefront pillars
+            side_box('skirting', s, X_CON - 0.025, X_CON + 0.01, y0, y0 + 0.14, zb, d0 - 0.06)
+            side_box('skirting', s, X_CON - 0.025, X_CON + 0.01, y0, y0 + 0.14, d1 + 0.06, za)
+        # a cornice band along the whole row, just under the ceiling
+        side_box('cornice', s, X_CON - 0.1, X_CON + 0.01, top - 0.42, top - 0.22, VOID_Z1, SLOT_Z0)
+
+# brass handrails on the balustrades (the rail panels themselves turn to glass below)
+HR = 0.04
+rail_segments = []
+for s in (-1, 1):
+    x0 = -VOID_X if s < 0 else VOID_X - 0.08
+    rail_segments += [(x0, x0 + 0.08, VOID_Z1, BRIDGE_Z1), (x0, x0 + 0.08, BRIDGE_Z0, VOID_Z0)]
+rail_segments += [
+    (-VOID_X, VOID_X, VOID_Z0, VOID_Z0 + 0.08),
+    (-VOID_X, VOID_X, VOID_Z1 - 0.08, VOID_Z1),
+    (-VOID_X, -2.6, BRIDGE_Z0 - 0.08, BRIDGE_Z0),
+    (-1.4, VOID_X, BRIDGE_Z0 - 0.08, BRIDGE_Z0),
+    (-VOID_X, 1.4, BRIDGE_Z1, BRIDGE_Z1 + 0.08),
+    (2.6, VOID_X, BRIDGE_Z1, BRIDGE_Z1 + 0.08),
+]
+for xa, xb, za, zb in rail_segments:
+    details.append(box('handrail', 'handrail', (xa - HR, UP + RAIL_H, za - HR), (xb + HR, UP + RAIL_H + 0.06, zb + HR)))
+
+# rail panels become glass balustrades (escalator side panels are "panel" and stay solid)
+for o in list(bpy.context.scene.objects):
+    if o.type == 'MESH' and o.name.split('.')[0] == 'rail':
+        o.data.materials[0] = material('railglass')
+        o.name = 'railglass'
+
 lights = []
 # each panel also gets an area light just below it (the emission alone is noisy to bake)
 for p in panels:
@@ -295,7 +357,7 @@ def to_blender(o):
         o.rotation_euler = (0, 0, 0)  # area lights already point down (−Z) in Blender's Z-up
 
 
-for o in panels + lights:
+for o in panels + lights + details:
     to_blender(o)
 
 # a little ambient bounce from outside (the entrance glass)
@@ -307,7 +369,10 @@ bg.inputs['Strength'].default_value = 0.08
 
 # ---- one mesh, one lightmap UV ------------------------------------------------------------------
 bpy.ops.object.select_all(action='DESELECT')
-meshes = [o for o in bpy.context.scene.objects if o.type == 'MESH' and o.name.split('.')[0] not in ('glass',)]
+# see-through things stay separate and unlit
+meshes = [
+    o for o in bpy.context.scene.objects if o.type == 'MESH' and o.name.split('.')[0] not in ('glass', 'railglass')
+]
 for o in meshes:
     o.select_set(True)
 bpy.context.view_layer.objects.active = meshes[0]
