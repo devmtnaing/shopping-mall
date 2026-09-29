@@ -125,10 +125,14 @@ The dates assume one full-time developer plus one part-time 3D artist. Phases 2 
 3D art for v1 uses **free CC0 kits** (Kenney, Quaternius, Poly Pizza). Higgsfield-generated assets come later and drop in as file swaps (ADR 0006). The licence has been checked: generated models may be committed.
 
 ## After v1.0 (P2 backlog)
-- Private rooms and invite links
+v1.0 shipped on 2026-09-29, then v1.1.0 and v1.1.1 on 2026-09-30 (see the [changelog](../CHANGELOG.md)). Still to do from v1: a check on a real Android phone (T-505).
+
+- Private rooms and invite links (the server already takes `?room=`; it needs an "Invite friends" button)
 - 3D product pedestals and product `.glb` viewer
 - Shopify / WooCommerce adapters
 - Scheduled events and host stage
 - Proximity voice chat (WebRTC)
+- Outfit colour tints (the colour you pick also tints your character's clothes)
 - WebGPU renderer by default once it matches WebGL on the device matrix
-- Interior theme packs for tenants
+- Interior theme packs for tenants (mostly covered since v1.1.0: interiors follow the shop's category)
+- Demo content: fill the live demo's empty units with sample shops, so it doesn't look vacant
