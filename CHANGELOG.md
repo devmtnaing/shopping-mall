@@ -3,6 +3,7 @@
 ## Unreleased
 
 - The fountain has moving water, and the skylight shows a sky with drifting clouds (T-213).
+- On High, the stone floor mirrors the mall (T-212).
 
 ## 1.1.0 (2026-09-30)
 

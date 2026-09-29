@@ -27,6 +27,7 @@ import { WalkTo } from './player/walkto';
 import { AutoQuality, TIERS, tier } from './quality';
 import type { DebugOverlay } from './render/debug';
 import { installEnvironment } from './render/environment';
+import { installFloorMirror } from './render/mirror';
 import { createRenderer } from './render/renderer';
 import { DynamicResolution } from './render/resolution';
 import {
@@ -83,6 +84,7 @@ await loadContent();
 const mall = await loadMall(art ?? undefined);
 scene.add(mall.visual);
 const sky = installSky(mall.visual); // drifting clouds in the skylight
+const mirror = installFloorMirror(renderer, scene); // High only: the floor mirrors the mall
 const vacant = () => ({ title: t('sign.comingSoon'), subtitle: t('sign.available') });
 let storefronts = await buildStorefronts(mall.meta, content.value.shops, vacant());
 // repaint the "Coming soon" signs when the language changes
@@ -411,6 +413,7 @@ startLoop({
     shoppers?.update(dt, camera.position);
     apples.update(dt);
     sky.update(dt);
+    mirror.update();
     water?.update(dt);
 
     const tap = input.takeTap();
