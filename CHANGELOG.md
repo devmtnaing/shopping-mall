@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## 1.1.1 (2026-09-30)
+
+Polish on top of 1.1.0.
 
 - The flagship store is furnished when a shop takes it: a bay of its category's furniture down each side and a showcase on the stage.
 - The fountain has moving water, and the skylight shows a sky with drifting clouds (T-213).
