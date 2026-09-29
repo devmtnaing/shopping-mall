@@ -83,6 +83,19 @@ On upload the server checks, in order, and refuses the package with the reason i
 
 The baked navgrid becomes the fourth file of the package. Visitors get the new building on their next visit. Files in use can't be deleted, and **Use the built-in building** switches back. The greybox in `client/public/assets/mall/` is itself a valid package: `pnpm greybox` rebuilds it and `pnpm navgrid` bakes it with the same code the server runs (`shared/src/bake.ts`).
 
+### Props
+Furniture and decoration come from a **props pack**, `client/public/assets/props/props.glb` (about 260 KB), built by `pnpm assets` from `assets-src/props/`:
+
+| Kind | Source |
+|---|---|
+| `bench`, `fountain`, `tree` | Generated with Higgsfield (prompts in `assets-src/props/higgsfield/prompts.md`) |
+| `plant`, `bin`, `lamp`, `sofa`, `table`, `chair` | Kenney Furniture Kit (CC0) |
+| `shelf`, `shelf-bags`, `register`, `cart`, `fruit` | Kenney Mini Market (CC0), for shop interiors |
+
+`tools/greybox/props.ts` lists each kind's source, real size, facing fix and collision box. The pipeline scales each model to size, stands it on the floor, turns it to face −Z and shrinks textures to 512 px WebP. The mall's meta says where props go (`props: [{ kind, pos, yaw }]`), and the client draws each part of each kind as one `InstancedMesh`. Collision lives in the mall's collision mesh as plain boxes, so props are purely visual and a missing kind is simply skipped.
+
+To restyle the mall's furniture, replace a source file and run `pnpm assets`. The placements and collision don't change. An uploaded building (admin → Building) uses the same pack, placed by its own meta's `props`.
+
 ### `optimize-assets.ts` steps
 ```
 dedup → prune → join (per material, static only) → weld → simplify (LOD only)

@@ -10,7 +10,12 @@ export class Geo {
   /** Triangles that the player and camera collide with. */
   readonly collision: number[] = [];
 
-  private tri(mat: string, collide: boolean, a: V3, b: V3, c: V3) {
+  /** `mat` null: collision only (invisible, e.g. under a prop that brings its own model). */
+  private tri(mat: string | null, collide: boolean, a: V3, b: V3, c: V3) {
+    if (mat === null) {
+      for (const p of [a, b, c]) this.collision.push(...p);
+      return;
+    }
     let part = this.parts.get(mat);
     if (!part) {
       part = { positions: [], normals: [] };
@@ -30,13 +35,13 @@ export class Geo {
   }
 
   /** Counter-clockwise quad (seen from the side it faces). */
-  private quad(mat: string, collide: boolean, a: V3, b: V3, c: V3, d: V3) {
+  private quad(mat: string | null, collide: boolean, a: V3, b: V3, c: V3, d: V3) {
     this.tri(mat, collide, a, b, c);
     this.tri(mat, collide, a, c, d);
   }
 
   /** Axis-aligned box from min to max corner. */
-  box(mat: string, min: V3, max: V3, collide = true) {
+  box(mat: string | null, min: V3, max: V3, collide = true) {
     const [x0, y0, z0] = min;
     const [x1, y1, z1] = max;
     const q = (a: V3, b: V3, c: V3, d: V3) => this.quad(mat, collide, a, b, c, d);

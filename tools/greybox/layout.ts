@@ -3,6 +3,7 @@
 // Side s = −1 is west (left as you walk in), s = +1 is east.
 import type { MallMeta } from '@shopping-mall/shared/meta';
 import { Geo } from './geometry.ts';
+import { PROPS } from './props.ts';
 
 const PI = Math.PI;
 const X_CON = 6; // concourse half-width
@@ -219,26 +220,61 @@ function escalator(g: Geo, meta: MallMeta, id: string, xc: number, zBottom: numb
   meta.escalators.push({ id, from: [xc, 0, zBottom], to: [xc, UP, zTop], width: w, speed: 1.2 });
 }
 
-/** Benches (seats), planters and a fountain. */
+/** Benches (seats), bins, lamps, plants, café tables, sofas, planters and a fountain. */
 function props(g: Geo, meta: MallMeta) {
+  const placed: NonNullable<MallMeta['props']> = [];
+  meta.props = placed;
+  /** A prop from the props pack, with an invisible collision box (yaw in quarter turns only). */
+  const place = (kind: string, x: number, y: number, z: number, yaw = 0) => {
+    const spec = PROPS[kind];
+    if (!spec) throw new Error(`greybox: unknown prop "${kind}"`);
+    placed.push({ kind, pos: [x, y, z], yaw });
+    if (!spec.footprint) return;
+    const [w, h, d] = spec.footprint;
+    const [hx, hz] = Math.abs(Math.sin(yaw)) > 0.5 ? [d / 2, w / 2] : [w / 2, d / 2];
+    g.box(null, [x - hx, y, z - hz], [x + hx, y + h, z + hz]);
+  };
+
   const bench = (x: number, y: number, z: number) => {
     const faceIn = x > 0 ? PI / 2 : -PI / 2; // sit facing the middle of the mall
-    g.box('wood', [x - 0.25, y, z - 0.9], [x + 0.25, y + 0.45, z + 0.9]);
+    place('bench', x, y, z, faceIn);
     meta.seats.push({ id: `bench-${meta.seats.length}`, kind: 'bench', pos: [x, y + 0.45, z], yaw: faceIn });
   };
-  for (const z of [-8, -20, -36, -48]) for (const x of [-4.6, 4.6]) bench(x, 0, z);
+  for (const z of [-8, -20, -36, -48]) {
+    for (const x of [-4.6, 4.6]) {
+      bench(x, 0, z);
+      place('bin', x, 0, z + 1.5);
+    }
+  }
   for (const z of [-16, -40]) for (const x of [-4.5, 4.5]) bench(x, UP, z);
+
+  // floor lamps between the benches, plants either side of the entrance and upstairs
+  for (const z of [-14, -28, -42]) for (const x of [-5.3, 5.3]) place('lamp', x, 0, z);
+  for (const x of [-4.8, 4.8]) place('plant', x, 0, -1.5);
+  for (const z of [-10, -44]) for (const x of [-4.8, 4.8]) place('plant', x, UP, z);
+
+  // café tables in the fountain court
+  for (const [x, z] of [
+    [-4, -49],
+    [4, -49],
+    [-4.2, -52],
+    [4.2, -52],
+  ] as const) {
+    place('table', x, 0, z);
+    place('chair', x - 0.8, 0, z, -PI / 2);
+    place('chair', x + 0.8, 0, z, PI / 2);
+  }
+  // sofas along the upper gallery, facing the atrium
+  for (const z of [-21, -36]) for (const x of [-4.8, 4.8]) place('sofa', x, UP, z, x > 0 ? PI / 2 : -PI / 2);
 
   const planter = (x: number, z: number) => {
     g.box('planter', [x - 1, 0, z - 1], [x + 1, 0.6, z + 1]);
-    g.box('plant', [x - 0.8, 0.6, z - 0.8], [x + 0.8, 1.5, z + 0.8], false);
+    place('tree', x, 0.6, z);
   };
   planter(-3, -4.5); // off the centre line, so the view from the spawn is clear
   planter(-2, -38);
 
-  g.box('wall', [-2.2, 0, -51.2], [2.2, 0.5, -46.8]);
-  g.box('water', [-1.95, 0.5, -50.95], [1.95, 0.52, -47.05], false);
-  g.box('trim', [-0.3, 0, -49.3], [0.3, 1.6, -48.7]);
+  place('fountain', 0, 0, -49);
 }
 
 function zones(meta: MallMeta) {

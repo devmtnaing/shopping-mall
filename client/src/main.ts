@@ -73,6 +73,11 @@ let storefronts = await buildStorefronts(mall.meta, content.value.shops, vacant(
 locale.subscribe(() => storefronts.setVacantText(t('sign.comingSoon'), t('sign.available')));
 scene.add(storefronts.group);
 mallMeta.value = mall.meta;
+// benches, plants, lamps…: after the mall, never blocking it
+import('./world/props')
+  .then(({ loadProps }) => loadProps(mall.meta))
+  .then((props) => scene.add(props))
+  .catch((e) => console.warn('props:', e));
 
 const input = new Input(canvas);
 if (matchMedia('(pointer: coarse)').matches) {

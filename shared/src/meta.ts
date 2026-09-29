@@ -27,6 +27,8 @@ export const metaSchema = z.object({
   zones: z.array(
     aabb.extend({ id: z.string(), name: z.string(), priority: z.number(), slot: z.string().optional() }),
   ),
+  /** Furniture and decoration from the props pack (props.glb), by kind. Optional: a mall can be bare. */
+  props: z.array(z.object({ kind: z.string(), pos: vec3, yaw: z.number() })).optional(),
   /** Moving walkways: carry the player from `from` to `to` (bottom → top) at `speed` m/s. */
   escalators: z.array(
     z.object({ id: z.string(), from: vec3, to: vec3, width: z.number(), speed: z.number() }),

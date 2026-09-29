@@ -45,7 +45,7 @@ T-104 uses a "floating capsule" (body capsule from step height up, with ground r
 
 | ID | Task | Size | Labels | Acceptance criteria |
 |---|---|---|---|---|
-| T-201 | Modular kit: storefront ×3 widths, column, rail, bench, planter, light, escalator | L | art | Every piece within the asset budgets. Pivot and naming conventions followed |
+| T-201 | Modular kit: storefront ×3 widths, column, rail, bench, planter, light, escalator | L | art | Every piece within the asset budgets. Pivot and naming conventions followed. 🟡 *(Props done: a 260 KB props pack of 14 kinds, with bench, fountain and tree from Higgsfield and the rest from Kenney CC0, placed by `meta.props` and drawn instanced. The building itself is still the greybox; architectural kit pieces need Blender.)* |
 | T-202 | Final `mall.blend` + Cycles lightmap bake to `uv1` per zone chunk | L | art | No seams or light leaks visible at Medium. Bake script is reproducible |
 | T-203 | `tools/optimize-assets.ts` (gltf-transform: dedup, prune, join, meshopt, KTX2, resize) | M | tooling | One command processes every file in `assets-src/`. Deterministic output |
 | T-204 | Asset budget CI: `gltf-transform inspect` on changed `.glb` files | S | tooling perf | Fails the PR with a table when over budget |
