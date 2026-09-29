@@ -12,6 +12,10 @@ type Row = { screen: string; issues: string[] };
 const rows: Row[] = [];
 
 async function scan(page: Page, screen: string) {
+  // let fades and slide-ins finish: mid-animation opacity would fail contrast for no real reason
+  await page.waitForFunction(() => document.getAnimations().every((a) => a.playState !== 'running'), null, {
+    timeout: 5000,
+  });
   // the 3D canvas is decoration; everything it shows is also in the HUD, directory and panels
   const result = await new AxeBuilder({ page }).exclude('#gl').analyze();
   const bad = result.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
