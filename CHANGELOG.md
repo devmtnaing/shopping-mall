@@ -1,5 +1,31 @@
 # Changelog
 
+## 1.1.0 (2026-09-30)
+
+The mall gets furnished, dressed and a bit more social: shops you can see into, a character set that looks like Myanmar, dancing and hugging, apples to throw, real textures and sound, and a smaller first load.
+
+**Live demo:** <https://web-production-cc219.up.railway.app> · **Docs:** <https://devmtnaing.github.io/shopping-mall/>
+
+### The mall
+- **Shop interiors.** Every shop is furnished to match its category (café, books, fashion, home, games, or a general store): a coffee bar and tables, bookcases, sneaker walls, plant stands, a row of arcade cabinets. The furniture is solid, and it follows the shops live when the host changes them. "For rent" units stay empty.
+- **More of the mall:** an information kiosk, a welcome sign and palms at the entrance; Myanmar festival lanterns hanging in the atrium; recycling stations; a round seating island with a tree.
+- **Real surfaces:** generated limestone floor tiles, plaster walls and oak shop floors in the Blender bake, which also gained door frames, glass balustrades, skirting and cornices.
+- 19 new pieces generated with Higgsfield (prompts in `assets-src/`).
+
+### Visitors
+- **Three new characters,** generated and put on the same rig as the Kenney ones: a woman in a htamein with thanaka on her cheeks, a man in a longyi, and a student in the school uniform. 15 in all.
+- **Dance (💃, key 7)** and **hug (🤗, key 8).** A hug turns you and the person you hug to face each other.
+- **Apples:** pick them at the fruit stands (F) and throw them (F). Everyone nearby sees the same arc.
+- **Sound:** a real door chime and UI tap, and seamless ambience and fountain loops.
+
+### Under the hood
+- Props ship in **packs by area**, loaded nearest first after the mall, so new furniture doesn't add to the wait. Every prop kind is one draw call.
+- **First load is 1.38 MB** (was 1.66 MB): the bake's textures ship as WebP, and the mall model is 1.01 MB.
+- `pnpm rig` puts a generated character on the Kenney rig in Blender. `pnpm assets` builds the audio with ffmpeg.
+
+### Known gaps
+- Real-device checks on iOS Safari and Android Chrome ([T-505](docs/tasks.md)).
+
 ## 1.0.0 (2026-09-29)
 
 The first release: a multiplayer 3D shopping mall that runs in the browser, which you host and run from an admin page.
