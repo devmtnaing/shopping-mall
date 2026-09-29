@@ -50,7 +50,7 @@ export class Avatar {
   private readonly actions = new Map<string, AnimationAction>();
   private current: AnimationAction | null = null;
   private state = -1;
-  private gesture: AnimationAction | null = null;
+  private playing: AnimationAction | null = null;
 
   constructor(id: AvatarId, object: Object3D, clips: AnimationClip[]) {
     this.id = id;
@@ -66,7 +66,7 @@ export class Avatar {
     }
     this.actions.get('dance')?.setLoop(LoopRepeat, DANCE_BARS);
     this.mixer.addEventListener('finished', (e) => {
-      if (e.action === this.gesture) this.endGesture();
+      if (e.action === this.playing) this.endGesture();
     });
     this.setState(ANIM.idle, 0);
   }
@@ -74,9 +74,9 @@ export class Avatar {
   /** Movement state (ANIM.*) and ground speed; walk and run play faster or slower to match it. */
   setState(state: number, speed: number) {
     // walking off (or sitting down) ends a dance or a hug
-    if (state !== this.state && state !== ANIM.idle && this.gesture) {
-      this.gesture.fadeOut(FADE);
-      this.gesture = null;
+    if (state !== this.state && state !== ANIM.idle && this.playing) {
+      this.playing.fadeOut(FADE);
+      this.playing = null;
     }
     if (state !== this.state) {
       const next = this.actions.get(CLIP_FOR_STATE[state] ?? 'idle');
@@ -93,20 +93,24 @@ export class Avatar {
     }
   }
 
-  /** Play an emote's gesture once (no gesture for most emotes: the bubble is enough). */
+  /** Play an emote's gesture (a nod for the ones without their own). */
   emote(e: string) {
-    const clip = CLIP_FOR_EMOTE[e] ?? 'emote-yes';
+    this.gesture(CLIP_FOR_EMOTE[e] ?? 'emote-yes');
+  }
+
+  /** Play a clip once over standing still (throwing an apple uses the reach). */
+  gesture(clip: string) {
     const a = this.actions.get(clip);
     if (!a || this.state !== ANIM.idle) return; // gestures only when standing still
-    this.gesture?.stop();
-    this.gesture = a;
+    this.playing?.stop();
+    this.playing = a;
     a.reset().play();
     if (this.current) a.crossFadeFrom(this.current, FADE, false);
   }
 
   private endGesture() {
-    const g = this.gesture;
-    this.gesture = null;
+    const g = this.playing;
+    this.playing = null;
     if (g && this.current) {
       this.current.reset().play();
       this.current.crossFadeFrom(g, FADE, false);

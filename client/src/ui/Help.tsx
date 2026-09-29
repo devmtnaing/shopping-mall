@@ -13,10 +13,11 @@ const desktop = (): [string, string][] => [
   [t('help.clickFloor'), t('help.walkThere')],
   [t('help.clickShop'), t('help.walkToDoor')],
   ['Enter', t('chat.open')],
-  ['1 – 6', t('emote.label')],
+  ['1 – 8', t('emote.label')],
   ['/', t('help.findShop')],
   ['M', t('help.overview')],
   ['E', t('help.visit')],
+  ['F', t('help.apple')],
   ['?', t('help.thisHelp')],
 ];
 const phone = (): [string, string][] => [

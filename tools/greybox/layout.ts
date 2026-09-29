@@ -222,7 +222,7 @@ function escalator(g: Geo, meta: MallMeta, id: string, xc: number, zBottom: numb
   meta.escalators.push({ id, from: [xc, 0, zBottom], to: [xc, UP, zTop], width: w, speed: 1.2 });
 }
 
-/** Benches (seats), recycling stations, lamps, plants, lanterns, café tables, sofas, planters and a fountain. */
+/** Benches (seats), recycling stations, lamps, plants, lanterns, café tables, sofas, planters, fruit stands and a fountain. */
 function props(g: Geo, meta: MallMeta) {
   const placed: NonNullable<MallMeta['props']> = [];
   meta.props = placed;
@@ -292,6 +292,8 @@ function props(g: Geo, meta: MallMeta) {
     place('lanterns', x, 10.3, z);
 
   place('fountain', 0, 0, -49);
+  // fruit stands under the bridge, clear of both escalators: pick an apple (F) and throw it (T-507)
+  for (const x of [-2.2, 2.2]) place('fruit', x, 0, -28, x > 0 ? PI / 2 : -PI / 2);
 }
 
 function zones(meta: MallMeta) {

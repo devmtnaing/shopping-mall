@@ -6,6 +6,7 @@ import { NET_HZ } from '@shopping-mall/shared/constants';
 import { renderDirectory } from '@shopping-mall/shared/directory';
 import { parseClientMessage } from '@shopping-mall/shared/messages';
 import {
+  APPLE,
   type ClientMessage,
   decodeInput,
   type Pose,
@@ -353,6 +354,13 @@ export async function startServer(opts: ServerOptions = {}) {
     } else if (msg.t === 'emote') {
       if (player.emoteLimit.take())
         room.nearby(player, EMOTE_RADIUS, { t: 'emote', id: player.id, e: msg.e });
+    } else if (msg.t === 'throw') {
+      // from where you stand, no harder than a throw: anything else is dropped
+      const [ox, oy, oz] = msg.o;
+      const p = player.pose;
+      const near = Math.hypot(ox - p.x, oy - p.y, oz - p.z) <= APPLE.reach;
+      if (player.placed && near && Math.hypot(...msg.v) <= APPLE.maxSpeed && player.throwLimit.take())
+        room.nearby(player, EMOTE_RADIUS, { t: 'throw', id: player.id, o: msg.o, v: msg.v });
     }
   }
 

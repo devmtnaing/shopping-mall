@@ -14,6 +14,8 @@ export type Commands = {
   walkTo: (x: number, z: number, floor: number) => void;
   /** Sit on the bench you're next to, or stand up. */
   toggleSeat: () => void;
+  /** Pick an apple at a fruit stand, or throw one you're holding. */
+  apple: () => void;
 };
 
 export const commands: Commands = {
@@ -23,6 +25,7 @@ export const commands: Commands = {
   emote: () => {},
   walkTo: () => {},
   toggleSeat: () => {},
+  apple: () => {},
 };
 
 export function installCommands(impl: Partial<Commands>) {

@@ -240,6 +240,27 @@ describe('emotes', () => {
   });
 });
 
+describe('apples', () => {
+  it('relay a throw from where you stand, and drop one from elsewhere or too hard', async () => {
+    const near = client();
+    await near.join('Near');
+    const me = client();
+    await me.join('Me');
+    near.ws.send(encodeInput(0, at(1, 0)));
+    me.ws.send(encodeInput(0, at(0, 0)));
+    await sleep(100);
+    me.send({ t: 'throw', o: [0, 1.3, -0.4], v: [0, 4.5, -8.5] });
+    expect(await near.waitFor((m) => m.t === 'throw')).toMatchObject({
+      o: [0, 1.3, -0.4],
+      v: [0, 4.5, -8.5],
+    });
+    me.send({ t: 'throw', o: [20, 1.3, 0], v: [0, 4.5, -8.5] }); // not where I am
+    me.send({ t: 'throw', o: [0, 1.3, 0], v: [0, 0, -40] }); // far too hard
+    await sleep(150);
+    expect(near.messages.filter((m) => m.t === 'throw')).toHaveLength(1);
+  });
+});
+
 describe('chat limits', () => {
   it('lets a burst through, then asks the sender to slow down', async () => {
     const a = client();

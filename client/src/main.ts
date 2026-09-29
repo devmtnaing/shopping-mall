@@ -1,5 +1,5 @@
 import { effect } from '@preact/signals';
-import { EMOTES } from '@shopping-mall/shared/protocol';
+import { APPLE, EMOTES } from '@shopping-mall/shared/protocol';
 import { Color, DirectionalLight, Fog, HemisphereLight, Scene, Vector3 } from 'three';
 import { track } from './analytics';
 import { type Sound, soundOnFirstInteraction } from './audio';
@@ -30,6 +30,7 @@ import { installEnvironment } from './render/environment';
 import { createRenderer } from './render/renderer';
 import { DynamicResolution } from './render/resolution';
 import {
+  applePrompt,
   mallMeta,
   nearbyShop,
   openShop,
@@ -44,6 +45,7 @@ import {
   zone,
 } from './state';
 import { mountUI } from './ui/App';
+import { Apples } from './world/apples';
 import { escalatorCarry } from './world/escalators';
 import { loadMall } from './world/mall';
 import { Shoppers } from './world/shoppers';
@@ -121,6 +123,40 @@ const follower = new PathFollower();
 const finder = new PathFinder(mall.nav);
 const walkTo = new WalkTo(camera, mall.collider, mall.meta, finder, follower);
 scene.add(walkTo.marker);
+// apples (T-507): pick up to three at a fruit stand (F), throw them where you're looking (F)
+const apples = new Apples(mall.collider);
+scene.add(apples.group);
+const stands = (mall.meta.props ?? []).filter((p) => p.kind === 'fruit').map((p) => p.pos);
+const HOLD = 3;
+let held = 0;
+const atStand = () =>
+  held < HOLD &&
+  stands.some(
+    (s) => Math.abs(s[1] - player.pos.y) < 1 && Math.hypot(s[0] - player.pos.x, s[2] - player.pos.z) < 2.2,
+  );
+function apple() {
+  if (atStand()) {
+    held++;
+    return;
+  }
+  if (held === 0) return;
+  held--;
+  // throw straight ahead of the camera, turning to face that way
+  const yaw = orbit.yaw;
+  const dx = -Math.sin(yaw);
+  const dz = -Math.cos(yaw);
+  player.facing = yaw;
+  const o: [number, number, number] = [
+    player.pos.x + dx * 0.35,
+    player.pos.y + 1.25,
+    player.pos.z + dz * 0.35,
+  ];
+  const v: [number, number, number] = [dx * APPLE.speed, APPLE.lift, dz * APPLE.speed];
+  apples.throw(o, v);
+  multi.throwApple(o, v);
+  avatar?.gesture('interact-right');
+}
+
 // benches: sit with E, stand up by moving
 const spots = seatSpots(mall.meta);
 let seated: SeatSpot | null = null;
@@ -149,6 +185,7 @@ const multi = createMultiplayer({
   onSelfEmote: (e) => avatar?.emote(e),
   seated: () => seated !== null,
   // someone hugged you: turn to face them, if you're standing still
+  onThrow: (o, v) => apples.throw(o, v),
   onHugFrom: (x, z) => {
     if (seated || player.speed > 0.2) return;
     player.facing = Math.atan2(-(x - player.pos.x), -(z - player.pos.z));
@@ -177,6 +214,7 @@ installCommands({
   emote: (e) => multi.emote(e),
   report: (id) => multi.report(id),
   toggleSeat,
+  apple,
   walkTo: (x, z, floor) => {
     const y = mall.meta.floors[floor]?.y ?? 0;
     if (!walkTo.walkToPoint({ x, y, z }, player)) toast(t('toast.cantWalk'));
@@ -334,6 +372,10 @@ startLoop({
     for (let i = 0; i < EMOTES.length; i++) {
       if (input.keys.consume(`Digit${i + 1}`) && !uiHasFocus.value) multi.emote(EMOTES[i] as string);
     }
+    if (input.keys.consume('KeyF') && !uiHasFocus.value) apple();
+    const pick = atStand() ? 'pick' : held > 0 ? 'throw' : null;
+    if (pick !== (applePrompt.value?.mode ?? null) || (pick && held !== applePrompt.value?.held))
+      applePrompt.value = pick ? { mode: pick, held } : null;
     const visit = input.keys.consume('KeyE'); // always consume, so a stray press can't fire later
     const seat = seated ? 'stand' : !near && nearestSpot(spots, player.pos) ? 'sit' : null;
     if (seat !== seatPrompt.value) seatPrompt.value = seat;
@@ -358,6 +400,7 @@ startLoop({
       avatar.update(dt);
     }
     shoppers?.update(dt, camera.position);
+    apples.update(dt);
 
     const tap = input.takeTap();
     if (tap && phase.value === 'playing' && !walkTo.tap(tap.x, tap.y, player, canvas, over.clipY))

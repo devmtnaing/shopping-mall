@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { AVATARS } from './avatars.ts';
 import { CHAT_MAX, type ClientMessage, EMOTES, NAME_MAX } from './protocol.ts';
 
+const finite = z.number().finite();
 const look = z.object({ color: z.string().regex(/^#[0-9a-fA-F]{6}$/), avatar: z.enum(AVATARS).optional() });
 
 const clientMessage = z.discriminatedUnion('t', [
@@ -17,6 +18,11 @@ const clientMessage = z.discriminatedUnion('t', [
   z.object({ t: z.literal('chat'), text: z.string().max(CHAT_MAX * 4) }),
   z.object({ t: z.literal('emote'), e: z.enum(EMOTES) }),
   z.object({ t: z.literal('teleport') }),
+  z.object({
+    t: z.literal('throw'),
+    o: z.tuple([finite, finite, finite]),
+    v: z.tuple([finite, finite, finite]),
+  }),
   z.object({
     t: z.literal('report'),
     id: z.number().int().nonnegative(),

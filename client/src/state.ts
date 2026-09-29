@@ -44,6 +44,8 @@ export const others = signal<{ x: number; z: number; floor: number; color: strin
 
 /** 'sit' when a bench is within reach, 'stand' while sitting (drives the seat prompt). */
 export const seatPrompt = signal<'sit' | 'stand' | null>(null);
+/** At a fruit stand ("pick"), or holding apples ("throw"); `held` is how many (T-507). */
+export const applePrompt = signal<{ mode: 'pick' | 'throw'; held: number } | null>(null);
 
 /** Id of the shop whose door the player is near (drives the "Visit" prompt). */
 export const nearbyShop = signal<string | null>(null);

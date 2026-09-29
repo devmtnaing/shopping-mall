@@ -115,6 +115,11 @@ export class Crowd {
     this.avatars.get(id)?.emote(e);
   }
 
+  /** Play a clip once on someone's avatar (a throw). */
+  gesture(id: number, clip: string) {
+    this.avatars.get(id)?.gesture(clip);
+  }
+
   update(remotes: Remotes, camera: Camera, time: number) {
     const dt = Math.min(0.1, time - this.lastTime);
     this.lastTime = time;

@@ -6,6 +6,7 @@ import { render } from 'preact';
 import { useEffect } from 'preact/hooks';
 import { chatOpen, dialog, mallMeta, panel, phase } from '../state';
 import { Announcement } from './Announcement';
+import { ApplePrompt } from './ApplePrompt';
 import { Chat } from './Chat';
 import { Dock } from './Dock';
 import { EmoteBar } from './EmoteBar';
@@ -80,6 +81,7 @@ function App() {
       <TopRight playing />
       <ShopPrompt />
       <SeatPrompt />
+      <ApplePrompt />
       <Dock />
       {meta && <Minimap meta={meta} />}
       <Chat />

@@ -90,6 +90,7 @@ Priority: **P0** = MVP, **P1** = v1.0, **P2** = later.
 | Visit shop | E | Tap shop / prompt |
 | Chat | Enter | Chat button |
 | Emoji (7 dances, 8 hugs) | 1–8 | Emoji bar |
+| Pick or throw an apple | F | 🍎 prompt at a fruit stand, or while holding apples |
 | Overview | M | Dock |
 | Directory | / or K | Dock |
 | Close panel | Esc | ✕ / swipe down |

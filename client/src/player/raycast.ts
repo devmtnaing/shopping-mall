@@ -4,14 +4,14 @@
 import { DoubleSide, FrontSide, type Ray, type Side, Vector3 } from 'three';
 import type { MeshBVH } from 'three-mesh-bvh';
 
-export type RayHit = { distance: number; point: Vector3; normalY: number };
+export type RayHit = { distance: number; point: Vector3; normalY: number; normal: Vector3 };
 
-const hit: RayHit = { distance: 0, point: new Vector3(), normalY: 0 };
+const hit: RayHit = { distance: 0, point: new Vector3(), normalY: 0, normal: new Vector3() };
 const p = new Vector3();
 const n = new Vector3();
 const entry = new Vector3();
 
-/** Nearest hit within `far`, or null. `normalY` is the hit triangle's normal (for walkability). */
+/** Nearest hit within `far`, or null. `normal` is the hit triangle's (`normalY` its y, for walkability). */
 export function castRay(bvh: MeshBVH, ray: Ray, far = Number.POSITIVE_INFINITY, side: Side = DoubleSide) {
   let best = far;
   let found = false;
@@ -27,6 +27,7 @@ export function castRay(bvh: MeshBVH, ray: Ray, far = Number.POSITIVE_INFINITY, 
         found = true;
         hit.point.copy(p);
         hit.normalY = tri.getNormal(n).y;
+        hit.normal.copy(n);
       }
       return false;
     },

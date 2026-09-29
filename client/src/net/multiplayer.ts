@@ -44,8 +44,10 @@ export function createMultiplayer(opts: {
   seated: () => boolean;
   /** Someone within hugging range hugged you (turn to face them). */
   onHugFrom?: (x: number, z: number) => void;
+  /** Someone threw an apple (fly it here too). */
+  onThrow?: (o: [number, number, number], v: [number, number, number]) => void;
 }) {
-  const { scene, player, travel, floorAt, onSelfEmote, seated, onHugFrom } = opts;
+  const { scene, player, travel, floorAt, onSelfEmote, seated, onHugFrom, onThrow } = opts;
   const room = new URLSearchParams(location.search).get('room') ?? 'main';
   const remotes = new Remotes();
   const crowd = new Crowd();
@@ -70,6 +72,11 @@ export function createMultiplayer(opts: {
         if (m.e === HUG && from?.visible && near(from.pose.x, from.pose.z, HUG_RANGE))
           onHugFrom?.(from.pose.x, from.pose.z);
         return bubbles.show(m.id === net.selfId ? 'me' : m.id, m.e, true);
+      }
+      if (m.t === 'throw') {
+        if (m.id === net.selfId || muted.value.has(m.id)) return; // yours is already in the air
+        crowd.gesture(m.id, 'interact-right');
+        return onThrow?.(m.o, m.v);
       }
       if (m.t === 'error' && m.code === 'rate') return toast(t('chat.slowDown'));
       if (m.t === 'error' && m.code === 'bad-token') {
@@ -166,6 +173,10 @@ export function createMultiplayer(opts: {
         onSelfEmote(e);
         bubbles.show('me', e, true);
       }
+    },
+    /** Tell people nearby about an apple you threw. */
+    throwApple(o: [number, number, number], v: [number, number, number]) {
+      if (net.online) net.send({ t: 'throw', o, v });
     },
     remotes,
     /** Is anyone else in view walking or running? (Keeps the frame rate up while they do.) */

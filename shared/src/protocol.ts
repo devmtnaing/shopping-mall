@@ -131,13 +131,16 @@ export type ClientMessage =
   | { t: 'chat'; text: string }
   | { t: 'emote'; e: string }
   | { t: 'teleport' }
-  | { t: 'report'; id: number; reason?: string };
+  | { t: 'report'; id: number; reason?: string }
+  /** An apple thrown from `o` at velocity `v` (m/s); every client flies it the same way. */
+  | { t: 'throw'; o: [number, number, number]; v: [number, number, number] };
 
 export type ServerMessage =
   | { t: 'welcome'; id: number; room: string; resume: string; players: PlayerInfo[] }
   | { t: 'presence'; joined: PlayerInfo[]; left: number[] }
   | { t: 'chat'; id: number; name: string; text: string; at: number; host?: boolean }
   | { t: 'emote'; id: number; e: string }
+  | { t: 'throw'; id: number; o: [number, number, number]; v: [number, number, number] }
   | { t: 'announce'; text: string }
   /** Shops or mall details changed: refetch /api/content if your version is older. */
   | { t: 'content'; version: number }
@@ -145,6 +148,8 @@ export type ServerMessage =
 
 /** Emotes anyone can send (keeps the wire and the UI in agreement). */
 export const EMOTES = ['👋', '😂', '❤️', '🔥', '👍', '😮', '💃', '🤗'] as const;
+/** Apples (T-507): how hard you throw, and the most the server relays. */
+export const APPLE = { speed: 8.5, lift: 4.5, maxSpeed: 12, reach: 3 } as const;
 export const CHAT_MAX = 200;
 export const NAME_MIN = 2;
 export const NAME_MAX = 20;
