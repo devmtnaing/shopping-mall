@@ -24,7 +24,7 @@ The first release: a multiplayer 3D shopping mall that runs in the browser, whic
 ### Running it
 - **An admin page** for the host: shops, products, units, images, the mall's details, and **the building itself** (upload a model, collision and meta, and the server validates it and bakes the navgrid). Changes go live for everyone within about 2 s.
 - Postgres for content, S3-compatible storage for uploads, and nightly backups with a tested restore.
-- `docker compose up` anywhere, or Railway (`.railway/railway.ts` describes the demo project).
+- `docker compose up` anywhere, or one click on Railway: <https://railway.com/deploy/shopping-mall>.
 - Anonymous usage events to your own logs: no cookies, no identifiers. See [privacy](docs/privacy.md).
 
 ### Quality
@@ -37,4 +37,3 @@ The first release: a multiplayer 3D shopping mall that runs in the browser, whic
 - Architectural detail on the building ([#2](https://github.com/devmtnaing/shopping-mall/issues/2)), and more art in small batches ([#4](https://github.com/devmtnaing/shopping-mall/issues/4)).
 - A real door chime and UI tap, and a listening pass ([#3](https://github.com/devmtnaing/shopping-mall/issues/3)).
 - Dance and hug (they need animation clips), and apples to throw.
-- A one-click Railway template (the draft is ready and waiting on the maintainer).

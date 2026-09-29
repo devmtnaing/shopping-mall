@@ -50,7 +50,9 @@ The production project `shopping-mall` (<https://web-production-cc219.up.railway
 
 `.railway/railway.ts` describes the same project as code (Railway [IaC](https://docs.railway.com/infrastructure-as-code)). It keeps the one secret, `HOST_SECRET`, out of the repo with `preserve()`. To compare it with the live project, install the SDK next to it (`npm install railway`, left out of the repo's dependencies) and run `railway link`, then `railway config plan` (Railway CLI 5 or newer, or `npx @railway/cli@latest`). A whole-project apply deletes anything the file leaves out, so read the plan first.
 
-To set up your own copy: create a project with the Postgres template and a bucket named `uploads`, add three empty services named as above, set the variables in the table, connect the repo, and give `web` a domain. Or edit `.railway/railway.ts` and run `railway config apply`.
+**One click:** [![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/shopping-mall). The [template](https://railway.com/deploy/shopping-mall) creates all five pieces with the variables below and asks you only for `HOST_SECRET`.
+
+By hand: create a project with the Postgres template and a bucket named `uploads`, add three empty services named as above, set the variables in the table, connect the repo, and give `web` a domain. Or edit `.railway/railway.ts` and run `railway config apply`.
 
 ## Backups and restoring
 

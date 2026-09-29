@@ -28,7 +28,11 @@ Open <http://localhost:8080/admin/>, sign in with your `HOST_SECRET`, and start 
 
 ## Put it online
 
-- **Railway** (what the demo uses): see [Self-hosting and deploying](../deploy#railway). You create a project with Postgres and a bucket, add three services from this repo, and set a few variables.
+- **Railway** (what the demo uses): one click with the template, where you only choose the admin password:
+
+  [![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/shopping-mall)
+
+  Or set it up by hand: [Self-hosting and deploying](../deploy#railway).
 - **Any server with Docker**: the same `docker compose up`, behind your own domain and HTTPS proxy.
 - **Static only** (no multiplayer, no admin): `pnpm build` and upload `client/dist/` to any static host. Shops then come from [`mall.config.ts`](./config).
 

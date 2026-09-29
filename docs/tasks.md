@@ -7,7 +7,7 @@ Ticket-sized work items grouped by [roadmap](roadmap.md) phase. Each one is mean
 
 Every task also has an implicit acceptance criterion: *typecheck, lint, tests and budgets pass, and no file is over ~300 lines.*
 
-**Progress:** Phase 0 ✅ (T-001 to T-007) · Phase 1 ✅ (T-101 to T-110) · Phase 3 ✅ (T-301 to T-312) · Phase 4 ✅ (T-401 to T-412) · Phase 3b ✅ (T-700 to T-707, live on Railway) · Phase 2 mostly ✅ (building: #2) · Phase 5 ✅ except real-device checks, dance/hug and apples · Phase 6 ✅ (v1.0.0), except publishing the Railway template. Changes from the plan are noted in the rows.
+**Progress:** Phase 0 ✅ (T-001 to T-007) · Phase 1 ✅ (T-101 to T-110) · Phase 3 ✅ (T-301 to T-312) · Phase 4 ✅ (T-401 to T-412) · Phase 3b ✅ (T-700 to T-707, live on Railway) · Phase 2 mostly ✅ (building: #2) · Phase 5 ✅ except real-device checks, dance/hug and apples · Phase 6 ✅ (v1.0.0, Railway template published). Changes from the plan are noted in the rows.
 Phase 4 load test (laptop, 100 bots in one room): 6.5 KB/s down per client, server 3.7 % of a core, 1.9 ms per tick.
 T-101 deviated from the plan: with no Blender on hand, the greybox is generated from [`tools/greybox/layout.ts`](../tools/greybox/layout.ts) and writes the same files a Blender export will ([greybox.md](greybox.md)).
 T-104 uses a "floating capsule" (body capsule from step height up, with ground rays below) instead of a full capsule, because rounded capsules can't climb steps without hacks.
@@ -123,7 +123,7 @@ T-104 uses a "floating capsule" (body capsule from step height up, with ground r
 | ID | Task | Size | Labels | Acceptance criteria |
 |---|---|---|---|---|
 | T-601 | VitePress docs site: operator guide (config, adding shops, adapters, self-hosting), contributor guide | M | tooling | A volunteer self-hosts from the docs without help. ✅ *(<https://devmtnaing.github.io/shopping-mall/>, built from `docs/` by `.github/workflows/docs.yml`. New pages: quick start, shops and products (admin page, JSON feeds), configuration, contributing. The existing docs and ADRs are included, with local search. Whether a volunteer can self-host from it is still to be seen.)* |
-| T-602 | Demo deploy + one-click deploy template (static host + container host) | S | tooling | Demo URL in the README. Deploy button works |
+| T-602 | Demo deploy + one-click deploy template (static host + container host) | S | tooling | Demo URL in the README. Deploy button works. ✅ *(The Railway template <https://railway.com/deploy/shopping-mall> has web, server, Postgres, the uploads bucket and the backup cron, and asks only for `HOST_SECRET`. The button is in the README and docs. Static hosting is `pnpm build` plus any host, documented in the quick start.)* |
 | T-603 | Analytics sink example (beacon → JSON logs) + privacy note | S | client | No cookies, no personal data. Events documented. ✅ *(Six anonymous events (visit, enter, shop, link, product, leave) are batched with `sendBeacon` to `POST /api/events` and logged as JSON lines. No identifiers of any kind. Off with Do Not Track, Global Privacy Control or `EVENTS=off`. See `docs/privacy.md`.)* |
 | T-604 | Release: changelog, `v1.0.0` tag, 60 s demo video, launch post | S | tooling | Release published on GitHub. ✅ *(`CHANGELOG.md`, the `v1.0.0` release with the demo video attached (`pnpm demo:video` records the tour, about 40 s). The launch post is drafted for the maintainer to publish.)* |
 

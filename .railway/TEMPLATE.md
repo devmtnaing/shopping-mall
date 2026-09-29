@@ -12,7 +12,7 @@ This template deploys the whole mall:
 - **uploads**: a private bucket for images and models, served through the server
 - **backup**: a nightly `pg_dump` into the bucket, keeping 30 days
 
-After it deploys, open the **web** service's domain and go to `/admin/`. Sign in with the `HOST_SECRET` generated for you (in the server's variables), then start adding shops.
+When you deploy, choose a `HOST_SECRET`: it's the password for the admin page. After it deploys, open the **web** service's domain, go to `/admin/`, sign in with that password and start adding shops.
 
 ## Common Use Cases
 

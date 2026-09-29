@@ -60,6 +60,10 @@ For multiplayer while developing, run `pnpm dev:server` in a second terminal. Fo
 
 ## Self-hosting
 
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/shopping-mall)
+
+One click deploys the whole mall on Railway: web, server, Postgres, an uploads bucket and nightly backups. You choose the admin password when you deploy.
+
 ```bash
 cp .env.example .env        # optional: HOST_SECRET, REPORT_WEBHOOK, WEB_PORT…
 docker compose up --build   # → http://localhost:8080
