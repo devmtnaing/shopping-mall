@@ -100,7 +100,7 @@ Furniture and decoration come in **props packs** by area, `client/public/assets/
 
 | Kind | Source |
 |---|---|
-| `bench`, `fountain`, `tree`, `kiosk`, `welcome`, `palm`, `lanterns`, `recycling`, `island`, `coffee-bar` | Generated with Higgsfield (prompts in `assets-src/props/higgsfield/prompts.md`) |
+| `bench`, `fountain`, `tree`, `kiosk`, `welcome`, `palm`, `lanterns`, `recycling`, `island`, `coffee-bar`, `bookshelf`, `sneakers`, `plant-stand`, `arcade` | Generated with Higgsfield (prompts in `assets-src/props/higgsfield/prompts.md`) |
 | `plant`, `lamp`, `sofa`, `table`, `chair` | Kenney Furniture Kit (CC0) |
 | `shelf`, `shelf-bags`, `register`, `cart`, `fruit` | Kenney Mini Market (CC0), for shop interiors |
 
@@ -110,13 +110,14 @@ Furniture and decoration come in **props packs** by area, `client/public/assets/
 | `concourse` | `bench`, `recycling`, `tree`, `plant`, `lamp`, `sofa` | 175 KB |
 | `atrium` | `lanterns`, `island` | 75 KB |
 | `court` | `fountain`, `table`, `chair` | 60 KB |
-| `shops` | `coffee-bar`, `shelf`, `shelf-bags`, `register`, `cart`, `fruit` | 100 KB |
+| `shops` | `shelf`, `register`, `cart`, `fruit` (the general store and every shop's till) | 33 KB |
+| `shop-cafe`, `shop-books`, `shop-fashion`, `shop-home`, `shop-games` | `coffee-bar`; `bookshelf`; `sneakers`, `shelf-bags`; `plant-stand`; `arcade` | 47–74 KB each |
 
 `props/index.json` says which pack holds which kinds. The client loads the packs with a placement within 35 m of the spawn right after the mall, then the rest one at a time when the browser is idle (nearest first, and walking up to one moves it to the front). So new props add to what loads in the background, not to what visitors wait for, and a pack nothing places is never downloaded. New props go in the pack for the area they furnish, or a new pack (add it to `PACKS`).
 
 `tools/greybox/props.ts` lists each kind's pack, source, real size, facing fix and collision box. The pipeline scales each model to size, stands it on the floor, turns it to face −Z and shrinks textures to 384 px WebP. The mall's meta says where props go (`props: [{ kind, pos, yaw }]`), and the client draws each part of each kind as one `InstancedMesh`. Collision lives in the mall's collision mesh as plain boxes, so props are purely visual and a missing kind is simply skipped.
 
-**Shop interiors.** Each shop's unit is furnished by its category (`client/src/world/interiors.ts`): the category text is matched by keyword to a layout (café, books, fashion, home, games, or a general store for anything else), and "For rent" units stay empty. Layouts are written in the unit's own frame (across, in from the door) and keep a clear aisle from the door to the back. They're rebuilt whenever the host changes the shops. Interior furniture comes from the same packs, and `index.json` carries each kind's collision box, so the client makes it solid with obstacle boxes on the player controller (the mall's collision mesh doesn't change with the shops). Units wider or deeper than 12 m, like the flagship, aren't furnished.
+**Shop interiors.** Each shop's unit is furnished by its category (`client/src/world/interiors.ts`): the category text is matched by keyword to a layout (café, books, fashion, home, games, or a general store for anything else), each with its own furniture pack so a shop only downloads what it shows, and "For rent" units stay empty. Layouts are written in the unit's own frame (across, in from the door) and keep a clear aisle from the door to the back. They're rebuilt whenever the host changes the shops. Interior furniture comes from the same packs, and `index.json` carries each kind's collision box, so the client makes it solid with obstacle boxes on the player controller (the mall's collision mesh doesn't change with the shops). Units wider or deeper than 12 m, like the flagship, aren't furnished.
 
 To restyle the mall's furniture, replace a source file and run `pnpm assets`. The placements and collision don't change. An uploaded building (admin → Building) uses the same packs, placed by its own meta's `props`.
 

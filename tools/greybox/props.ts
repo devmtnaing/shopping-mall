@@ -2,10 +2,22 @@
 // gives them collision boxes of `footprint`; tools/assets/props.ts builds the models to match.
 
 /**
- * Props ship in packs by area (props/<pack>.glb), and the client loads a pack once a visitor comes
- * near any of its placements, so a new batch of props doesn't grow what everyone downloads up front.
+ * Props ship in packs by area (props/<pack>.glb), with shop furniture in a pack per kind of shop.
+ * The client loads the packs near a visitor first and the rest in the background, so a new batch of
+ * props doesn't grow what everyone waits for, and a pack nothing uses never downloads.
  */
-export const PACKS = ['entrance', 'concourse', 'atrium', 'court', 'shops'] as const;
+export const PACKS = [
+  'entrance',
+  'concourse',
+  'atrium',
+  'court',
+  'shops',
+  'shop-cafe',
+  'shop-books',
+  'shop-fashion',
+  'shop-home',
+  'shop-games',
+] as const;
 export type Pack = (typeof PACKS)[number];
 
 export type PropSpec = {
@@ -115,12 +127,44 @@ export const PROPS: Record<string, PropSpec> = {
   },
   chair: { pack: 'court', src: `${F}/chair.glb`, axis: 'y', size: 0.95, turn: 0, footprint: null },
   'coffee-bar': {
-    pack: 'shops',
+    pack: 'shop-cafe',
     src: `${H}/coffee-bar.glb`,
     axis: 'x',
     size: 3,
     turn: Math.PI,
     footprint: [3, 1.1, 1],
+  },
+  bookshelf: {
+    pack: 'shop-books',
+    src: `${H}/bookshelf.glb`,
+    axis: 'y',
+    size: 2,
+    turn: Math.PI / 2,
+    footprint: [1.6, 2, 0.6],
+  },
+  sneakers: {
+    pack: 'shop-fashion',
+    src: `${H}/sneakers.glb`,
+    axis: 'x',
+    size: 2.2,
+    turn: Math.PI / 2,
+    footprint: [2.2, 1.95, 0.3],
+  },
+  'plant-stand': {
+    pack: 'shop-home',
+    src: `${H}/plant-stand.glb`,
+    axis: 'y',
+    size: 1.3,
+    turn: Math.PI,
+    footprint: [1.1, 1.3, 0.75],
+  },
+  arcade: {
+    pack: 'shop-games',
+    src: `${H}/arcade.glb`,
+    axis: 'y',
+    size: 1.8,
+    turn: Math.PI / 2,
+    footprint: [0.8, 1.8, 0.9],
   },
   shelf: {
     pack: 'shops',
@@ -131,7 +175,7 @@ export const PROPS: Record<string, PropSpec> = {
     footprint: [1.7, 1.8, 1.5],
   },
   'shelf-bags': {
-    pack: 'shops',
+    pack: 'shop-fashion',
     src: `${M}/shelf-bags.glb`,
     axis: 'y',
     size: 1.8,

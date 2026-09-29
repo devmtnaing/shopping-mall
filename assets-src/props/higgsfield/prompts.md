@@ -27,6 +27,11 @@ Batch 2 of #4 (the atrium), 2026-09-29: 15 credits.
 |---|---|---|
 | `coffee-bar.glb` | 2000 | A coffee bar counter for a small cafe inside a shopping mall: a straight wooden service counter with a white stone top, a chrome espresso machine, a grinder, stacked cups and a small glass pastry display case, clean modern design, stylized low-poly game asset, flat colors, isolated |
 
-Batch 3 of #4 (shop interiors), started 2026-09-29: 5 credits so far.
+| `bookshelf.glb` | 2000 | A tall wide wooden bookshelf for a bookshop, five shelves full of colorful books standing upright with a few lying flat, warm light oak, flat back so it stands against a wall, clean modern design, stylized low-poly game asset, flat colors, isolated |
+| `sneakers.glb` | 2000 | A sneaker display wall unit for a shoe shop: a tall white panel with rows of small floating wooden shelves, each holding one colorful sneaker, flat back so it stands against a wall, clean modern design, stylized low-poly game asset, flat colors, isolated |
+| `plant-stand.glb` | 2000 | A tiered wooden plant stand for a home and plant shop: three stepped wooden shelves holding small potted green plants, succulents and a trailing ivy in white and terracotta pots, clean modern design, stylized low-poly game asset, flat colors, isolated |
+| `arcade.glb` | 2000 | A retro upright arcade cabinet for a games shop: a tall cabinet in bold purple and teal with a glowing screen, a joystick and colorful buttons on the control panel, a lit marquee on top, stylized low-poly game asset, flat colors, isolated |
+
+Batch 3 of #4 (shop interiors), 2026-09-29: 25 credits.
 
 (The bench came out with a backrest despite the prompt, and the island as a split, spiralling ring. Both look right in the mall, so they stay.)

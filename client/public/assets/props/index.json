@@ -4,7 +4,12 @@
     "concourse": ["bench", "tree", "recycling", "plant", "lamp", "sofa"],
     "atrium": ["lanterns", "island"],
     "court": ["fountain", "table", "chair"],
-    "shops": ["coffee-bar", "shelf", "shelf-bags", "register", "cart", "fruit"]
+    "shops": ["shelf", "register", "cart", "fruit"],
+    "shop-cafe": ["coffee-bar"],
+    "shop-books": ["bookshelf"],
+    "shop-fashion": ["sneakers", "shelf-bags"],
+    "shop-home": ["plant-stand"],
+    "shop-games": ["arcade"]
   },
   "footprints": {
     "bench": [1.9, 0.45, 0.7],
@@ -22,6 +27,10 @@
     "table": [1, 0.75, 1],
     "chair": null,
     "coffee-bar": [3, 1.1, 1],
+    "bookshelf": [1.6, 2, 0.6],
+    "sneakers": [2.2, 1.95, 0.3],
+    "plant-stand": [1.1, 1.3, 0.75],
+    "arcade": [0.8, 1.8, 0.9],
     "shelf": [1.7, 1.8, 1.5],
     "shelf-bags": [1.7, 1.8, 1.5],
     "register": [1.6, 1.1, 1.6],

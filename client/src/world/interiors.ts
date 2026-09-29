@@ -28,13 +28,19 @@ const KEYWORDS: [Layout, RegExp][] = [
   ['games', /game|toy|arcade|play|hobby/i],
 ];
 
-/** A shelf against each side wall, facing the aisle. */
-const walls = (kind: string, d: number, x = 3.05): Item[] => [
-  { kind, x: -x, d, yaw: -PI / 2 },
-  { kind, x, d, yaw: PI / 2 },
-];
-/** The counter at the back, facing the door. */
+/** The side walls' faces, from the unit's centre line. */
+const WALL = 3.85;
+/** A piece `depth` deep against each side wall at `d`, facing the aisle. */
+const walls = (kind: string, d: number, depth: number): Item[] => {
+  const x = WALL - depth / 2 - 0.05;
+  return [
+    { kind, x: -x, d, yaw: -PI / 2 },
+    { kind, x, d, yaw: PI / 2 },
+  ];
+};
+/** The till at the back, facing the door. */
 const counter = (back: number): Item => ({ kind: 'register', x: 1.8, d: back - 1.3, yaw: PI });
+const sofa = (back: number): Item => ({ kind: 'sofa', x: -1.6, d: back - 1.4, yaw: PI });
 
 const LAYOUTS: Record<Layout, (depth: number) => Item[]> = {
   cafe: (D) => [
@@ -47,23 +53,30 @@ const LAYOUTS: Record<Layout, (depth: number) => Item[]> = {
       ]),
     ),
   ],
-  books: (D) => [...walls('shelf', 2.6), ...walls('shelf', 4.4), ...walls('shelf', 6.2), counter(D)],
-  fashion: (D) => [...walls('shelf-bags', 3), ...walls('shelf-bags', 5.2), counter(D)],
+  // bookcases down both walls and one on the back wall
+  books: (D) => [
+    ...[2.2, 3.9, 5.6].flatMap((d) => walls('bookshelf', d, 0.6)),
+    { kind: 'bookshelf', x: -2, d: D - 0.4, yaw: PI },
+    counter(D),
+  ],
+  fashion: (D) => [
+    ...walls('sneakers', 2.6, 0.3),
+    ...walls('sneakers', 5, 0.3),
+    ...walls('shelf-bags', 7.2, 1.5),
+    counter(D),
+  ],
   home: (D) => [
-    ...walls('plant', 2, 3.3),
-    ...walls('plant', 4.2, 3.3),
-    { kind: 'sofa', x: -1.6, d: D - 1.4, yaw: PI },
+    ...walls('plant-stand', 2.2, 0.75),
+    ...walls('plant-stand', 4.2, 0.75),
+    ...walls('plant', 6.2, 0.6),
+    sofa(D),
     counter(D),
   ],
-  games: (D) => [
-    ...walls('shelf', 3),
-    ...walls('shelf', 5.2),
-    { kind: 'sofa', x: -1.6, d: D - 1.4, yaw: PI },
-    counter(D),
-  ],
+  // a row of arcade cabinets down each wall
+  games: (D) => [...[2, 3, 4, 5, 6].flatMap((d) => walls('arcade', d, 0.9)), sofa(D), counter(D)],
   store: (D) => [
-    ...walls('shelf', 3),
-    ...walls('shelf-bags', 5.2),
+    ...walls('shelf', 3, 1.5),
+    ...walls('shelf-bags', 5.2, 1.5),
     { kind: 'cart', x: -2.4, d: 1.2, yaw: PI / 4 },
     counter(D),
   ],
