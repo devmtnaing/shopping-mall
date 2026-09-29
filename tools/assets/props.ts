@@ -61,8 +61,8 @@ await out.transform(
   dedup(),
   prune(),
   weld(),
-  // generated models come with 1–2k textures; props are never seen close enough to need more than 512
-  textureCompress({ encoder: sharp, targetFormat: 'webp', resize: [512, 512] }),
+  // generated models come with 1–2k textures; props are never seen close enough to need more than 384
+  textureCompress({ encoder: sharp, targetFormat: 'webp', resize: [384, 384], quality: 80 }),
   meshopt({ encoder: MeshoptEncoder, level: 'medium' }),
 );
 

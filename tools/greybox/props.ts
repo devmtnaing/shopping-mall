@@ -21,6 +21,9 @@ export const PROPS: Record<string, PropSpec> = {
   fountain: { src: `${H}/fountain.glb`, axis: 'x', size: 4.4, turn: 0, footprint: [4.2, 0.7, 4.2] },
   /** Stands on a planter (the planter is the solid part). */
   tree: { src: `${H}/tree.glb`, axis: 'y', size: 3.2, turn: 0, footprint: null },
+  kiosk: { src: `${H}/kiosk.glb`, axis: 'y', size: 1.45, turn: Math.PI / 2, footprint: [1.3, 1, 1.3] },
+  welcome: { src: `${H}/welcome.glb`, axis: 'y', size: 2.3, turn: -Math.PI / 2, footprint: [0.7, 2.3, 0.5] },
+  palm: { src: `${H}/palm.glb`, axis: 'y', size: 2.3, turn: 0, footprint: [0.8, 1, 0.8] },
   plant: { src: `${F}/pottedPlant.glb`, axis: 'y', size: 1.5, turn: 0, footprint: [0.6, 1, 0.6] },
   bin: { src: `${F}/trashcan.glb`, axis: 'y', size: 0.85, turn: 0, footprint: [0.45, 0.85, 0.45] },
   lamp: { src: `${F}/lampRoundFloor.glb`, axis: 'y', size: 2.4, turn: 0, footprint: [0.35, 2.4, 0.35] },

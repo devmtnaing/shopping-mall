@@ -252,7 +252,10 @@ function props(g: Geo, meta: MallMeta) {
 
   // floor lamps between the benches, plants either side of the entrance and upstairs
   for (const z of [-14, -28, -42]) for (const x of [-5.3, 5.3]) place('lamp', x, 0, z);
-  for (const x of [-4.8, 4.8]) place('plant', x, 0, -1.5);
+  // the lobby (#4, batch 1): palms either side of the doors, an information kiosk and a welcome sign
+  for (const x of [-4.6, 4.6]) place('palm', x, 0, -1.4);
+  place('kiosk', 3, 0, -10.5, PI); // facing the entrance
+  place('welcome', -2.4, 0, -10, PI);
   for (const z of [-10, -44]) for (const x of [-4.8, 4.8]) place('plant', x, UP, z);
 
   // café tables in the fountain court

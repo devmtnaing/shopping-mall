@@ -100,11 +100,11 @@ Furniture and decoration come from a **props pack**, `client/public/assets/props
 
 | Kind | Source |
 |---|---|
-| `bench`, `fountain`, `tree` | Generated with Higgsfield (prompts in `assets-src/props/higgsfield/prompts.md`) |
+| `bench`, `fountain`, `tree`, `kiosk`, `welcome`, `palm` | Generated with Higgsfield (prompts in `assets-src/props/higgsfield/prompts.md`) |
 | `plant`, `bin`, `lamp`, `sofa`, `table`, `chair` | Kenney Furniture Kit (CC0) |
 | `shelf`, `shelf-bags`, `register`, `cart`, `fruit` | Kenney Mini Market (CC0), for shop interiors |
 
-`tools/greybox/props.ts` lists each kind's source, real size, facing fix and collision box. The pipeline scales each model to size, stands it on the floor, turns it to face −Z and shrinks textures to 512 px WebP. The mall's meta says where props go (`props: [{ kind, pos, yaw }]`), and the client draws each part of each kind as one `InstancedMesh`. Collision lives in the mall's collision mesh as plain boxes, so props are purely visual and a missing kind is simply skipped.
+`tools/greybox/props.ts` lists each kind's source, real size, facing fix and collision box. The pipeline scales each model to size, stands it on the floor, turns it to face −Z and shrinks textures to 384 px WebP. The mall's meta says where props go (`props: [{ kind, pos, yaw }]`), and the client draws each part of each kind as one `InstancedMesh`. Collision lives in the mall's collision mesh as plain boxes, so props are purely visual and a missing kind is simply skipped.
 
 To restyle the mall's furniture, replace a source file and run `pnpm assets`. The placements and collision don't change. An uploaded building (admin → Building) uses the same pack, placed by its own meta's `props`.
 
@@ -124,7 +124,7 @@ dedup → prune → join (per material, static only) → weld → simplify (LOD 
 | Collision mesh | 50k | 1.5 MB | 2.2k tris, 91 KB |
 | Navgrid | — | 60 KB | 9 KB |
 | Avatar pack (all characters and clips) | 15k | 250 KB | 11k tris, 179 KB |
-| Props pack | 30k | 300 KB | 12k tris, 262 KB |
+| Props pack | 40k | 450 KB | 377 KB (split into packs by area before it grows further) |
 | Avatar preview | — | 8 KB | 2 KB |
 | Audio loop (each / all) | — | 170 KB / 250 KB | 156 + 47 KB |
 

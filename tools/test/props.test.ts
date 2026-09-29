@@ -24,7 +24,7 @@ describe('props', () => {
     for (const k of placed) expect(PROPS).toHaveProperty(k);
   });
 
-  it('stays within its 300 KB budget', () => {
-    expect(glb.byteLength).toBeLessThan(300 * 1024);
+  it('stays within its 450 KB budget', () => {
+    expect(glb.byteLength).toBeLessThan(450 * 1024);
   });
 });
