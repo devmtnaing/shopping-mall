@@ -61,3 +61,18 @@ export function trim(buf: Uint8Array, seconds: number): Uint8Array {
   }
   return buf.slice(start, end);
 }
+
+/** The frames between `from` and `to` seconds, plus one frame before (a frame may borrow bits from the one before it). */
+export function slice(buf: Uint8Array, from: number, to: number): Uint8Array {
+  const fs = frames(buf);
+  let t = 0;
+  let start = -1;
+  let end = 0;
+  for (const [i, f] of fs.entries()) {
+    const next = t + f.samples / f.rate;
+    if (start < 0 && next > from) start = (fs[Math.max(0, i - 1)] as Frame).offset;
+    if (start >= 0 && t < to) end = f.offset + f.length;
+    t = next;
+  }
+  return buf.slice(Math.max(0, start), end);
+}

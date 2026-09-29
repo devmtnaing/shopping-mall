@@ -1,7 +1,8 @@
 // Sound (T-506). Nothing loads or plays until the visitor's first click, tap or key press (browsers
 // require it, and a silent start is kinder). Then: a soft ambience loop, the fountain as a positional
 // source you can walk up to, a gentle tap for buttons and a door chime when a shop opens. The tap
-// and chime are synthesized, so they cost no download. Volumes live in `volume` (Help dialog).
+// and chime are short generated clips (16 KB together); until they load, or if they can't, they're
+// synthesized. Volumes live in `volume` (Help dialog).
 import { effect, signal } from '@preact/signals';
 import { load, save } from './storage';
 
@@ -18,6 +19,8 @@ const BASE = `${import.meta.env.BASE_URL}assets/audio/`;
 const TARGET_RMS = 0.05;
 /** Crossfade at the loop point (s): the clips are trimmed, not made seamless. */
 const FADE = 1.5;
+/** Peak level of the one-shots: the generated clips come out at very different levels. */
+const PEAK = { chime: 0.3, tap: 0.15 };
 
 type Vec = { x: number; y: number; z: number };
 export type Sound = {
@@ -77,6 +80,25 @@ async function start(fountain: Vec | null): Promise<Sound> {
     loop(ctx, water.buf, water.gain * 1.5, panner);
   }
 
+  // the one-shots, after the loops (nothing waits on them): synthesized until they're in
+  const shots: Partial<Record<keyof typeof PEAK, { buf: AudioBuffer; gain: number; lead: number }>> = {};
+  for (const name of ['chime', 'tap'] as const) {
+    fetch(`${BASE}${name}.mp3`)
+      .then((r) => r.arrayBuffer())
+      .then((bytes) => ctx.decodeAudioData(bytes))
+      .then((buf) => {
+        shots[name] = { buf, gain: PEAK[name] / peak(buf), lead: lead(buf) };
+      })
+      .catch((e) => console.warn(`audio: ${name}:`, e));
+  }
+  const play = (name: keyof typeof PEAK, fallback: () => void) => {
+    const shot = shots[name];
+    if (!shot) return fallback();
+    const src = new AudioBufferSourceNode(ctx, { buffer: shot.buf });
+    src.connect(new GainNode(ctx, { gain: shot.gain })).connect(effects);
+    src.start(0, shot.lead);
+  };
+
   const l = ctx.listener;
   return {
     listen(pos, fwd) {
@@ -88,19 +110,37 @@ async function start(fountain: Vec | null): Promise<Sound> {
       l.forwardY.setValueAtTime(fwd.y, t);
       l.forwardZ.setValueAtTime(fwd.z, t);
     },
-    tap: () => tone(ctx, effects, [[1320, 0]], 0.05, 0.12),
+    tap: () => play('tap', () => tone(ctx, effects, [[1320, 0]], 0.05, 0.12)),
     chime: () =>
-      tone(
-        ctx,
-        effects,
-        [
-          [1318.5, 0], // E6
-          [1046.5, 0.16], // C6
-        ],
-        0.9,
-        0.22,
+      play('chime', () =>
+        tone(
+          ctx,
+          effects,
+          [
+            [1318.5, 0], // E6
+            [1046.5, 0.16], // C6
+          ],
+          0.9,
+          0.22,
+        ),
       ),
   };
+}
+
+/** Seconds of near-silence before a clip's sound starts (MP3 frames can't be cut any finer). */
+function lead(buf: AudioBuffer): number {
+  const d = buf.getChannelData(0);
+  const floor = peak(buf) * 0.05;
+  const i = d.findIndex((x) => Math.abs(x) > floor);
+  return Math.max(0, i / buf.sampleRate - 0.005);
+}
+
+/** The highest sample of a buffer's first channel. */
+function peak(buf: AudioBuffer): number {
+  const d = buf.getChannelData(0);
+  let p = 0;
+  for (let i = 0; i < d.length; i++) p = Math.max(p, Math.abs(d[i] ?? 0));
+  return p || 1;
 }
 
 /** Root-mean-square level of a buffer's first channel. */
