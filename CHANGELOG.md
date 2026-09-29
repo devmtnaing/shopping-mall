@@ -4,6 +4,7 @@
 
 - The fountain has moving water, and the skylight shows a sky with drifting clouds (T-213).
 - On High, the stone floor mirrors the mall (T-212).
+- Phones: long shop names no longer run under the Run button or into the minimap, and the dock's emoji button shows again.
 
 ## 1.1.0 (2026-09-30)
 

@@ -270,7 +270,7 @@ kbd {
 
 /* ---- phones: icon-only dock, smaller brand ---- */
 @media (max-width: 560px) {
-  .dock-btn span {
+  .dock-btn span:not(.dock-icon) {
     position: absolute;
     width: 1px;
     height: 1px;
@@ -324,6 +324,17 @@ kbd {
 .prompt-name {
   font-weight: 600;
   font-size: 15px;
+  /* a long shop name shortens with "…" rather than pushing the button off the screen */
+  max-width: min(42vw, 280px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* touch: above the Jump and Run buttons, which sit either side of where the prompt would be */
+@media (pointer: coarse) {
+  .prompt {
+    bottom: calc(168px + env(safe-area-inset-bottom));
+    max-width: calc(100vw - 32px);
+  }
 }
 .prompt-btn {
   display: flex;
@@ -1022,7 +1033,7 @@ a.product:hover {
 @media (pointer: coarse) {
   .emotes {
     top: auto;
-    bottom: calc(150px + env(safe-area-inset-bottom));
+    bottom: calc(226px + env(safe-area-inset-bottom)); /* above the prompt */
     display: flex;
     left: 50%;
     right: auto;
@@ -1166,9 +1177,13 @@ a.product:hover {
   .zone {
     top: calc(64px + env(safe-area-inset-top));
     padding: 4px 14px 5px;
+    /* centred, so it must stop short of the minimap on both sides: long names end in "…" */
+    max-width: calc(100vw - 204px);
   }
   .zone-name {
     font-size: 15px;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   /* centred dialogs (directory, help) hang from the top and stop short of the dock */
   .dialog:not(.dialog-sheet) {

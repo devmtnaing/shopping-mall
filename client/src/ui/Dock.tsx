@@ -35,7 +35,9 @@ export function Dock() {
           aria-pressed={emoteBar.value}
           onClick={() => (emoteBar.value = !emoteBar.value)}
         >
-          <span aria-hidden="true">😊</span>
+          <span class="dock-icon" aria-hidden="true">
+            😊
+          </span>
           <span>{t('emote.label')}</span>
         </button>
       )}
