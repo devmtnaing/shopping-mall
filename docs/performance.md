@@ -67,7 +67,7 @@ The reference downloads ~5.1 MB of models on the landing page alone.
 - The UI updates through signals only when a value changes. Nothing re-renders every frame.
 - Collision: a capsule sweep against the BVH, only while the player is moving.
 
-## Measured (2026-09-29, M1, production build, 144 Hz)
+## Measured (2026-09-29, Apple M5 Pro, production build, 144 Hz)
 
 | What | Result |
 |---|---|

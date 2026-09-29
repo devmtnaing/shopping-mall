@@ -9,3 +9,4 @@ screenshots/
 .cache/
 docs/.vitepress/cache/
 docs/.vitepress/dist/
+demo/

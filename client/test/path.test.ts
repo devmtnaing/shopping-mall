@@ -63,7 +63,7 @@ describe('PathFinder', () => {
     expect(path?.[path.length - 1]?.y).toBeCloseTo(0, 2);
   });
 
-  it('is fast: well under 2 ms per path on average', () => {
+  it('is fast: well under 2 ms per path (median)', () => {
     const goals: Waypoint[] = [
       { x: -12, y: 0, z: -32 },
       { x: 12, y: 0, z: -48 },
@@ -71,12 +71,17 @@ describe('PathFinder', () => {
       { x: 4.5, y: 7.6, z: -50 },
       { x: -12, y: 7.6, z: -10 },
     ];
-    for (const g of goals) finder.find(spawn, g); // warm up
-    const t0 = performance.now();
-    for (let i = 0; i < 20; i++) for (const g of goals) finder.find(spawn, g);
-    const avg = (performance.now() - t0) / 100;
+    for (let i = 0; i < 5; i++) for (const g of goals) finder.find(spawn, g); // warm up the JIT
+    // the median of 9 rounds, so a busy machine (another build, a browser) doesn't fail it
+    const rounds: number[] = [];
+    for (let r = 0; r < 9; r++) {
+      const t0 = performance.now();
+      for (let i = 0; i < 4; i++) for (const g of goals) finder.find(spawn, g);
+      rounds.push((performance.now() - t0) / 20);
+    }
+    const median = rounds.sort((a, b) => a - b)[4] as number;
     // budget is 2 ms (docs/tasks.md T-109); shared CI runners are ~2-3× slower than a dev laptop
-    expect(avg).toBeLessThan(process.env.CI ? 6 : 2);
+    expect(median).toBeLessThan(process.env.CI ? 6 : 2);
   });
 });
 
