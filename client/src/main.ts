@@ -1,6 +1,6 @@
 import { effect } from '@preact/signals';
 import { APPLE, EMOTES } from '@shopping-mall/shared/protocol';
-import { Color, DirectionalLight, Fog, HemisphereLight, Scene, Vector3 } from 'three';
+import { Color, DirectionalLight, Fog, HemisphereLight, Ray, Scene, Vector3 } from 'three';
 import { track } from './analytics';
 import { type Sound, soundOnFirstInteraction } from './audio';
 import type { Avatar } from './avatars/kit';
@@ -20,6 +20,7 @@ import { Input } from './player/input';
 import { Intro } from './player/intro';
 import { Overview } from './player/overview';
 import { PathFinder } from './player/path';
+import { castRay } from './player/raycast';
 import { nearestSpot, type SeatSpot, seatSpots, standSpot } from './player/seats';
 import { createTouchControls } from './player/touch';
 import { Travel } from './player/travel';
@@ -301,7 +302,13 @@ const furnishShops = (shops: typeof content.value.shops) => {
   void Promise.all([propsLib, import('./world/interiors')])
     .then(([{ lib, propLayer }, { furnish }]) => {
       if (seq !== furnishSeq) return;
-      const { placements, obstacles } = furnish(mall.meta, shops, lib.index.footprints);
+      // furniture stands on the floor under it (a flagship's showcase is on its stage)
+      const down = new Ray(new Vector3(), new Vector3(0, -1, 0));
+      const floorAt = (x: number, z: number, above: number) => {
+        down.origin.set(x, above + 2.5, z);
+        return castRay(mall.collider, down, 3.5)?.point.y ?? above;
+      };
+      const { placements, obstacles } = furnish(mall.meta, shops, lib.index.footprints, floorAt);
       interiors?.dispose();
       interiors = propLayer(lib, placements, player.pos);
       scene.add(interiors.group);

@@ -7,6 +7,10 @@
 // Layouts are in the unit's own frame: x across the unit (+ is to your right as you walk in), d the
 // distance in from the door, and yaw relative to facing into the shop (π faces the door, π/2 faces
 // left). Every layout keeps a clear aisle from the door to the back.
+//
+// A big unit (wider than MAX_UNIT, like the flagship) gets a bay of its category's layout down
+// each side, an open middle from the door, and a showcase of the category's signature piece at
+// the back. Everything stands on whatever floor is under it (the flagship's back is a stage).
 import type { Shop } from '@shopping-mall/shared/config';
 import type { MallMeta, Slot } from '@shopping-mall/shared/meta';
 import { Box3, Vector3 } from 'three';
@@ -16,8 +20,10 @@ type Item = { kind: string; x: number; d: number; yaw: number };
 export type Layout = 'cafe' | 'books' | 'fashion' | 'home' | 'games' | 'store';
 
 const PI = Math.PI;
-/** Units wider or deeper than this (a flagship store) bring their own interior. */
+/** Units wider than this are furnished as big stores (bays and a showcase); deeper ones not at all. */
 const MAX_UNIT = 12;
+/** A standard unit's width: a big store's bays are this wide. */
+const BAY = 8;
 
 /** A category (free text, set by the host) to a layout, by keyword. Unknown categories get a store. */
 const KEYWORDS: [Layout, RegExp][] = [
@@ -82,6 +88,16 @@ const LAYOUTS: Record<Layout, (depth: number) => Item[]> = {
   ],
 };
 
+/** A big store's showcase at the back, centred and facing the door: the category's signature piece. */
+const SHOWCASE: Record<Layout, (depth: number) => Item[]> = {
+  cafe: (D) => [{ kind: 'coffee-bar', x: 0, d: D - 1.6, yaw: PI }],
+  books: (D) => [-1.7, 0, 1.7].map((x) => ({ kind: 'bookshelf', x, d: D - 1.2, yaw: PI })),
+  fashion: (D) => [-2.4, 0, 2.4].map((x) => ({ kind: 'sneakers', x, d: D - 1.2, yaw: PI })),
+  home: (D) => [-2.4, 0, 2.4].map((x) => ({ kind: 'plant-stand', x, d: D - 1.5, yaw: PI })),
+  games: (D) => [-2.5, -1.5, -0.5, 0.5, 1.5, 2.5].map((x) => ({ kind: 'arcade', x, d: D - 1.5, yaw: PI })),
+  store: (D) => [-2, 2].map((x) => ({ kind: 'shelf', x, d: D - 1.6, yaw: PI })),
+};
+
 export function layoutFor(shop: Shop): Layout | null {
   if (shop.category && /rent|vacan|available/i.test(shop.category)) return null;
   return KEYWORDS.find(([, re]) => re.test(shop.category ?? ''))?.[0] ?? 'store';
@@ -105,11 +121,15 @@ function frame(slot: Slot) {
   return { yaw, f, r, door, depth, width };
 }
 
+/** Height of the floor under (x, z), looking down from `above`. */
+export type FloorAt = (x: number, z: number, above: number) => number;
+
 /** Every furnished unit's props, and their collision boxes. */
 export function furnish(
   meta: MallMeta,
   shops: readonly Shop[],
   footprints: Record<string, Footprint | null>,
+  floorAt: FloorAt = (_x, _z, above) => above,
 ): { placements: Placement[]; obstacles: Box3[] } {
   const placements: Placement[] = [];
   const obstacles: Box3[] = [];
@@ -119,9 +139,28 @@ export function furnish(
     const layout = shop && layoutFor(shop);
     if (!layout) continue;
     const u = frame(slot);
-    if (u.depth > MAX_UNIT || u.width > MAX_UNIT) continue;
-    for (const it of LAYOUTS[layout](u.depth)) {
+    if (u.depth > MAX_UNIT) continue;
+    // a big store: the category's layout in a bay down each side, and its showcase at the back
+    const items =
+      u.width > MAX_UNIT
+        ? [
+            ...[-1, 1].flatMap((side) =>
+              LAYOUTS[layout](u.depth).map((it) => {
+                // a bay's inner row turns round to face the open middle, not its own bay
+                const inner = Math.abs(Math.abs(it.yaw) - PI / 2) < 0.01 && Math.sign(it.x) === -side;
+                return {
+                  ...it,
+                  x: it.x + side * (u.width / 2 - BAY / 2 - 0.15),
+                  yaw: inner ? it.yaw + PI : it.yaw,
+                };
+              }),
+            ),
+            ...SHOWCASE[layout](u.depth),
+          ]
+        : LAYOUTS[layout](u.depth);
+    for (const it of items) {
       const pos = u.door.clone().addScaledVector(u.f, it.d).addScaledVector(u.r, it.x);
+      pos.y = floorAt(pos.x, pos.z, u.door.y);
       const yaw = u.yaw + it.yaw;
       placements.push({ kind: it.kind, pos: [pos.x, pos.y, pos.z], yaw });
       const fp = footprints[it.kind];

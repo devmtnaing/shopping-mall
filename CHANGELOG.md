@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- The flagship store is furnished when a shop takes it: a bay of its category's furniture down each side and a showcase on the stage.
 - The fountain has moving water, and the skylight shows a sky with drifting clouds (T-213).
 - On High, the stone floor mirrors the mall (T-212).
 - Phones: long shop names no longer run under the Run button or into the minimap, and the dock's emoji button shows again.

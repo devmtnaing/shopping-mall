@@ -2,12 +2,13 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { parseConfig } from '@shopping-mall/shared/config';
 import { PLAYER } from '@shopping-mall/shared/constants';
-import { Box3, Vector3 } from 'three';
+import { Box3, Ray, Vector3 } from 'three';
 import { describe, expect, it } from 'vitest';
 import config from '../../mall.config';
+import { castRay } from '../src/player/raycast';
 import { furnish, layoutFor } from '../src/world/interiors';
 import type { PropIndex } from '../src/world/props';
-import { greybox } from './greybox';
+import { collider, greybox } from './greybox';
 
 const { meta } = greybox;
 const shops = parseConfig(config).shops;
@@ -38,7 +39,7 @@ describe('shop interiors', () => {
       const shop = shops.find((s) => s.slot === slot.id);
       const room = new Box3(new Vector3(...slot.interior.min), new Vector3(...slot.interior.max));
       const here = placements.filter((p) => inside(room, p.pos));
-      const furnished = shop && layoutFor(shop) && slot.id !== 'flagship';
+      const furnished = shop && layoutFor(shop);
       expect(here.length > 0, slot.id).toBe(Boolean(furnished));
     }
   });
@@ -60,5 +61,39 @@ describe('shop interiors', () => {
           expect(b.clone().expandByScalar(PLAYER.radius).containsPoint(at), slot.id).toBe(false);
       }
     }
+  });
+
+  it('furnishes a flagship: a bay down each side and a showcase on the stage, the middle kept open', () => {
+    const down = new Ray(new Vector3(), new Vector3(0, -1, 0));
+    const floorAt = (x: number, z: number, above: number) => {
+      down.origin.set(x, above + 2.5, z);
+      return castRay(collider, down, 3.5)?.point.y ?? above;
+    };
+    const games = {
+      ...shops[0],
+      id: 'big-arcade',
+      slot: 'flagship',
+      category: 'Games',
+    } as (typeof shops)[number];
+    const big = furnish(meta, [games], index.footprints, floorAt);
+    const slot = meta.slots.find((s) => s.id === 'flagship');
+    if (!slot) throw new Error('no flagship');
+    const room = new Box3(new Vector3(...slot.interior.min), new Vector3(...slot.interior.max));
+    expect(big.placements.length).toBeGreaterThan(20);
+    for (const p of big.placements) expect(room.containsPoint(new Vector3(...p.pos)), p.kind).toBe(true);
+    for (const b of big.obstacles) expect(room.containsBox(b)).toBe(true);
+    // the showcase stands on the stage (0.6 m up), and there's furniture on both sides
+    const onStage = big.placements.filter((p) => p.pos[1] > 0.5);
+    expect(onStage.length).toBeGreaterThanOrEqual(6);
+    expect(onStage.every((p) => p.kind === 'arcade')).toBe(true);
+    expect(big.placements.some((p) => p.pos[0] < -8)).toBe(true);
+    expect(big.placements.some((p) => p.pos[0] > 8)).toBe(true);
+    // walk in through the doors, 6 m, to the foot of the stage steps: nothing in the way
+    for (let d = 0; d <= 6; d += 0.25)
+      for (const x of [-1.5, 0, 1.5]) {
+        const at = new Vector3(x, 1, slot.door.pos[2] - d);
+        for (const b of big.obstacles)
+          expect(b.clone().expandByScalar(PLAYER.radius).containsPoint(at)).toBe(false);
+      }
   });
 });
