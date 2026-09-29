@@ -39,6 +39,7 @@ import {
 import { mountUI } from './ui/App';
 import { escalatorCarry } from './world/escalators';
 import { loadMall } from './world/mall';
+import { Shoppers } from './world/shoppers';
 import { buildStorefronts } from './world/storefronts';
 import { ZoneTracker } from './world/zones';
 import './style.css';
@@ -95,6 +96,7 @@ effect(() => {
   setColor(profile.value.color);
 });
 let avatar: Avatar | null = null;
+let shoppers: Shoppers | null = null;
 
 const orbit = new OrbitCamera(mall.collider, spawn.yaw);
 const follower = new PathFollower();
@@ -116,6 +118,8 @@ import('./avatars/kit')
   .then(({ loadAvatarKit }) => loadAvatarKit())
   .then((kit) => {
     multi.setAvatarKit(kit);
+    shoppers = new Shoppers(kit, mall.meta, finder, 6);
+    scene.add(shoppers.group);
     effect(() => {
       const id = profile.value.avatar;
       if (avatar?.id === id) return;
@@ -250,6 +254,7 @@ startLoop({
       avatar.setState(animState(player), player.speed);
       avatar.update(dt);
     }
+    shoppers?.update(dt, camera.position);
 
     const tap = input.takeTap();
     if (tap && phase.value === 'playing' && !walkTo.tap(tap.x, tap.y, player, canvas, over.clipY))

@@ -57,7 +57,7 @@ T-104 uses a "floating capsule" (body capsule from step height up, with ground r
 | T-210 | Animation state machine: idle / walk / run / jump / fall / land / sit, speed-matched blend, crossfades | M | client | No pops between states. Walk cycle speed matches movement speed. ✅ *(0.18 s crossfades; walk and sprint time-scaled to ground speed; emotes play a one-shot gesture when standing. There's no `land` clip in the pack. Remote avatars beyond 20 m animate at a third of the rate.)* |
 | T-211 | Quality tiers + auto-detect (GPU probe + 3 s frame-time sample), saved | M | client perf | Low, Medium and High apply the settings table in the architecture doc. Changes live without reloading |
 | T-212 | Floor reflections per tier (env-map / blurred / planar half-res) | M | client perf | High costs ≤ 3 ms on an M1. Low has zero extra passes |
-| T-213 | Ambient life: fountain shader, skylight clouds, 4–6 NPC shoppers wandering the navgrid at LOD2 | M | client art | Total cost ≤ 1 ms/frame on Medium |
+| T-213 | Ambient life: fountain shader, skylight clouds, 4–6 NPC shoppers wandering the navgrid at LOD2 | M | client art | Total cost ≤ 1 ms/frame on Medium. 🟡 *(6 shoppers done: local to each visitor, walking A* paths between shop windows and free benches, where they sit. Animated only within 30 m. The fountain shader and clouds are still to do.)* |
 
 ## Phase 3: Shops & UI
 
