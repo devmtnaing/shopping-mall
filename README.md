@@ -5,7 +5,7 @@ Walk around with friends, visit shops, browse real products, and chat. It loads 
 
 > Status: **Phases 0, 1, 3, 3b and 4 done.** A greybox mall with working shops, directory, minimap, overview, deep links, English and Burmese, multiplayer (see others move, chat, emote, host announcements), and live content: shops, products, uploads and even the building are edited from `/admin/` and show up for everyone within seconds.
 > **Live demo:** <https://web-production-cc219.up.railway.app> (Railway, Singapore). Self-host with `docker compose up`.
-> Next up: real CC0 art and avatars, then performance and phone polish. See the [roadmap](docs/roadmap.md).
+> Phase 2 (art) is mostly in: pick one of 12 animated characters, shoppers stroll and sit, and the mall has benches, trees, a fountain and more (Kenney CC0 plus a few Higgsfield models), with quality tiers and reflections. Still to come: the real building with baked lighting, then performance and phone polish. See the [roadmap](docs/roadmap.md).
 
 ---
 
