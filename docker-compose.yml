@@ -19,7 +19,9 @@ services:
   # S3-compatible storage for uploads (production uses a Railway bucket; any S3 store works)
   storage:
     image: chrislusf/seaweedfs:latest
-    command: server -s3 -dir=/data
+    # small volumes, as many as the disk holds: the defaults (30 GB volumes, a few of them) run out
+    # once test runs have created a few dozen buckets
+    command: server -s3 -dir=/data -volume.max=0 -master.volumeSizeLimitMB=100
     environment:
       AWS_ACCESS_KEY_ID: mall
       AWS_SECRET_ACCESS_KEY: mall-secret

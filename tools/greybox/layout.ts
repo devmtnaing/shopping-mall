@@ -87,10 +87,12 @@ function xs(s: number, a: number, b: number, y: number, z: number, max = false):
 function shopRow(g: Geo, meta: MallMeta, s: -1 | 1, upper: boolean) {
   const y0 = upper ? UP : 0;
   const top = upper ? ROOF : CEIL;
-  // dividers between units, including both ends of the row
+  // dividers between units, including both ends of the row. They start behind the storefront (the
+  // pillars already close the front), so their end caps don't overlap the pillars' faces: coplanar
+  // faces flicker, and bake black.
   for (let k = 0; k <= SLOTS; k++) {
     const z = SLOT_Z0 - k * SLOT_LEN;
-    g.box('wall', xs(s, X_CON, X_OUT, y0, z - 0.15), xs(s, X_CON, X_OUT, top, z + 0.15, true));
+    g.box('wall', xs(s, X_CON + T, X_OUT, y0, z - 0.15), xs(s, X_CON + T, X_OUT, top, z + 0.15, true));
   }
   for (let i = 0; i < SLOTS; i++) {
     const zA = SLOT_Z0 - i * SLOT_LEN; // south edge (nearer the entrance)

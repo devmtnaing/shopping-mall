@@ -83,6 +83,18 @@ On upload the server checks, in order, and refuses the package with the reason i
 
 The baked navgrid becomes the fourth file of the package. Visitors get the new building on their next visit. Files in use can't be deleted, and **Use the built-in building** switches back. The greybox in `client/public/assets/mall/` is itself a valid package: `pnpm greybox` rebuilds it and `pnpm navgrid` bakes it with the same code the server runs (`shared/src/bake.ts`).
 
+### The built-in mall (Blender, issue #2)
+`pnpm mall` rebuilds `client/public/assets/mall/mall.glb` in about 2.5 minutes. It needs Blender 4.2+ (set `BLENDER` if it isn't in `/Applications`). `tools/blender/build.py`, run headless:
+1. **Imports the greybox**, so the dimensions, collision (`greybox.collision.glb`), meta and navgrid all stay the greybox's. Change the layout in `tools/greybox/` and run `pnpm greybox`, then `pnpm mall`.
+2. **Culls faces nobody can see**: the exterior skin, and faces pressed against other geometry.
+3. **Upgrades materials.** Tiling detail textures are generated in the script (60 cm stone floor tiles, plaster with panel seams, a ceiling tile grid, wooden shop floors), placed on UV0 by world-space box projection.
+4. **Lights it**: ceiling light panels (glowing, plus area lights), a warm light in every shop, the flagship and lobby, and cool daylight through the skylight.
+5. **Bakes** direct and indirect diffuse lighting (no colour) into one 4096² lightmap on UV1: Cycles on the GPU, 512 samples, OpenImageDenoise. It then exports the model. `--exposure` is the one brightness knob (default 0.14).
+
+`tools/assets/mall.ts` then embeds the lightmap (WebP). Intermediates live in `.cache/mall/` and aren't committed.
+
+**Lightmap convention** (also for uploaded buildings): a material that carries a lightmap has it as its `occlusionTexture` on `TEXCOORD_1`, plus `extras: { lightmap: <scale> }`. The texture stores `sRGB(L / scale)`. The client renders those surfaces unlit, as base colour × L (`MeshBasicMaterial` with `lightMap`), so they look like the Cycles bake at the cheapest possible shader cost. Other glTF viewers just see ambient occlusion. Emissive and see-through materials (`lightpanel`, `skylight`, `glass`) aren't lightmapped.
+
 ### Props
 Furniture and decoration come from a **props pack**, `client/public/assets/props/props.glb` (about 260 KB), built by `pnpm assets` from `assets-src/props/`:
 

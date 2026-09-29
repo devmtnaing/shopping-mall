@@ -2,13 +2,23 @@
 // navgrid. The built-in greybox ships with the app; a host can upload a replacement (docs/adr/0006).
 import type { MallArt, MallMeta } from '@shopping-mall/shared/meta';
 import { decodeNavGrid, type NavGrid } from '@shopping-mall/shared/navgrid';
-import { BufferAttribute, BufferGeometry, type Group, type Mesh, Vector3 } from 'three';
+import {
+  BufferAttribute,
+  BufferGeometry,
+  type Group,
+  type Material,
+  type Mesh,
+  MeshBasicMaterial,
+  type MeshStandardMaterial,
+  SRGBColorSpace,
+  Vector3,
+} from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshBVH } from 'three-mesh-bvh';
 
 const BASE = `${import.meta.env.BASE_URL}assets/mall/`;
 export const BUILT_IN: MallArt = {
-  model: `${BASE}greybox.glb`,
+  model: `${BASE}mall.glb`,
   collision: `${BASE}greybox.collision.glb`,
   meta: `${BASE}mall.meta.json`,
   navgrid: `${BASE}navgrid.bin`,
@@ -43,6 +53,27 @@ function collisionGeometry(scene: Group): BufferGeometry {
   return geometry;
 }
 
+/**
+ * Lightmapped surfaces (tools/assets/mall.ts: occlusionTexture on UV1 + extras.lightmap = scale)
+ * become unlit: base colour × baked light. The cheapest shader there is, and it looks like Cycles.
+ */
+function bakedMaterial(m: Material): Material {
+  const scale = (m.userData as { lightmap?: number }).lightmap;
+  const std = m as MeshStandardMaterial;
+  if (!scale || !std.aoMap) return m;
+  const map = std.aoMap;
+  map.colorSpace = SRGBColorSpace; // stored sRGB-encoded for precision in the darks
+  const baked = new MeshBasicMaterial({
+    name: m.name,
+    color: std.color,
+    map: std.map,
+    lightMap: map,
+    lightMapIntensity: scale * Math.PI, // MeshBasicMaterial divides the lightmap by π
+  });
+  m.dispose();
+  return baked;
+}
+
 export async function loadMall(art: MallArt = BUILT_IN): Promise<Mall> {
   const loader = new GLTFLoader();
   const [visual, collision, meta, nav] = await Promise.all([
@@ -54,6 +85,8 @@ export async function loadMall(art: MallArt = BUILT_IN): Promise<Mall> {
   visual.scene.traverse((o) => {
     o.matrixAutoUpdate = false; // static world: matrices never change
     o.updateMatrix();
+    const mesh = o as Mesh;
+    if (mesh.isMesh) mesh.material = bakedMaterial(mesh.material as Material);
   });
   return { visual: visual.scene, collider: new MeshBVH(collisionGeometry(collision.scene)), meta, nav };
 }

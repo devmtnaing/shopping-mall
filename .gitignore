@@ -6,3 +6,4 @@ dist/
 # local browser-automation output (screenshots of third-party sites — do not commit)
 .playwright-mcp/
 screenshots/
+.cache/
