@@ -1,6 +1,7 @@
 import { effect } from '@preact/signals';
 import { EMOTES } from '@shopping-mall/shared/protocol';
 import { Color, DirectionalLight, Fog, HemisphereLight, Scene, Vector3 } from 'three';
+import { track } from './analytics';
 import { type Sound, soundOnFirstInteraction } from './audio';
 import type { Avatar } from './avatars/kit';
 import { installCommands } from './commands';
@@ -187,6 +188,7 @@ const bounds = {
 };
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
 const autoQuality = new AutoQuality();
+track({ e: 'visit', locale: locale.value, tier: tier.value, touch: matchMedia('(pointer: coarse)').matches });
 
 // sound starts on the first click, tap or key press (nothing loads before)
 let sound: Sound | null = null;
@@ -258,6 +260,7 @@ effect(() => {
   if (phase.value !== 'playing' || intro.flying) return;
   intro.begin();
   performance.mark('playable');
+  track({ e: 'enter', ms: Math.round(performance.now()) });
   if (linkProblem) toast(t(linkProblem), 4000);
 });
 

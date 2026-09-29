@@ -49,6 +49,7 @@ Set these as environment variables (a `.env` file for docker compose). Everythin
 | `ROOM_CAPACITY` | People per room before newcomers go to `main-2`, `main-3`, … (default 100). |
 | `REPORT_WEBHOOK` | Also POST player reports here, for example a chat webhook. |
 | `BLOCKLIST_FILE` | Words to mask in chat and refuse in names. |
+| `EVENTS` | `off` stops logging the anonymous usage events ([privacy](../privacy)). |
 | `PORT` | Server port (default 8787). |
 
 The web container also takes `PORT` (default 80) and `API_UPSTREAM` (default `server:8787`). See [Self-hosting and deploying](../deploy) for the full picture.

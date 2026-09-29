@@ -1,3 +1,4 @@
+import { track } from '../analytics';
 // The shop panel: who they are, what they sell, where to go next. Plain DOM, no three.js,
 // so it also works for visitors whose device can't run WebGL.
 
@@ -14,7 +15,7 @@ import { share } from './share';
 
 const external = { target: '_blank', rel: 'noopener noreferrer' } as const;
 
-function ProductCard({ p, accent }: { p: Product; accent: string }) {
+function ProductCard({ p, accent, shop }: { p: Product; accent: string; shop: string }) {
   const body = (
     <>
       <div class="product-img" style={{ '--accent': accent }}>
@@ -32,7 +33,7 @@ function ProductCard({ p, accent }: { p: Product; accent: string }) {
     </>
   );
   return p.url ? (
-    <a class="product" href={p.url} {...external}>
+    <a class="product" href={p.url} {...external} onClick={() => track({ e: 'product', shop })}>
       {body}
     </a>
   ) : (
@@ -66,7 +67,7 @@ function Products({ shop }: { shop: Shop }) {
       {result.stale && <p class="note">{t('shop.stale')}</p>}
       <div class="products">
         {result.items.map((p) => (
-          <ProductCard key={p.id} p={p} accent={shop.colors.accent} />
+          <ProductCard key={p.id} p={p} accent={shop.colors.accent} shop={shop.id} />
         ))}
       </div>
     </>
@@ -97,7 +98,13 @@ export function ShopPanel({ id }: { id: string }) {
         {shop.links.length > 0 && (
           <div class="shop-links">
             {shop.links.map((l, i) => (
-              <a key={l.url} class={i === 0 ? 'cta cta-primary' : 'cta'} href={l.url} {...external}>
+              <a
+                key={l.url}
+                class={i === 0 ? 'cta cta-primary' : 'cta'}
+                href={l.url}
+                {...external}
+                onClick={() => track({ e: 'link', shop: shop.id, label: l.label.slice(0, 64) })}
+              >
                 {l.label}
                 <span aria-hidden="true">↗</span>
               </a>

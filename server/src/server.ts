@@ -14,6 +14,7 @@ import {
 import { type RawData, type WebSocket, WebSocketServer } from 'ws';
 import { loadContent } from './db/content.ts';
 import type { Sql } from './db/db.ts';
+import { eventsHandler } from './events.ts';
 import { issueHostToken, secretMatches, verifyHostToken } from './host.ts';
 import { contentApi } from './http/content-api.ts';
 import { filesHandler } from './http/files.ts';
@@ -52,6 +53,10 @@ export type ServerOptions = {
   storage?: Storage | null;
   /** Content to show when there's no database (the directory page uses it). */
   fallbackContent?: MallConfig;
+  /** Log anonymous usage events from POST /api/events (default on; EVENTS=off in main.ts). */
+  events?: boolean;
+  /** Where event lines go (tests capture them). */
+  eventLog?: (line: string) => void;
 };
 
 const ROOM_NAME = /^[a-z0-9-]{1,32}$/;
@@ -78,8 +83,11 @@ export async function startServer(opts: ServerOptions = {}) {
     assetUrl = (id: string) => `/assets/${id}`,
     storage = null,
     fallbackContent,
+    events = true,
+    eventLog,
   } = opts;
   const files = filesHandler(storage);
+  const usage = eventsHandler(events, eventLog);
   /** Host sign-in attempts per IP: 5, then one a minute. */
   const signInLimits = new Map<string, RateLimit>();
   const rooms = new Map<string, Room>();
@@ -110,6 +118,7 @@ export async function startServer(opts: ServerOptions = {}) {
       res.writeHead(204, CORS).end();
       return;
     }
+    if (await usage(req, res)) return;
     if (api && (await api(req, res))) return;
     if (await files(req, res)) return;
     // the plain-HTML shop directory, always current (live from the database when there is one)

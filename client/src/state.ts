@@ -4,6 +4,7 @@
 import { computed, signal } from '@preact/signals';
 import { type AvatarId, DEFAULT_AVATAR, isAvatar } from '@shopping-mall/shared/avatars';
 import type { MallMeta } from '@shopping-mall/shared/meta';
+import { track } from './analytics';
 import { load, save } from './storage';
 
 /** 'landing' shows the welcome screen over an orbiting view; 'playing' hands over control. */
@@ -111,6 +112,7 @@ export const uiHasFocus = computed(
 
 export function openShop(id: string) {
   panel.value = id;
+  track({ e: 'shop', shop: id });
 }
 
 let nextToast = 1;

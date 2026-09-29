@@ -28,6 +28,7 @@ export default defineConfig({
           { text: 'Configuration', link: '/guide/config' },
           { text: 'Self-hosting and deploying', link: '/deploy' },
           { text: 'Art: building, props, avatars', link: '/art-direction' },
+          { text: 'Privacy and usage events', link: '/privacy' },
         ],
       },
       {

@@ -24,6 +24,7 @@ const server = await startServer({
   db: db ?? undefined,
   fallbackContent: parseConfig(config),
   storage,
+  events: process.env.EVENTS !== 'off',
 });
 console.log(`shopping-mall server listening on :${server.port} (ws path /ws, health /health)`);
 if (process.env.METRICS) {
