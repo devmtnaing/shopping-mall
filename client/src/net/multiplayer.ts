@@ -2,7 +2,7 @@
 // and the room state the UI shows. Without a server this all quietly does nothing.
 
 import { effect } from '@preact/signals';
-import { FLAG_GROUNDED, packAnim, unpackAnim } from '@shopping-mall/shared/protocol';
+import { animSpeed, FLAG_GROUNDED, packAnim } from '@shopping-mall/shared/protocol';
 import type { Camera, Scene } from 'three';
 import { Vector3 } from 'three';
 import type { AvatarKit } from '../avatars/kit';
@@ -141,8 +141,7 @@ export function createMultiplayer(opts: {
     remotes,
     /** Is anyone else in view walking or running? (Keeps the frame rate up while they do.) */
     anyoneMoving() {
-      for (const r of remotes.players.values())
-        if (r.visible && unpackAnim(r.pose.anim).speed > 0.3) return true;
+      for (const r of remotes.players.values()) if (r.visible && animSpeed(r.pose.anim) > 0.3) return true;
       return false;
     },
     /** Avatars loaded: remote players switch from capsules to their characters. */

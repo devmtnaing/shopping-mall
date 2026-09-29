@@ -3,7 +3,7 @@
 // The server sends at most the nearest 40 people, so that's at most 40 skinned meshes; the ones far
 // away (by quality tier) animate at a third of the rate.
 import { PLAYER } from '@shopping-mall/shared/constants';
-import { unpackAnim } from '@shopping-mall/shared/protocol';
+import { animSpeed, animState } from '@shopping-mall/shared/protocol';
 import {
   BoxGeometry,
   type Camera,
@@ -129,7 +129,8 @@ export class Crowd {
         continue;
       }
       const p = r.pose;
-      const { state, speed } = unpackAnim(p.anim);
+      const state = animState(p.anim);
+      const speed = animSpeed(p.anim);
       if (avatar) {
         avatar.object.visible = true;
         avatar.object.position.set(p.x, p.y, p.z);

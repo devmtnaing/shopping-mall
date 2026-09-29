@@ -29,8 +29,11 @@ export function packAnim(state: number, speed: number) {
   return ((state & 15) << 4) | Math.max(0, Math.min(15, Math.round(speed * 2)));
 }
 export function unpackAnim(anim: number) {
-  return { state: anim >> 4, speed: (anim & 15) / 2 };
+  return { state: animState(anim), speed: animSpeed(anim) };
 }
+/** The two halves of `anim`, without allocating (for per-frame code). */
+export const animState = (anim: number) => anim >> 4;
+export const animSpeed = (anim: number) => (anim & 15) / 2;
 
 function writeBody(v: DataView, o: number, p: Pose) {
   v.setInt16(o, cm(p.x), true);

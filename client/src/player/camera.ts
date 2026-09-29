@@ -3,6 +3,7 @@
 import { CAMERA } from '@shopping-mall/shared/constants';
 import { DoubleSide, Ray, Vector3 } from 'three';
 import type { HitPointInfo, MeshBVH } from 'three-mesh-bvh';
+import { castRay } from './raycast';
 
 const pivotTarget = new Vector3();
 const back = new Vector3();
@@ -128,8 +129,8 @@ export class OrbitCamera {
         from.z + (az * i + bz * j) * r,
       );
       ray.direction.copy(dir);
-      const hit = this.bvh.raycastFirst(ray, DoubleSide);
-      if (hit && hit.distance - CAMERA.radius < best) best = hit.distance - CAMERA.radius;
+      const hit = castRay(this.bvh, ray, best + CAMERA.radius, DoubleSide);
+      if (hit) best = hit.distance - CAMERA.radius;
     }
     return Math.max(0, best);
   }

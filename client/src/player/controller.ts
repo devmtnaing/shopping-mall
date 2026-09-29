@@ -8,6 +8,7 @@
 import { PLAYER } from '@shopping-mall/shared/constants';
 import { Box3, FrontSide, Line3, Ray, Vector3 } from 'three';
 import type { MeshBVH } from 'three-mesh-bvh';
+import { castRay } from './raycast';
 
 /** What the player wants this step. x = strafe right, y = forward, both relative to `yaw`. */
 export type Intent = { x: number; y: number; run: boolean; jump: boolean; yaw: number };
@@ -117,8 +118,8 @@ export class PlayerController {
     let best = Number.NEGATIVE_INFINITY;
     for (const [ox, oz] of PROBE) {
       ray.origin.set(this.pos.x + ox, top, this.pos.z + oz);
-      const hit = this.bvh.raycastFirst(ray, FrontSide);
-      if (!hit || hit.distance > reach || !hit.face || hit.face.normal.y < WALKABLE_Y) continue;
+      const hit = castRay(this.bvh, ray, reach, FrontSide);
+      if (!hit || hit.normalY < WALKABLE_Y) continue;
       best = Math.max(best, hit.point.y);
     }
     if (best === Number.NEGATIVE_INFINITY) {

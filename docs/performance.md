@@ -67,6 +67,13 @@ The reference downloads ~5.1 MB of models on the landing page alone.
 - The UI updates through signals only when a value changes. Nothing re-renders every frame.
 - Collision: a capsule sweep against the BVH, only while the player is moving.
 
+## Measured (2026-09-29, M1, production build, 144 Hz)
+
+| What | Result |
+|---|---|
+| GC while walking with shoppers (8 s) | 1 minor GC (0.8 ms), 0 major |
+| Idle frame rate | 29 fps (144 when active) |
+
 ## Measuring
 
 - `?debug`: an overlay with fps, frame-time graph, draw calls, triangles, textures, geometries, heap, net KB/s and quality tier. It uses `renderer.info` and no extra dependencies.

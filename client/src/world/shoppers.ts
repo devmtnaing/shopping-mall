@@ -64,7 +64,8 @@ export class Shoppers {
 
   update(dt: number, camera: Vector3) {
     const { shoppers: visible, animateWithin } = TIERS[tier.value];
-    for (const [i, s] of this.list.entries()) {
+    for (let i = 0; i < this.list.length; i++) {
+      const s = this.list[i] as Shopper;
       s.avatar.object.visible = i < visible; // lower tiers show fewer (they keep strolling unseen)
       if (s.wait > 0) {
         s.wait -= dt;
