@@ -25,6 +25,7 @@
     "greybox": "node tools/greybox/build.ts && node tools/bake-navgrid.ts",
     "navgrid": "node tools/bake-navgrid.ts",
     "mall": "node tools/blender/mall.ts",
+    "rig": "node tools/blender/rig.ts",
     "assets": "node tools/assets/avatars.ts && node tools/assets/props.ts && node tools/assets/audio.ts",
     "bots": "node tools/bots.ts",
     "db:up": "docker compose up -d postgres storage",

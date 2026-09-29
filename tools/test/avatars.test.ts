@@ -29,9 +29,10 @@ describe('avatars.glb', () => {
     expect(json.animations.map((a) => a.name).sort()).toEqual([...CLIPS].sort());
   });
 
-  it('shares one texture and material, and stays within its 250 KB budget', () => {
-    expect(json.images).toHaveLength(1);
-    expect(json.materials).toHaveLength(1);
-    expect(glb.byteLength).toBeLessThan(250 * 1024);
+  it('shares one texture among the Kenney characters (one more per generated one), within 350 KB', () => {
+    const generated = AVATARS.filter((id) => !/^(fe)?male-[a-f]$/.test(id)).length;
+    expect(json.images).toHaveLength(1 + generated);
+    expect(json.materials).toHaveLength(1 + generated);
+    expect(glb.byteLength).toBeLessThan(350 * 1024);
   });
 });

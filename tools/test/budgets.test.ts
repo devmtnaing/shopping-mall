@@ -13,7 +13,8 @@ const BUDGETS: { match: RegExp; bytes: number; tris?: number; what: string }[] =
   { match: /^mall\/.*\.glb$/, bytes: 1500 * KB, tris: 80_000, what: 'mall (one world chunk)' },
   { match: /^mall\/navgrid\.bin$/, bytes: 60 * KB, what: 'navgrid' },
   { match: /^mall\/mall\.meta\.json$/, bytes: 100 * KB, what: 'mall meta' },
-  { match: /^avatars\/avatars\.glb$/, bytes: 250 * KB, tris: 15_000, what: 'avatar pack' },
+  // 350 KB since #4 batch 5 (three generated characters, ~45 KB each); it loads after the world, capsules first
+  { match: /^avatars\/avatars\.glb$/, bytes: 350 * KB, tris: 20_000, what: 'avatar pack' },
   { match: /^avatars\/.*\.png$/, bytes: 8 * KB, what: 'avatar preview' },
   // each area's pack loads when you get near it, so a new batch of props adds a pack rather than weight up front
   { match: /^props\/[a-z-]+\.glb$/, bytes: 200 * KB, tris: 20_000, what: 'props pack (one area)' },

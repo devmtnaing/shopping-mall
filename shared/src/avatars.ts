@@ -1,4 +1,5 @@
-// The avatars visitors can pick from (Kenney Mini Characters, CC0; built by `pnpm assets`).
+// The avatars visitors can pick from (Kenney Mini Characters, CC0, and characters generated with
+// Higgsfield on the same rig; built by `pnpm assets`).
 // The id is the node name in avatars.glb and the preview's file name.
 export const AVATARS = [
   'female-a',
@@ -13,6 +14,9 @@ export const AVATARS = [
   'male-d',
   'male-e',
   'male-f',
+  'burmese-woman',
+  'burmese-man',
+  'student',
 ] as const;
 
 export type AvatarId = (typeof AVATARS)[number];

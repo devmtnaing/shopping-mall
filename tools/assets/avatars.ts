@@ -1,9 +1,10 @@
-// pnpm assets — builds client/public/assets/avatars/ from assets-src/avatars (Kenney Mini Characters, CC0):
+// pnpm assets — builds client/public/assets/avatars/ from assets-src/avatars (Kenney Mini Characters, CC0,
+// plus characters generated with Higgsfield and put on the Kenney rig by `pnpm rig`):
 //   avatars.glb   every character as its own skinned mesh (body + head joined: one draw call each),
 //                 one shared texture, and one set of animation clips (all characters share the rig)
 //   <id>.png      64 px preview for the character picker
 // Deterministic: the same sources always give the same bytes.
-import { copyFileSync, mkdirSync, statSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, statSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { Document, getBounds, type Node, NodeIO } from '@gltf-transform/core';
 import { ALL_EXTENSIONS } from '@gltf-transform/extensions';
@@ -14,13 +15,20 @@ import {
   meshopt,
   prune,
   resample,
+  textureCompress,
   unpartition,
   weld,
 } from '@gltf-transform/functions';
 import { AVATARS, CLIPS } from '@shopping-mall/shared/avatars';
 import { MeshoptEncoder } from 'meshoptimizer';
+import sharp from 'sharp';
 
 const SRC = resolve(import.meta.dirname, '../../assets-src/avatars/kenney-mini-characters');
+const RIGGED = resolve(import.meta.dirname, '../../assets-src/avatars/higgsfield/rigged');
+/** A Kenney character's model and preview, or a generated one's (rigged by tools/blender/rig.py). */
+const kenney = (id: string) => existsSync(`${SRC}/models/character-${id}.glb`);
+const model = (id: string) => (kenney(id) ? `${SRC}/models/character-${id}.glb` : `${RIGGED}/${id}.glb`);
+const preview = (id: string) => (kenney(id) ? `${SRC}/previews/character-${id}.png` : `${RIGGED}/${id}.png`);
 const OUT = resolve(import.meta.dirname, '../../client/public/assets/avatars');
 /** Standing height in metres: the source characters are about 0.6 m, the player capsule 1.75 m. */
 const HEIGHT = 1.55;
@@ -32,7 +40,7 @@ const io = new NodeIO()
 
 /** One character, reduced to a single skinned mesh under a node named by its id. */
 async function character(id: string, keepClips: boolean): Promise<Document> {
-  const doc = await io.read(`${SRC}/models/character-${id}.glb`);
+  const doc = await io.read(model(id));
   const root = doc.getRoot();
   for (const a of root.listAnimations()) {
     if (keepClips && (CLIPS as readonly string[]).includes(a.getName())) continue;
@@ -81,6 +89,14 @@ await out.transform(
   unpartition(),
   dedup(), // twelve copies of the same colormap become one texture and one material
   prune(),
+  // a generated character brings its own 2048 px texture; at the size a character is seen, 256 is plenty
+  textureCompress({
+    encoder: sharp,
+    targetFormat: 'webp',
+    resize: [256, 256],
+    quality: 85,
+    pattern: /^(?!colormap)/,
+  }),
   resample(),
   weld(),
   meshopt({ encoder: MeshoptEncoder, level: 'medium' }),
@@ -88,7 +104,7 @@ await out.transform(
 
 mkdirSync(OUT, { recursive: true });
 await io.write(`${OUT}/avatars.glb`, out);
-for (const id of AVATARS) copyFileSync(`${SRC}/previews/character-${id}.png`, `${OUT}/${id}.png`);
+for (const id of AVATARS) copyFileSync(preview(id), `${OUT}/${id}.png`);
 
 const clips = out
   .getRoot()

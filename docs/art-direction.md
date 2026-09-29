@@ -46,19 +46,19 @@ flowchart LR
 v1 uses **free CC0 kits** (Kenney, Quaternius, Poly Pizza), recorded per asset in `assets-src/**/LICENSE`. Higgsfield-generated assets follow later as drop-in replacements through the asset library (ADR 0006); the licence has been checked and generated models may be committed.
 
 ### Characters
-v1 ships the 12 characters of Kenney's **Mini Characters** (CC0), in `assets-src/avatars/kenney-mini-characters/`. `pnpm assets` builds `client/public/assets/avatars/`:
+The 12 characters of Kenney's **Mini Characters** (CC0), in `assets-src/avatars/kenney-mini-characters/`, plus 3 generated with Higgsfield and put on the same rig (`assets-src/avatars/higgsfield/`): a woman in a htamein with thanaka on her cheeks, a man in a longyi, and a student in the school uniform. `pnpm assets` builds `client/public/assets/avatars/`:
 
-- **`avatars.glb`** (about 180 KB): every character as one skinned mesh (body and head joined, so one draw call each), sharing one 8 KB texture, plus **one** copy of the animation clips. All characters share Kenney's 7-bone rig, so the clips play on any of them. Scaled to 1.55 m. Meshopt-compressed.
+- **`avatars.glb`** (about 310 KB, loaded after the world): every character as one skinned mesh (body and head joined, so one draw call each). The Kenney characters share one 8 KB texture, and each generated one brings a 256 px WebP. It has **one** copy of the animation clips, which play on every character because they all use Kenney's 7-bone rig. Scaled to 1.55 m. Meshopt-compressed.
 - **`<id>.png`**: the 64 px preview used by the character picker.
 
 Clips kept: `idle walk sprint jump fall sit emote-yes emote-no interact-right` (the list is `CLIPS` in `shared/src/avatars.ts`). The source also has wheelchair clips and wheelchairs, walking aids and glasses, which are a natural next addition.
 
-To add or replace characters (for example Higgsfield ones later):
-1. Put the `.glb` next to the others. It must use the same 7 joint names (`root torso head arm-left arm-right leg-left leg-right`) so the shared clips fit, or bring its own rig and clips.
-2. Add its id to `AVATARS` in `shared/src/avatars.ts` (the server only accepts listed ids) and a 64 px preview.
-3. Run `pnpm assets` and commit the output. `tools/test/avatars.test.ts` checks it.
+**Generated characters** go on Kenney's rig with `pnpm rig` (`tools/blender/rig.py`, needs Blender), so they play every clip:
+1. Generate a chibi figure like Kenney's: a big head, arms out to the sides, standing (prompts in `assets-src/avatars/higgsfield/prompts.md`). Save it as `assets-src/avatars/higgsfield/<id>.glb`.
+2. Add it to `GENERATED` in `tools/blender/rig.ts`, with the turn that makes it face +Z, and run `pnpm rig <id>`. The script finds the neck, shoulders and hips in the mesh, raises the arms into Kenney's T-pose rest, moves the joints to fit, weights each part rigidly to its bone (as Kenney's are), and writes `rigged/<id>.glb` and a preview. The clips only rotate the bones, so moved joints don't disturb them.
+3. Add its id to `AVATARS` in `shared/src/avatars.ts` (the server only accepts listed ids), run `pnpm assets` and commit the output. `tools/test/avatars.test.ts` checks it.
 
-Keep prompts for generated characters in `assets-src/avatars/<pack>/prompt.md`, and record each pack's licence in its folder.
+A character that brings its own rig and clips needs its own clip set in the avatar kit instead.
 
 ### World
 - Units are metres. The concourse is 12 m wide and floors are 7.6 m apart (matching the reference's scale, which feels right).
@@ -136,7 +136,7 @@ dedup → prune → join (per material, static only) → weld → simplify (LOD 
 | Mall visual (one world chunk) | 80k | 1.5 MB | 2.4k tris, 172 KB |
 | Collision mesh | 50k | 1.5 MB | 2.2k tris, 91 KB |
 | Navgrid | — | 60 KB | 9 KB |
-| Avatar pack (all characters and clips) | 15k | 250 KB | 11k tris, 179 KB |
+| Avatar pack (all characters and clips) | 20k | 350 KB | 14.5k tris, 310 KB (loads after the world) |
 | Props pack (each area) | 20k | 200 KB | 175 KB (largest, `concourse`); loaded nearest first |
 | Avatar preview | — | 8 KB | 2 KB |
 | Audio loop (each / all) | — | 170 KB / 250 KB | 156 + 47 KB |
