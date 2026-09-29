@@ -38,7 +38,7 @@ const counter = (back: number): Item => ({ kind: 'register', x: 1.8, d: back - 1
 
 const LAYOUTS: Record<Layout, (depth: number) => Item[]> = {
   cafe: (D) => [
-    counter(D),
+    { kind: 'coffee-bar', x: 1.2, d: D - 1.1, yaw: PI },
     ...[-2.3, 2.3].flatMap((x) =>
       [3, 5.6].flatMap((d) => [
         { kind: 'table', x, d, yaw: 0 },

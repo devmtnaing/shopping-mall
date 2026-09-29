@@ -4,7 +4,7 @@
     "concourse": ["bench", "tree", "recycling", "plant", "lamp", "sofa"],
     "atrium": ["lanterns", "island"],
     "court": ["fountain", "table", "chair"],
-    "shops": ["shelf", "shelf-bags", "register", "cart", "fruit"]
+    "shops": ["coffee-bar", "shelf", "shelf-bags", "register", "cart", "fruit"]
   },
   "footprints": {
     "bench": [1.9, 0.45, 0.7],
@@ -21,6 +21,7 @@
     "sofa": [2.2, 0.8, 0.9],
     "table": [1, 0.75, 1],
     "chair": null,
+    "coffee-bar": [3, 1.1, 1],
     "shelf": [1.7, 1.8, 1.5],
     "shelf-bags": [1.7, 1.8, 1.5],
     "register": [1.6, 1.1, 1.6],

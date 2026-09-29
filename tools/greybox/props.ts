@@ -114,6 +114,14 @@ export const PROPS: Record<string, PropSpec> = {
     footprint: [1, 0.75, 1],
   },
   chair: { pack: 'court', src: `${F}/chair.glb`, axis: 'y', size: 0.95, turn: 0, footprint: null },
+  'coffee-bar': {
+    pack: 'shops',
+    src: `${H}/coffee-bar.glb`,
+    axis: 'x',
+    size: 3,
+    turn: Math.PI,
+    footprint: [3, 1.1, 1],
+  },
   shelf: {
     pack: 'shops',
     src: `${M}/shelf-boxes.glb`,

@@ -23,4 +23,10 @@ Batch 1 of #4 (the entrance), 2026-09-29: 15 credits.
 
 Batch 2 of #4 (the atrium), 2026-09-29: 15 credits.
 
+| File | face_limit | Prompt |
+|---|---|---|
+| `coffee-bar.glb` | 2000 | A coffee bar counter for a small cafe inside a shopping mall: a straight wooden service counter with a white stone top, a chrome espresso machine, a grinder, stacked cups and a small glass pastry display case, clean modern design, stylized low-poly game asset, flat colors, isolated |
+
+Batch 3 of #4 (shop interiors), started 2026-09-29: 5 credits so far.
+
 (The bench came out with a backrest despite the prompt, and the island as a split, spiralling ring. Both look right in the mall, so they stay.)

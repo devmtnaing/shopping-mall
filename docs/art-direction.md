@@ -100,17 +100,17 @@ Furniture and decoration come in **props packs** by area, `client/public/assets/
 
 | Kind | Source |
 |---|---|
-| `bench`, `fountain`, `tree`, `kiosk`, `welcome`, `palm`, `lanterns`, `recycling`, `island` | Generated with Higgsfield (prompts in `assets-src/props/higgsfield/prompts.md`) |
+| `bench`, `fountain`, `tree`, `kiosk`, `welcome`, `palm`, `lanterns`, `recycling`, `island`, `coffee-bar` | Generated with Higgsfield (prompts in `assets-src/props/higgsfield/prompts.md`) |
 | `plant`, `lamp`, `sofa`, `table`, `chair` | Kenney Furniture Kit (CC0) |
 | `shelf`, `shelf-bags`, `register`, `cart`, `fruit` | Kenney Mini Market (CC0), for shop interiors |
 
 | Pack | Kinds | Size |
 |---|---|---|
 | `entrance` | `kiosk`, `welcome`, `palm` | 133 KB |
-| `concourse` | `bench`, `recycling`, `tree`, `plant`, `lamp`, `sofa` | 178 KB |
+| `concourse` | `bench`, `recycling`, `tree`, `plant`, `lamp`, `sofa` | 175 KB |
 | `atrium` | `lanterns`, `island` | 75 KB |
 | `court` | `fountain`, `table`, `chair` | 60 KB |
-| `shops` | `shelf`, `shelf-bags`, `register`, `cart`, `fruit` | 47 KB |
+| `shops` | `coffee-bar`, `shelf`, `shelf-bags`, `register`, `cart`, `fruit` | 100 KB |
 
 `props/index.json` says which pack holds which kinds. The client loads the packs with a placement within 35 m of the spawn right after the mall, then the rest one at a time when the browser is idle (nearest first, and walking up to one moves it to the front). So new props add to what loads in the background, not to what visitors wait for, and a pack nothing places is never downloaded. New props go in the pack for the area they furnish, or a new pack (add it to `PACKS`).
 
@@ -136,7 +136,7 @@ dedup → prune → join (per material, static only) → weld → simplify (LOD 
 | Collision mesh | 50k | 1.5 MB | 2.2k tris, 91 KB |
 | Navgrid | — | 60 KB | 9 KB |
 | Avatar pack (all characters and clips) | 15k | 250 KB | 11k tris, 179 KB |
-| Props pack (each area) | 20k | 200 KB | 178 KB (largest, `concourse`); loaded nearest first |
+| Props pack (each area) | 20k | 200 KB | 175 KB (largest, `concourse`); loaded nearest first |
 | Avatar preview | — | 8 KB | 2 KB |
 | Audio loop (each / all) | — | 170 KB / 250 KB | 156 + 47 KB |
 
