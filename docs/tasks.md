@@ -122,7 +122,7 @@ T-104 uses a "floating capsule" (body capsule from step height up, with ground r
 
 | ID | Task | Size | Labels | Acceptance criteria |
 |---|---|---|---|---|
-| T-601 | VitePress docs site: operator guide (config, adding shops, adapters, self-hosting), contributor guide | M | tooling | A volunteer self-hosts from the docs without help |
+| T-601 | VitePress docs site: operator guide (config, adding shops, adapters, self-hosting), contributor guide | M | tooling | A volunteer self-hosts from the docs without help. ✅ *(<https://devmtnaing.github.io/shopping-mall/>, built from `docs/` by `.github/workflows/docs.yml`. New pages: quick start, shops and products (admin page, JSON feeds), configuration, contributing. The existing docs and ADRs are included, with local search. Whether a volunteer can self-host from it is still to be seen.)* |
 | T-602 | Demo deploy + one-click deploy template (static host + container host) | S | tooling | Demo URL in the README. Deploy button works |
 | T-603 | Analytics sink example (beacon → JSON logs) + privacy note | S | client | No cookies, no personal data. Events documented |
 | T-604 | Release: changelog, `v1.0.0` tag, 60 s demo video, launch post | S | tooling | Release published on GitHub |

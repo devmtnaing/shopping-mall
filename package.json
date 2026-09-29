@@ -18,6 +18,8 @@
     "perf": "node tools/perf.ts",
     "a11y": "node tools/a11y.ts",
     "screenshots": "node tools/screenshots.ts",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
     "check": "pnpm typecheck && pnpm lint && pnpm test && pnpm build && pnpm size",
     "greybox": "node tools/greybox/build.ts && node tools/bake-navgrid.ts",
     "navgrid": "node tools/bake-navgrid.ts",
@@ -42,6 +44,7 @@
     "three": "^0.186.1",
     "three-mesh-bvh": "^0.9.15",
     "typescript": "^5.9.3",
+    "vitepress": "^1.6.4",
     "vitest": "^5.0.2",
     "zod": "^4.6.5"
   }

@@ -4,7 +4,7 @@
 Walk around with friends, visit shops, browse real products, and chat. It loads fast, stays at 60 fps on a mid-range phone, and you run it with an admin page for shops and products (or one config file for a static build).
 
 > Status: **Phases 0, 1, 3, 3b and 4 done.** A greybox mall with working shops, directory, minimap, overview, deep links, English and Burmese, multiplayer (see others move, chat, emote, host announcements), and live content: shops, products, uploads and even the building are edited from `/admin/` and show up for everyone within seconds.
-> **Live demo:** <https://web-production-cc219.up.railway.app> (Railway, Singapore). Self-host with `docker compose up`.
+> **Live demo:** <https://web-production-cc219.up.railway.app> (Railway, Singapore). **Docs:** <https://devmtnaing.github.io/shopping-mall/>. Self-host with `docker compose up`.
 > Phase 2 (art) is mostly in: pick one of 12 animated characters, shoppers stroll and sit, and the mall has benches, trees, a fountain and more (Kenney CC0 plus a few Higgsfield models), with quality tiers and reflections. Still to come: the real building with baked lighting, then performance and phone polish. See the [roadmap](docs/roadmap.md).
 
 ---

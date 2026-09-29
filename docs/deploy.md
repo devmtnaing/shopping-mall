@@ -36,6 +36,8 @@ Two ways to run the whole mall: **docker compose** on any machine, or **Railway*
 
 The production project `shopping-mall` (<https://web-production-cc219.up.railway.app>) runs in Singapore (`asia-southeast1`, bucket region `sin`). Every service builds from `main` on GitHub. Watch paths keep a docs-only push from rebuilding anything.
 
+<div v-pre>
+
 | Service | Dockerfile (`RAILWAY_DOCKERFILE_PATH`) | Notable settings |
 |---|---|---|
 | `web` | `client/Dockerfile` | Public domain on port 8080, `PORT=8080`, `API_UPSTREAM=${{server.RAILWAY_PRIVATE_DOMAIN}}:8787`, health check `/` |
@@ -43,6 +45,8 @@ The production project `shopping-mall` (<https://web-production-cc219.up.railway
 | `backup` | `tools/backup/Dockerfile` | Cron `0 3 * * *` (UTC), restart never, `PG_MAJOR=18`, same database and bucket references |
 | `Postgres` | Railway template | Volume `postgres-volume` |
 | `uploads` | Railway bucket | Private. Files reach visitors through the server's `/files/` route. |
+
+</div>
 
 `.railway/railway.ts` describes the same project as code (Railway [IaC](https://docs.railway.com/infrastructure-as-code)). It keeps the one secret, `HOST_SECRET`, out of the repo with `preserve()`. To compare it with the live project, install the SDK next to it (`npm install railway`, left out of the repo's dependencies) and run `railway link`, then `railway config plan` (Railway CLI 5 or newer, or `npx @railway/cli@latest`). A whole-project apply deletes anything the file leaves out, so read the plan first.
 
