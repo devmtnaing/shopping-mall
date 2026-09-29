@@ -5,7 +5,10 @@ import { describe, expect, it } from 'vitest';
 import { PACKS, PROPS } from '../greybox/props';
 
 const ASSETS = resolve(import.meta.dirname, '../../client/public/assets');
-const index: Record<string, string[]> = JSON.parse(readFileSync(`${ASSETS}/props/index.json`, 'utf8'));
+const { packs: index, footprints } = JSON.parse(readFileSync(`${ASSETS}/props/index.json`, 'utf8')) as {
+  packs: Record<string, string[]>;
+  footprints: Record<string, unknown>;
+};
 const meta: MallMeta = JSON.parse(readFileSync(`${ASSETS}/mall/mall.meta.json`, 'utf8'));
 
 function topNodes(pack: string): string[] {
@@ -24,6 +27,10 @@ describe('props', () => {
       expect(PACKS).toContain(pack);
       for (const k of kinds) expect(PROPS[k]?.pack).toBe(pack);
     }
+  });
+
+  it("the index carries every kind's collision box", () => {
+    for (const [k, p] of Object.entries(PROPS)) expect(footprints[k]).toEqual(p.footprint);
   });
 
   it('each pack has one top-level node per kind in it, and nothing else ships', () => {

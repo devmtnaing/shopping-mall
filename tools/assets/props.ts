@@ -1,6 +1,6 @@
 // pnpm assets — builds client/public/assets/props/<pack>.glb from assets-src/props: one node per prop
 // kind (named by kind), scaled to real-world size, standing on y = 0, centred on x/z, front facing −Z
-// (the mall's yaw 0). index.json says which pack holds which kinds. The mall's meta places them
+// (the mall's yaw 0). index.json says which pack holds which kinds, and their collision boxes. The mall's meta places them
 // (meta.props); the client loads a pack when a visitor nears its props and instances each kind.
 import { mkdirSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -9,8 +9,10 @@ import { ALL_EXTENSIONS } from '@gltf-transform/extensions';
 import {
   dedup,
   flatten,
+  join,
   mergeDocuments,
   meshopt,
+  palette,
   prune,
   textureCompress,
   unpartition,
@@ -62,6 +64,10 @@ async function buildPack(pack: Pack) {
   await out.transform(
     unpartition(),
     dedup(),
+    // flat-coloured models (Kenney's) have a material per colour: bake those into one palette
+    // texture, then join each model's parts, so a shelf is one draw call instead of eleven
+    palette({ min: 2 }),
+    join(),
     prune(),
     weld(),
     // generated models come with 1–2k textures; props are never seen close enough to need more than 384
@@ -73,14 +79,21 @@ async function buildPack(pack: Pack) {
 
 mkdirSync(OUT, { recursive: true });
 for (const f of readdirSync(OUT)) rmSync(`${OUT}/${f}`); // drop packs that no longer exist
-const index: Record<string, string[]> = {};
+/** Which pack holds which kinds, and each kind's collision box (for props the client places itself). */
+const index: {
+  packs: Record<string, string[]>;
+  footprints: Record<string, [number, number, number] | null>;
+} = {
+  packs: {},
+  footprints: Object.fromEntries(Object.entries(PROPS).map(([k, p]) => [k, p.footprint])),
+};
 for (const pack of PACKS) {
   const kinds = Object.keys(PROPS).filter((k) => PROPS[k]?.pack === pack);
   if (!kinds.length) continue;
   await io.write(`${OUT}/${pack}.glb`, await buildPack(pack));
-  index[pack] = kinds;
+  index.packs[pack] = kinds;
   console.log(
     `props/${pack}: ${kinds.length} kinds, ${(statSync(`${OUT}/${pack}.glb`).size / 1024).toFixed(0)} KB`,
   );
 }
-writeFileSync(`${OUT}/index.json`, `${JSON.stringify(index, null, 2)}\n`);
+writeFileSync(`${OUT}/index.json`, `${JSON.stringify(index)}\n`);

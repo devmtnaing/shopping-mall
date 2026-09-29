@@ -116,6 +116,8 @@ Furniture and decoration come in **props packs** by area, `client/public/assets/
 
 `tools/greybox/props.ts` lists each kind's pack, source, real size, facing fix and collision box. The pipeline scales each model to size, stands it on the floor, turns it to face −Z and shrinks textures to 384 px WebP. The mall's meta says where props go (`props: [{ kind, pos, yaw }]`), and the client draws each part of each kind as one `InstancedMesh`. Collision lives in the mall's collision mesh as plain boxes, so props are purely visual and a missing kind is simply skipped.
 
+**Shop interiors.** Each shop's unit is furnished by its category (`client/src/world/interiors.ts`): the category text is matched by keyword to a layout (café, books, fashion, home, games, or a general store for anything else), and "For rent" units stay empty. Layouts are written in the unit's own frame (across, in from the door) and keep a clear aisle from the door to the back. They're rebuilt whenever the host changes the shops. Interior furniture comes from the same packs, and `index.json` carries each kind's collision box, so the client makes it solid with obstacle boxes on the player controller (the mall's collision mesh doesn't change with the shops). Units wider or deeper than 12 m, like the flagship, aren't furnished.
+
 To restyle the mall's furniture, replace a source file and run `pnpm assets`. The placements and collision don't change. An uploaded building (admin → Building) uses the same packs, placed by its own meta's `props`.
 
 ### `optimize-assets.ts` steps

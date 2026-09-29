@@ -47,6 +47,11 @@ export class PlayerController {
   speed = 0;
   /** Extra velocity from moving surfaces (escalators, T-105), applied while grounded. */
   readonly carry = new Vector3();
+  /**
+   * Solid boxes that aren't in the mall's collision mesh (shop furniture, which changes with the
+   * shops). They block the body sideways; you can't stand on them.
+   */
+  obstacles: readonly Box3[] = [];
 
   private readonly spawn = new Vector3();
   private spawnYaw = 0;
@@ -156,6 +161,34 @@ export class PlayerController {
       });
       p.set(seg.start.x, seg.start.y - STEP_H - R, seg.start.z);
       if (!hit) break;
+    }
+    this.pushOutOfBoxes(p);
+  }
+
+  /** Push the body out of `obstacles`, sideways only (a vertical capsule against boxes). */
+  private pushOutOfBoxes(p: Vector3) {
+    const lo = p.y + STEP_H;
+    const hi = p.y + H;
+    for (const b of this.obstacles) {
+      if (b.max.y <= lo || b.min.y >= hi) continue;
+      const cx = Math.min(Math.max(p.x, b.min.x), b.max.x);
+      const cz = Math.min(Math.max(p.z, b.min.z), b.max.z);
+      const dx = p.x - cx;
+      const dz = p.z - cz;
+      const d = Math.hypot(dx, dz);
+      if (d >= R) continue;
+      if (d > 1e-6) {
+        p.x = cx + (dx / d) * R;
+        p.z = cz + (dz / d) * R;
+        continue;
+      }
+      // centre inside the box: leave by the nearest side
+      const out = [p.x - b.min.x, b.max.x - p.x, p.z - b.min.z, b.max.z - p.z];
+      const i = out.indexOf(Math.min(...out));
+      if (i === 0) p.x = b.min.x - R;
+      else if (i === 1) p.x = b.max.x + R;
+      else if (i === 2) p.z = b.min.z - R;
+      else p.z = b.max.z + R;
     }
   }
 }

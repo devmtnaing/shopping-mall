@@ -1,4 +1,5 @@
 import { PLAYER, STEP } from '@shopping-mall/shared/constants';
+import { Box3, Vector3 } from 'three';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { type Intent, PlayerController } from '../src/player/controller';
 import { collider } from './greybox';
@@ -36,6 +37,17 @@ describe('PlayerController on the greybox', () => {
     expect(p.pos.x).toBeGreaterThan(-2 + PLAYER.radius - 0.05);
     expect(p.pos.x).toBeLessThan(-1.5);
     expect(p.pos.y).toBeLessThan(0.05);
+  });
+
+  it('is stopped by an obstacle box (shop furniture), and stays out of it', () => {
+    // a shelf inside unit w0: x -12…-10, z -9…-7
+    p.obstacles = [new Box3(new Vector3(-12, 0, -9), new Vector3(-10, 1.8, -7))];
+    p.place(-8, 0, -8);
+    sim(p, 3, { x: -1, run: true });
+    expect(p.pos.x).toBeCloseTo(-10 + PLAYER.radius, 2);
+    p.place(-11, 0, -8.8); // spawned inside it: pushed out through the nearest side
+    sim(p, 0.1);
+    expect(p.pos.z).toBeLessThanOrEqual(-9 - PLAYER.radius + 1e-6);
   });
 
   it('never tunnels through a wall, even running into it for a long time', () => {

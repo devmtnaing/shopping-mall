@@ -85,14 +85,14 @@ locale.subscribe(() => storefronts.setVacantText(t('sign.comingSoon'), t('sign.a
 scene.add(storefronts.group);
 mallMeta.value = mall.meta;
 // benches, plants, lamps…: after the mall, never blocking it, and far-off packs as you approach
-let props: import('./world/props').Props | null = null;
 const start = mall.meta.spawns[0]?.pos ?? [0, 0, 0];
-import('./world/props')
-  .then(({ loadProps }) => loadProps(mall.meta, new Vector3(...start)))
-  .then(async (p) => {
-    props = p;
-    scene.add(p.group);
-    await p.near;
+const propsLib = import('./world/props').then(async (m) => ({ ...m, lib: await m.PropLibrary.load() }));
+let props: import('./world/props').PropLayer | null = null;
+propsLib
+  .then(async ({ lib, propLayer }) => {
+    props = propLayer(lib, mall.meta.props ?? [], new Vector3(...start));
+    scene.add(props.group);
+    await props.near;
     // reflections: capture the mall once it's furnished, from eye height in the middle of the hall
     installEnvironment(renderer, scene, new Vector3(start[0], start[1] + 2, start[2] - 20));
   })
@@ -239,10 +239,28 @@ function showZone() {
     : { id: z.id, name: z.name, area: z.slot ? 'vacant' : z.id };
 }
 
+// shop interiors, furnished by category (and solid), rebuilt whenever the shops change
+let interiors: import('./world/props').PropLayer | null = null;
+let furnishSeq = 0;
+const furnishShops = (shops: typeof content.value.shops) => {
+  const seq = ++furnishSeq;
+  void Promise.all([propsLib, import('./world/interiors')])
+    .then(([{ lib, propLayer }, { furnish }]) => {
+      if (seq !== furnishSeq) return;
+      const { placements, obstacles } = furnish(mall.meta, shops, lib.index.footprints);
+      interiors?.dispose();
+      interiors = propLayer(lib, placements, player.pos);
+      scene.add(interiors.group);
+      player.obstacles = obstacles;
+    })
+    .catch((e) => console.warn('interiors:', e));
+};
+
 // live content: when shops change, rebuild the storefronts (signs, strips, floors) in place
 let buildSeq = 0;
 effect(() => {
   const shops = content.value.shops;
+  furnishShops(shops);
   const seq = ++buildSeq;
   if (seq === 1) return; // the first build happened above
   void buildStorefronts(mall.meta, shops, vacant()).then((next) => {
@@ -318,6 +336,7 @@ startLoop({
     }
     if (zones.update(dt, player.pos)) showZone();
     props?.update(player.pos);
+    interiors?.update(player.pos);
   },
   render: (alpha, dt) => {
     const t0 = performance.now();
