@@ -7,6 +7,8 @@ export const en = {
   'landing.name': 'Your name',
   'landing.namePlaceholder': 'Write your name',
   'landing.nameError': 'Please write your name (2 letters or more).',
+  'landing.avatar': 'Your character',
+  'landing.avatarOption': 'Character {n}',
   'landing.colour': 'Your colour',
   'landing.colourOption': 'Colour {c}',
   'landing.enter': 'Enter the mall →',

@@ -2,11 +2,13 @@
 // and the room state the UI shows. Without a server this all quietly does nothing.
 
 import { effect } from '@preact/signals';
-import { ANIM, FLAG_GROUNDED, packAnim } from '@shopping-mall/shared/protocol';
+import { FLAG_GROUNDED, packAnim } from '@shopping-mall/shared/protocol';
 import type { Camera, Scene } from 'three';
 import { Vector3 } from 'three';
+import type { AvatarKit } from '../avatars/kit';
 import { loadContent, onContentVersion } from '../content';
 import { t } from '../i18n';
+import { animState } from '../player/anim';
 import type { PlayerController } from '../player/controller';
 import type { Travel } from '../player/travel';
 import { Bubbles } from '../render/bubbles';
@@ -26,21 +28,16 @@ import {
 import { Remotes } from './remotes';
 import { NetClient, serverUrl } from './socket';
 
-/** Coarse animation state for the wire: remote players animate from this. */
-function animState(p: PlayerController) {
-  if (!p.grounded) return p.vel.y > 0 ? ANIM.jump : ANIM.fall;
-  if (p.speed > 4.5) return ANIM.run;
-  return p.speed > 0.3 ? ANIM.walk : ANIM.idle;
-}
-
 export function createMultiplayer(opts: {
   scene: Scene;
   player: PlayerController;
   travel: Travel;
   /** Floor index for a height (for minimap dots). */
   floorAt: (y: number) => number;
+  /** Your own emote went out (play its gesture on your avatar). */
+  onSelfEmote: (e: string) => void;
 }) {
-  const { scene, player, travel, floorAt } = opts;
+  const { scene, player, travel, floorAt, onSelfEmote } = opts;
   const room = new URLSearchParams(location.search).get('room') ?? 'main';
   const remotes = new Remotes();
   const crowd = new Crowd();
@@ -58,7 +55,11 @@ export function createMultiplayer(opts: {
         const from = m.id === net.selfId ? undefined : m.id;
         return addChat({ kind: 'msg', from, name: m.name, text: m.text, host: m.host });
       }
-      if (m.t === 'emote') return bubbles.show(m.id === net.selfId ? 'me' : m.id, m.e, true);
+      if (m.t === 'emote') {
+        if (m.id === net.selfId) onSelfEmote(m.e);
+        else crowd.emote(m.id, m.e);
+        return bubbles.show(m.id === net.selfId ? 'me' : m.id, m.e, true);
+      }
       if (m.t === 'error' && m.code === 'rate') return toast(t('chat.slowDown'));
       if (m.t === 'error' && m.code === 'bad-token') {
         hostToken.value = null; // expired: carry on as a regular visitor
@@ -107,7 +108,11 @@ export function createMultiplayer(opts: {
     line(left, 'chat.left', 'chat.leftMany');
   }
   const connect = () =>
-    net.connect(profile.value.name, { color: profile.value.color }, hostToken.value ?? undefined);
+    net.connect(
+      profile.value.name,
+      { color: profile.value.color, avatar: profile.value.avatar },
+      hostToken.value ?? undefined,
+    );
   effect(() => {
     if (phase.value === 'playing') connect();
   });
@@ -128,9 +133,14 @@ export function createMultiplayer(opts: {
     /** Emote: shown right away for you, and sent to people nearby when online. */
     emote(e: string) {
       if (net.online) net.send({ t: 'emote', e });
-      else bubbles.show('me', e, true);
+      else {
+        onSelfEmote(e);
+        bubbles.show('me', e, true);
+      }
     },
     remotes,
+    /** Avatars loaded: remote players switch from capsules to their characters. */
+    setAvatarKit: (kit: AvatarKit) => crowd.setKit(kit),
     /** Every simulation step: send our movement at 15 Hz (every 4th 60 Hz step). */
     step() {
       if (++steps % 4 !== 0 || !net.online) return;

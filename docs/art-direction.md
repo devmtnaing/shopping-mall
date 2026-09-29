@@ -46,15 +46,19 @@ flowchart LR
 v1 uses **free CC0 kits** (Kenney, Quaternius, Poly Pizza), recorded per asset in `assets-src/**/LICENSE`. Higgsfield-generated assets follow later as drop-in replacements through the asset library (ADR 0006); the licence has been checked and generated models may be committed.
 
 ### Characters
+v1 ships the 12 characters of Kenney's **Mini Characters** (CC0), in `assets-src/avatars/kenney-mini-characters/`. `pnpm assets` builds `client/public/assets/avatars/`:
 
-1. Generate the character in Higgsfield (front-facing T-pose, neutral lighting). Keep the prompt in `assets-src/characters/<id>/prompt.md` so anyone can reproduce it.
-2. Import into Blender. Decimate to **≤ 15k tris** (LOD0), **3k** (LOD1) and **600** (LOD2).
-3. Skin to `assets-src/rig/mall-skeleton.blend` (Mixamo bone names). **Never export animation with the outfit.** All animations live in `anims.glb`.
-4. Bake all materials into a single **1024² atlas**: base colour plus a packed ORM texture.
-5. Export glTF (no animations, Y-up, +Z forward). Run `pnpm assets`.
-6. Add an entry in `mall.config.ts → outfits`.
+- **`avatars.glb`** (about 180 KB): every character as one skinned mesh (body and head joined, so one draw call each), sharing one 8 KB texture, plus **one** copy of the animation clips. All characters share Kenney's 7-bone rig, so the clips play on any of them. Scaled to 1.55 m. Meshopt-compressed.
+- **`<id>.png`**: the 64 px preview used by the character picker.
 
-Check the Higgsfield terms of service before committing generated assets to a public repo. Record the license in `assets-src/characters/<id>/LICENSE`.
+Clips kept: `idle walk sprint jump fall sit emote-yes emote-no interact-right` (the list is `CLIPS` in `shared/src/avatars.ts`). The source also has wheelchair clips and wheelchairs, walking aids and glasses, which are a natural next addition.
+
+To add or replace characters (for example Higgsfield ones later):
+1. Put the `.glb` next to the others. It must use the same 7 joint names (`root torso head arm-left arm-right leg-left leg-right`) so the shared clips fit, or bring its own rig and clips.
+2. Add its id to `AVATARS` in `shared/src/avatars.ts` (the server only accepts listed ids) and a 64 px preview.
+3. Run `pnpm assets` and commit the output. `tools/test/avatars.test.ts` checks it.
+
+Keep prompts for generated characters in `assets-src/avatars/<pack>/prompt.md`, and record each pack's licence in its folder.
 
 ### World
 - Units are metres. The concourse is 12 m wide and floors are 7.6 m apart (matching the reference's scale, which feels right).

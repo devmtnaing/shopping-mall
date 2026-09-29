@@ -69,4 +69,4 @@ That runs nginx serving the built site (and proxying `/ws`, `/api` and `/files` 
 
 ## License
 
-MIT for code. Assets are CC BY 4.0 unless a file's `LICENSE` says otherwise.
+MIT for code. Assets are CC BY 4.0 unless a file's `LICENSE` says otherwise. The characters are [Kenney's Mini Characters](https://kenney.nl/assets/mini-characters) (CC0): thank you, Kenney.

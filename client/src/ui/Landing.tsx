@@ -1,5 +1,6 @@
 // Welcome screen, shown over a slowly orbiting view of the mall while the world loads behind it.
 import { useSignal } from '@preact/signals';
+import { AVATARS } from '@shopping-mall/shared/avatars';
 import { useEffect, useRef } from 'preact/hooks';
 import { content } from '../content';
 import { t } from '../i18n';
@@ -10,6 +11,7 @@ import { HostSignIn } from './HostSignIn';
 export function Landing() {
   const name = useSignal(profile.value.name);
   const color = useSignal(profile.value.color);
+  const avatar = useSignal(profile.value.avatar);
   const error = useSignal(false);
   const waiting = useSignal(false);
   const ready = mallMeta.value !== null;
@@ -36,7 +38,7 @@ export function Landing() {
       nameRef.current?.focus();
       return;
     }
-    saveProfile({ name: n.slice(0, 20), color: color.value });
+    saveProfile({ name: n.slice(0, 20), color: color.value, avatar: avatar.value });
     if (ready) phase.value = 'playing';
     else waiting.value = true; // main.ts flips the phase once the world is ready
   };
@@ -74,6 +76,23 @@ export function Landing() {
           {t('landing.nameError')}
         </p>
       )}
+
+      <fieldset class="avatars">
+        <legend class="field-label">{t('landing.avatar')}</legend>
+        {AVATARS.map((a, i) => (
+          <label key={a} class="avatar-pick">
+            <input
+              type="radio"
+              name="avatar"
+              value={a}
+              checked={avatar.value === a}
+              onChange={() => (avatar.value = a)}
+              aria-label={t('landing.avatarOption', { n: String(i + 1) })}
+            />
+            <img src={`${import.meta.env.BASE_URL}assets/avatars/${a}.png`} alt="" width={40} height={40} />
+          </label>
+        ))}
+      </fieldset>
 
       <fieldset class="swatches">
         <legend class="field-label">{t('landing.colour')}</legend>

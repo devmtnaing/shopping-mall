@@ -1,9 +1,10 @@
 // Validation for messages the server receives. Server-only: the client never imports this,
 // so zod stays out of the browser bundle.
 import { z } from 'zod';
+import { AVATARS } from './avatars.ts';
 import { CHAT_MAX, type ClientMessage, EMOTES, NAME_MAX } from './protocol.ts';
 
-const look = z.object({ color: z.string().regex(/^#[0-9a-fA-F]{6}$/) });
+const look = z.object({ color: z.string().regex(/^#[0-9a-fA-F]{6}$/), avatar: z.enum(AVATARS).optional() });
 
 const clientMessage = z.discriminatedUnion('t', [
   z.object({

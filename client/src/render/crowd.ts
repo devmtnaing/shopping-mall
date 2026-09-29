@@ -1,5 +1,7 @@
-// Draws remote players cheaply: all bodies in one instanced mesh (per-player colour), and all name
-// tags as instanced billboards sampling one name atlas. 40 people ≈ 3 draw calls.
+// Draws remote players: an animated avatar each once the avatar kit has loaded (capsules in one
+// instanced mesh until then), and all name tags as instanced billboards sampling one name atlas.
+// The server sends at most the nearest 40 people, so that's at most 40 skinned meshes; the ones far
+// away animate at a third of the rate.
 import { PLAYER } from '@shopping-mall/shared/constants';
 import { unpackAnim } from '@shopping-mall/shared/protocol';
 import {
@@ -22,6 +24,7 @@ import {
   SRGBColorSpace,
   Vector3,
 } from 'three';
+import type { Avatar, AvatarKit } from '../avatars/kit';
 import type { Remote, Remotes } from '../net/remotes';
 
 const COLS = 4;
@@ -32,6 +35,8 @@ const CELL_H = 64;
 const FADE_START = 14;
 const FADE_END = 24;
 const TAG_Y = PLAYER.height + 0.42;
+/** Beyond this distance (m) avatars animate every third frame. */
+const FAR = 20;
 
 const m = new Matrix4();
 const q = new Quaternion();
@@ -56,6 +61,10 @@ export class Crowd {
   /** Label currently painted in each cell. */
   private readonly painted: string[] = [];
   private atlasDirty = false;
+  private kit: AvatarKit | null = null;
+  private readonly avatars = new Map<number, Avatar>();
+  private frame = 0;
+  private lastTime = 0;
 
   constructor(max = COLS * ROWS) {
     this.max = max;
@@ -97,24 +106,60 @@ export class Crowd {
     this.group.add(this.bodies, this.noses, this.tags);
   }
 
+  /** Avatars are ready: from now on everyone gets one instead of a capsule. */
+  setKit(kit: AvatarKit) {
+    this.kit = kit;
+  }
+
+  /** Play an emote's gesture on someone's avatar. */
+  emote(id: number, e: string) {
+    this.avatars.get(id)?.emote(e);
+  }
+
   update(remotes: Remotes, camera: Camera, time: number) {
+    const dt = Math.min(0.1, time - this.lastTime);
+    this.lastTime = time;
+    this.frame++;
     this.releaseHidden(remotes);
     let n = 0;
+    let capsules = 0;
     for (const r of remotes.players.values()) {
-      if (!r.visible || n >= this.max) continue;
+      const avatar = this.avatarFor(r);
+      if (!r.visible || n >= this.max) {
+        if (avatar) avatar.object.visible = false;
+        continue;
+      }
       const p = r.pose;
-      // a little bob while walking so movement reads even on capsules (real animation in Phase 2)
       const { state, speed } = unpackAnim(p.anim);
-      const bob = state === 1 || state === 2 ? Math.abs(Math.sin(time * speed * 2.4)) * 0.05 : 0;
-      q.setFromAxisAngle(up, p.yaw);
-      m.compose(pos.set(p.x, p.y + bob, p.z), q, one);
-      this.bodies.setMatrixAt(n, m);
-      this.noses.setMatrixAt(n, m);
-      this.bodies.setColorAt(n, color.set(r.info.look.color));
+      if (avatar) {
+        avatar.object.visible = true;
+        avatar.object.position.set(p.x, p.y, p.z);
+        avatar.object.rotation.y = p.yaw;
+        avatar.setState(state, speed);
+        const far = camera.position.distanceToSquared(avatar.object.position) > FAR * FAR;
+        if (!far) avatar.update(dt);
+        else if ((this.frame + r.id) % 3 === 0) avatar.update(dt * 3);
+      } else {
+        // capsules until the kit arrives: a little bob so walking still reads
+        const bob = state === 1 || state === 2 ? Math.abs(Math.sin(time * speed * 2.4)) * 0.05 : 0;
+        q.setFromAxisAngle(up, p.yaw);
+        m.compose(pos.set(p.x, p.y + bob, p.z), q, one);
+        this.bodies.setMatrixAt(capsules, m);
+        this.noses.setMatrixAt(capsules, m);
+        this.bodies.setColorAt(capsules, color.set(r.info.look.color));
+        capsules++;
+      }
       this.writeTag(n, r, camera);
       n++;
     }
-    this.bodies.count = this.noses.count = n;
+    // people who left: drop their avatars
+    for (const [id, a] of this.avatars) {
+      if (!remotes.players.has(id)) {
+        a.dispose();
+        this.avatars.delete(id);
+      }
+    }
+    this.bodies.count = this.noses.count = capsules;
     this.tags.geometry.instanceCount = n;
     this.bodies.instanceMatrix.needsUpdate = this.noses.instanceMatrix.needsUpdate = true;
     if (this.bodies.instanceColor) this.bodies.instanceColor.needsUpdate = true;
@@ -123,6 +168,22 @@ export class Crowd {
       this.atlasTex.needsUpdate = true;
       this.atlasDirty = false;
     }
+  }
+
+  /** This person's avatar, created (or re-created after they changed character) on demand. */
+  private avatarFor(r: Remote): Avatar | null {
+    if (!this.kit) return null;
+    let a = this.avatars.get(r.id);
+    if (a && r.info.look.avatar && a.id !== r.info.look.avatar) {
+      a.dispose();
+      a = undefined;
+    }
+    if (!a) {
+      a = this.kit.create(r.info.look.avatar);
+      this.avatars.set(r.id, a);
+      this.group.add(a.object);
+    }
+    return a;
   }
 
   private writeTag(i: number, r: Remote, camera: Camera) {

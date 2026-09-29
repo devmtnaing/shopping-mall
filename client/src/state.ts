@@ -2,6 +2,7 @@
 // the UI reads them. UI code never imports three.js, game code never touches the DOM (except the canvas).
 
 import { computed, signal } from '@preact/signals';
+import { type AvatarId, DEFAULT_AVATAR, isAvatar } from '@shopping-mall/shared/avatars';
 import type { MallMeta } from '@shopping-mall/shared/meta';
 import { load, save } from './storage';
 
@@ -11,12 +12,17 @@ export const phase = signal<'landing' | 'playing'>('landing');
 /** Mall meta once the world has loaded (the landing screen shows before it's ready). */
 export const mallMeta = signal<MallMeta | null>(null);
 
-/** Body colours offered until real outfits arrive (Phase 2). */
+/** Colours for your name tag and minimap dot. */
 export const BODY_COLORS = ['#e2b857', '#e76f51', '#2a9d8f', '#6d8bff', '#c77dff', '#f4f1ea'] as const;
 
-/** Who the visitor is. Remembered on this device. */
-export type Profile = { name: string; color: string };
-export const profile = signal<Profile>(load('profile', { name: '', color: BODY_COLORS[0] }));
+/** Who the visitor is. Remembered on this device (profiles saved before avatars get the default one). */
+export type Profile = { name: string; color: string; avatar: AvatarId };
+const saved = load<Partial<Profile>>('profile', {});
+export const profile = signal<Profile>({
+  name: saved.name ?? '',
+  color: saved.color ?? BODY_COLORS[0],
+  avatar: isAvatar(saved.avatar) ? saved.avatar : DEFAULT_AVATAR,
+});
 
 export function saveProfile(p: Profile) {
   profile.value = p;

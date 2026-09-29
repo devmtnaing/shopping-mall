@@ -4,6 +4,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { parseArgs } from 'node:util';
+import { AVATARS } from '@shopping-mall/shared/avatars';
 import { NET_HZ, PLAYER } from '@shopping-mall/shared/constants';
 import { decodeNavGrid, type NavGrid } from '@shopping-mall/shared/navgrid';
 import { EMOTES, encodeInput, packAnim } from '@shopping-mall/shared/protocol';
@@ -67,7 +68,13 @@ function bot(n: number) {
     if (typeof e.data === 'string' && e.data.includes('"welcome"')) joined++;
   };
   ws.onopen = () => {
-    ws.send(JSON.stringify({ t: 'join', name: `Bot ${n}`, look: { color: COLORS[n % COLORS.length] } }));
+    ws.send(
+      JSON.stringify({
+        t: 'join',
+        name: `Bot ${n}`,
+        look: { color: COLORS[n % COLORS.length], avatar: AVATARS[n % AVATARS.length] },
+      }),
+    );
     const speed = PLAYER.walkSpeed * (0.7 + Math.random() * 0.4);
     setInterval(() => {
       const dt = 1 / NET_HZ;

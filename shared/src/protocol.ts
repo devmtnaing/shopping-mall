@@ -119,8 +119,8 @@ function toView(data: ArrayBufferView | ArrayBuffer): DataView {
 
 // ---- JSON messages ---------------------------------------------------------------------------
 
-/** How a visitor looks. Grows with outfits in Phase 2. */
-export type Look = { color: string };
+/** How a visitor looks: which character (shared/src/avatars.ts) and their colour (name tag, minimap). */
+export type Look = { color: string; avatar?: string };
 export type PlayerInfo = { id: number; name: string; look: Look; host?: boolean };
 
 export type ClientMessage =

@@ -99,4 +99,11 @@ describe('parseClientMessage', () => {
     expect(parseClientMessage('{"t":"join","name":"a","look":{"color":"red"}}')).toBeNull();
     expect(parseClientMessage('{"t":"emote","e":"💣"}')).toBeNull();
   });
+
+  it('carries a known avatar, and refuses made-up ones', () => {
+    const join = (avatar: string) =>
+      parseClientMessage(JSON.stringify({ t: 'join', name: 'Mya', look: { color: '#e2b857', avatar } }));
+    expect(join('male-c')).toMatchObject({ look: { avatar: 'male-c' } });
+    expect(join('../../etc')).toBeNull();
+  });
 });

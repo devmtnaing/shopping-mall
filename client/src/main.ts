@@ -1,6 +1,7 @@
 import { effect } from '@preact/signals';
 import { EMOTES } from '@shopping-mall/shared/protocol';
 import { Color, DirectionalLight, Fog, HemisphereLight, Scene } from 'three';
+import type { Avatar } from './avatars/kit';
 import { installCommands } from './commands';
 import { art, content, loadContent } from './content';
 import { locale, t } from './i18n';
@@ -8,6 +9,7 @@ import type { Key } from './i18n/en';
 import { parseLink } from './links';
 import { startLoop } from './loop';
 import { createMultiplayer } from './net/multiplayer';
+import { animState } from './player/anim';
 import { createPlaceholderBody } from './player/body';
 import { OrbitCamera } from './player/camera';
 import { PlayerController } from './player/controller';
@@ -82,11 +84,12 @@ if (matchMedia('(pointer: coarse)').matches) {
 const player = new PlayerController(mall.collider);
 const spawn = mall.meta.spawns[0] ?? { pos: [0, 0, 0], yaw: 0 };
 player.place(spawn.pos[0], spawn.pos[1], spawn.pos[2], spawn.yaw);
-const { group: body, setColor } = createPlaceholderBody();
+const { group: body, setColor, setPlaceholder } = createPlaceholderBody();
 scene.add(body);
 effect(() => {
   setColor(profile.value.color);
 });
+let avatar: Avatar | null = null;
 
 const orbit = new OrbitCamera(mall.collider, spawn.yaw);
 const follower = new PathFollower();
@@ -96,7 +99,28 @@ scene.add(walkTo.marker);
 const travel = new Travel(() => content.value.shops, mall.meta, player, orbit, finder, follower);
 
 // multiplayer: connects once the visitor enters; without a server the mall stays single-player
-const multi = createMultiplayer({ scene, player, travel, floorAt: (y) => mall.nav.floorAt(y) });
+const multi = createMultiplayer({
+  scene,
+  player,
+  travel,
+  floorAt: (y) => mall.nav.floorAt(y),
+  onSelfEmote: (e) => avatar?.emote(e),
+});
+// avatars load after the world (capsules until then); a failure just keeps the capsules
+import('./avatars/kit')
+  .then(({ loadAvatarKit }) => loadAvatarKit())
+  .then((kit) => {
+    multi.setAvatarKit(kit);
+    effect(() => {
+      const id = profile.value.avatar;
+      if (avatar?.id === id) return;
+      avatar?.dispose();
+      avatar = kit.create(id);
+      body.add(avatar.object);
+      setPlaceholder(false);
+    });
+  })
+  .catch((e) => console.warn('avatars:', e));
 installCommands({
   travelToShop: (id) => travel.toShop(id),
   sendChat: (text) => multi.sendChat(text),
@@ -217,6 +241,10 @@ startLoop({
     const t0 = performance.now();
     body.position.lerpVectors(player.prev, player.pos, alpha);
     body.rotation.y = player.facing;
+    if (avatar) {
+      avatar.setState(animState(player), player.speed);
+      avatar.update(dt);
+    }
 
     const tap = input.takeTap();
     if (tap && phase.value === 'playing' && !walkTo.tap(tap.x, tap.y, player, canvas, over.clipY))

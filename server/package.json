@@ -8,7 +8,7 @@
     "typecheck": "tsc -p ."
   },
   "dependencies": {
-    "@gltf-transform/core": "^4.5.0",
+    "@gltf-transform/core": "^4.5.1",
     "@shopping-mall/shared": "workspace:*",
     "aws4fetch": "^1.0.20",
     "postgres": "^3.4.9",

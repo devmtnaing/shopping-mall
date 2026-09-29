@@ -8,6 +8,8 @@ export const my: Partial<Record<Key, string>> = {
   'landing.name': 'သင့်အမည်',
   'landing.namePlaceholder': 'အမည် ရေးပါ',
   'landing.nameError': 'အမည် ရေးပေးပါ (အနည်းဆုံး စာလုံး ၂ လုံး)။',
+  'landing.avatar': 'သင့်ဇာတ်ကောင်',
+  'landing.avatarOption': 'ဇာတ်ကောင် {n}',
   'landing.colour': 'အရောင်',
   'landing.colourOption': 'အရောင် {c}',
   'landing.enter': 'မောလ်ထဲ ဝင်မယ် →',
