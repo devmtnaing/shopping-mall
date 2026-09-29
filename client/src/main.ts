@@ -1,6 +1,7 @@
 import { effect } from '@preact/signals';
 import { EMOTES } from '@shopping-mall/shared/protocol';
 import { Color, DirectionalLight, Fog, HemisphereLight, Scene, Vector3 } from 'three';
+import { type Sound, soundOnFirstInteraction } from './audio';
 import type { Avatar } from './avatars/kit';
 import { installCommands } from './commands';
 import { art, content, loadContent } from './content';
@@ -165,6 +166,20 @@ const bounds = {
 };
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
 const autoQuality = new AutoQuality();
+
+// sound starts on the first click, tap or key press (nothing loads before)
+let sound: Sound | null = null;
+const fountainAt = mall.meta.props?.find((p) => p.kind === 'fountain')?.pos;
+soundOnFirstInteraction(fountainAt ? { x: fountainAt[0], y: fountainAt[1], z: fountainAt[2] } : null, (s) => {
+  sound = s;
+});
+effect(() => {
+  if (panel.value) sound?.chime(); // a shop's door opens
+});
+document.addEventListener('click', (e) => {
+  if ((e.target as Element | null)?.closest?.('#ui button')) sound?.tap();
+});
+const ears = new Vector3();
 const dynamicRes = new DynamicResolution();
 effect(() => dynamicRes.setBudget(tier.value === 'low' ? 1000 / 30 : 1000 / 60));
 /** Last time anything moved or was touched (for the idle frame rate). */
@@ -322,6 +337,7 @@ startLoop({
     fog.far = 140 + 200 * over.t;
 
     multi.render(now, camera, body.position, canvas.clientWidth, canvas.clientHeight);
+    sound?.listen(camera.position, camera.getWorldDirection(ears));
     renderer.render(scene, camera);
     if (debug) {
       debug.set('pos', `${player.pos.x.toFixed(1)} ${player.pos.y.toFixed(2)} ${player.pos.z.toFixed(1)}`);

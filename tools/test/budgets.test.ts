@@ -16,6 +16,7 @@ const BUDGETS: { match: RegExp; bytes: number; tris?: number; what: string }[] =
   { match: /^avatars\/avatars\.glb$/, bytes: 250 * KB, tris: 15_000, what: 'avatar pack' },
   { match: /^avatars\/.*\.png$/, bytes: 8 * KB, what: 'avatar preview' },
   { match: /^props\/props\.glb$/, bytes: 300 * KB, tris: 30_000, what: 'props pack' },
+  { match: /^audio\/.*\.mp3$/, bytes: 170 * KB, what: 'audio loop' },
 ];
 
 function files(dir: string): string[] {
@@ -66,5 +67,11 @@ describe('asset budgets', () => {
       );
     }
     expect(over.map((r) => r.name)).toEqual([]);
+  });
+
+  it('all audio together stays within 250 KB (T-506)', () => {
+    const audio = rows.filter((r) => r.name.startsWith('audio/')).reduce((n, r) => n + r.bytes, 0);
+    expect(audio).toBeGreaterThan(0);
+    expect(audio).toBeLessThan(250 * KB);
   });
 });

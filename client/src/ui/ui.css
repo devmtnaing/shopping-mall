@@ -215,6 +215,21 @@ button {
   opacity: 0.7;
   font-size: 14px;
 }
+.sound .slider {
+  display: grid;
+  grid-template-columns: 11em 1fr;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 0;
+  background: none;
+  cursor: default;
+}
+#ui .sound input[type="range"] {
+  position: static;
+  opacity: 1;
+  width: 100%;
+  accent-color: var(--accent);
+}
 .help-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));

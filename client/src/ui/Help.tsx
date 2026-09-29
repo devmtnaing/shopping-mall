@@ -1,3 +1,4 @@
+import { setVolume, volume } from '../audio';
 import { t } from '../i18n';
 import { type QualitySetting, qualitySetting, setQuality, tier } from '../quality';
 import { dialog } from '../state';
@@ -73,6 +74,22 @@ export function Help() {
           ))}
         </div>
         <p class="hint">{t('quality.hint')}</p>
+      </fieldset>
+      <fieldset class="quality sound">
+        <legend>{t('sound.title')}</legend>
+        {(['ambience', 'effects'] as const).map((k) => (
+          <label key={k} class="slider">
+            <span>{t(`sound.${k}`)}</span>
+            <input
+              type="range"
+              min={0}
+              max={1}
+              step={0.05}
+              value={volume.value[k]}
+              onInput={(e) => setVolume({ [k]: Number((e.target as HTMLInputElement).value) })}
+            />
+          </label>
+        ))}
       </fieldset>
     </Dialog>
   );

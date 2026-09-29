@@ -114,6 +114,7 @@ dedup → prune → join (per material, static only) → weld → simplify (LOD 
 | Avatar pack (all characters and clips) | 15k | 250 KB | 11k tris, 179 KB |
 | Props pack | 30k | 300 KB | 12k tris, 262 KB |
 | Avatar preview | — | 8 KB | 2 KB |
+| Audio loop (each / all) | — | 170 KB / 250 KB | 156 + 47 KB |
 
 ## Audio
 - Ambient loop (soft crowd + fountain, 96 kbps Opus, ~40 s loop, lazy-loaded after the first interaction).
