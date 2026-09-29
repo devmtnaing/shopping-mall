@@ -104,13 +104,16 @@ dedup → prune → join (per material, static only) → weld → simplify (LOD 
 ```
 
 ### Asset budgets (enforced in CI)
-| Asset | Tris | Textures | Size |
+`tools/test/budgets.test.ts` checks every file under `client/public/assets` against this table and fails with a table of offenders. A file with no matching budget fails too.
+
+| Asset | Tris | Size | Now |
 |---|---|---|---|
-| Avatar outfit LOD0 | 15k | one 1K atlas | 400 KB (all LODs) |
-| Accessory | 1.5k | shares atlas | 30 KB |
-| World chunk | 80k | ≤ 4 × 2K | 1.5 MB |
-| Shop interior kit | 30k | ≤ 2 × 1K | 500 KB |
-| Animation pack | — | — | 200 KB |
+| Mall visual (one world chunk) | 80k | 1.5 MB | 2.4k tris, 172 KB |
+| Collision mesh | 50k | 1.5 MB | 2.2k tris, 91 KB |
+| Navgrid | — | 60 KB | 9 KB |
+| Avatar pack (all characters and clips) | 15k | 250 KB | 11k tris, 179 KB |
+| Props pack | 30k | 300 KB | 12k tris, 262 KB |
+| Avatar preview | — | 8 KB | 2 KB |
 
 ## Audio
 - Ambient loop (soft crowd + fountain, 96 kbps Opus, ~40 s loop, lazy-loaded after the first interaction).
