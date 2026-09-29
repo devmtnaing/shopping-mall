@@ -96,7 +96,7 @@ The baked navgrid becomes the fourth file of the package. Visitors get the new b
 **Lightmap convention** (also for uploaded buildings): a material that carries a lightmap has it as its `occlusionTexture` on `TEXCOORD_1`, plus `extras: { lightmap: <scale> }`. The texture stores `sRGB(L / scale)`. The client renders those surfaces unlit, as base colour × L (`MeshBasicMaterial` with `lightMap`), so they look like the Cycles bake at the cheapest possible shader cost. Other glTF viewers just see ambient occlusion. Emissive and see-through materials (`lightpanel`, `skylight`, `glass`, `railglass`) aren't lightmapped. `extras.reflect` (on the floor) adds a faint environment reflection on Medium and High.
 
 ### Props
-Furniture and decoration come from a **props pack**, `client/public/assets/props/props.glb` (about 260 KB), built by `pnpm assets` from `assets-src/props/`:
+Furniture and decoration come in **props packs** by area, `client/public/assets/props/<pack>.glb`, built by `pnpm assets` from `assets-src/props/`:
 
 | Kind | Source |
 |---|---|
@@ -104,9 +104,18 @@ Furniture and decoration come from a **props pack**, `client/public/assets/props
 | `plant`, `bin`, `lamp`, `sofa`, `table`, `chair` | Kenney Furniture Kit (CC0) |
 | `shelf`, `shelf-bags`, `register`, `cart`, `fruit` | Kenney Mini Market (CC0), for shop interiors |
 
-`tools/greybox/props.ts` lists each kind's source, real size, facing fix and collision box. The pipeline scales each model to size, stands it on the floor, turns it to face −Z and shrinks textures to 384 px WebP. The mall's meta says where props go (`props: [{ kind, pos, yaw }]`), and the client draws each part of each kind as one `InstancedMesh`. Collision lives in the mall's collision mesh as plain boxes, so props are purely visual and a missing kind is simply skipped.
+| Pack | Kinds | Size |
+|---|---|---|
+| `entrance` | `kiosk`, `welcome`, `palm` | 133 KB |
+| `concourse` | `bench`, `tree`, `plant`, `bin`, `lamp`, `sofa` | 139 KB |
+| `court` | `fountain`, `table`, `chair` | 60 KB |
+| `shops` | `shelf`, `shelf-bags`, `register`, `cart`, `fruit` | 47 KB |
 
-To restyle the mall's furniture, replace a source file and run `pnpm assets`. The placements and collision don't change. An uploaded building (admin → Building) uses the same pack, placed by its own meta's `props`.
+`props/index.json` says which pack holds which kinds. The client loads the packs with a placement within 35 m of the spawn right after the mall, then the rest one at a time when the browser is idle (nearest first, and walking up to one moves it to the front). So new props add to what loads in the background, not to what visitors wait for, and a pack nothing places is never downloaded. New props go in the pack for the area they furnish, or a new pack (add it to `PACKS`).
+
+`tools/greybox/props.ts` lists each kind's pack, source, real size, facing fix and collision box. The pipeline scales each model to size, stands it on the floor, turns it to face −Z and shrinks textures to 384 px WebP. The mall's meta says where props go (`props: [{ kind, pos, yaw }]`), and the client draws each part of each kind as one `InstancedMesh`. Collision lives in the mall's collision mesh as plain boxes, so props are purely visual and a missing kind is simply skipped.
+
+To restyle the mall's furniture, replace a source file and run `pnpm assets`. The placements and collision don't change. An uploaded building (admin → Building) uses the same packs, placed by its own meta's `props`.
 
 ### `optimize-assets.ts` steps
 ```
@@ -124,7 +133,7 @@ dedup → prune → join (per material, static only) → weld → simplify (LOD 
 | Collision mesh | 50k | 1.5 MB | 2.2k tris, 91 KB |
 | Navgrid | — | 60 KB | 9 KB |
 | Avatar pack (all characters and clips) | 15k | 250 KB | 11k tris, 179 KB |
-| Props pack | 40k | 450 KB | 377 KB (split into packs by area before it grows further) |
+| Props pack (each area) | 20k | 200 KB | 139 KB (largest, `concourse`); loaded as you approach |
 | Avatar preview | — | 8 KB | 2 KB |
 | Audio loop (each / all) | — | 170 KB / 250 KB | 156 + 47 KB |
 

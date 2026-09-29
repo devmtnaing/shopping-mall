@@ -84,14 +84,17 @@ let storefronts = await buildStorefronts(mall.meta, content.value.shops, vacant(
 locale.subscribe(() => storefronts.setVacantText(t('sign.comingSoon'), t('sign.available')));
 scene.add(storefronts.group);
 mallMeta.value = mall.meta;
-// benches, plants, lamps…: after the mall, never blocking it
+// benches, plants, lamps…: after the mall, never blocking it, and far-off packs as you approach
+let props: import('./world/props').Props | null = null;
+const start = mall.meta.spawns[0]?.pos ?? [0, 0, 0];
 import('./world/props')
-  .then(({ loadProps }) => loadProps(mall.meta))
-  .then((props) => {
-    scene.add(props);
+  .then(({ loadProps }) => loadProps(mall.meta, new Vector3(...start)))
+  .then(async (p) => {
+    props = p;
+    scene.add(p.group);
+    await p.near;
     // reflections: capture the mall once it's furnished, from eye height in the middle of the hall
-    const spawn = mall.meta.spawns[0]?.pos ?? [0, 0, 0];
-    installEnvironment(renderer, scene, new Vector3(spawn[0], spawn[1] + 2, spawn[2] - 20));
+    installEnvironment(renderer, scene, new Vector3(start[0], start[1] + 2, start[2] - 20));
   })
   .catch((e) => console.warn('props:', e));
 
@@ -314,6 +317,7 @@ startLoop({
       else if (seat) toggleSeat();
     }
     if (zones.update(dt, player.pos)) showZone();
+    props?.update(player.pos);
   },
   render: (alpha, dt) => {
     const t0 = performance.now();

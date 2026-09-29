@@ -15,8 +15,9 @@ const BUDGETS: { match: RegExp; bytes: number; tris?: number; what: string }[] =
   { match: /^mall\/mall\.meta\.json$/, bytes: 100 * KB, what: 'mall meta' },
   { match: /^avatars\/avatars\.glb$/, bytes: 250 * KB, tris: 15_000, what: 'avatar pack' },
   { match: /^avatars\/.*\.png$/, bytes: 8 * KB, what: 'avatar preview' },
-  // 450 KB since #4 batch 1 (entrance pieces); later batches should split into packs loaded by area
-  { match: /^props\/props\.glb$/, bytes: 450 * KB, tris: 40_000, what: 'props pack' },
+  // each area's pack loads when you get near it, so a new batch of props adds a pack rather than weight up front
+  { match: /^props\/[a-z]+\.glb$/, bytes: 200 * KB, tris: 20_000, what: 'props pack (one area)' },
+  { match: /^props\/index\.json$/, bytes: 2 * KB, what: 'props index' },
   { match: /^audio\/.*\.mp3$/, bytes: 170 * KB, what: 'audio loop' },
 ];
 

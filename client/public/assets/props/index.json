@@ -1,0 +1,6 @@
+{
+  "entrance": ["kiosk", "welcome", "palm"],
+  "concourse": ["bench", "tree", "plant", "bin", "lamp", "sofa"],
+  "court": ["fountain", "table", "chair"],
+  "shops": ["shelf", "shelf-bags", "register", "cart", "fruit"]
+}
