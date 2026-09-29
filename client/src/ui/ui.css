@@ -1144,3 +1144,52 @@ a.product:hover {
   font-weight: 600;
   animation: fade-down 0.3s ease-out;
 }
+
+/* ---- phone layout pass (T-505) ---- */
+@media (max-width: 560px) {
+  /* the zone pill sits under the top bar instead of colliding with its buttons */
+  .zone {
+    top: calc(64px + env(safe-area-inset-top));
+    padding: 4px 14px 5px;
+  }
+  .zone-name {
+    font-size: 15px;
+  }
+  /* centred dialogs (directory, help) hang from the top and stop short of the dock */
+  .dialog:not(.dialog-sheet) {
+    margin: calc(12px + env(safe-area-inset-top)) auto auto;
+    max-height: calc(100dvh - 104px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  }
+}
+/* short screens (phones in landscape): a compact landing card that scrolls if it must */
+@media (max-height: 520px) {
+  .landing {
+    top: calc(8px + env(safe-area-inset-top));
+    bottom: calc(8px + env(safe-area-inset-bottom));
+    transform: none;
+    width: min(540px, calc(100vw - 32px - env(safe-area-inset-left)));
+    overflow-y: auto;
+    gap: 6px;
+    padding: 16px 20px;
+  }
+  .landing h1 {
+    font-size: 32px;
+  }
+  .landing .eyebrow,
+  .landing-tagline,
+  .landing-here {
+    display: none; /* every pixel goes to the name, the look and the Enter button */
+  }
+  .avatars {
+    grid-template-columns: repeat(12, 1fr);
+    margin-bottom: 4px;
+  }
+  #ui .swatch-pick span {
+    width: 28px;
+    height: 28px;
+  }
+  #ui .enter {
+    margin-top: 6px;
+    min-height: 44px;
+  }
+}

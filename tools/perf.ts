@@ -5,11 +5,10 @@
 //
 //   pnpm perf            headless, software GL: frame times are reported but not enforced
 //   pnpm perf --gpu      headed with the real GPU: frame times are enforced too
-import { spawn } from 'node:child_process';
 import { appendFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { chromium } from 'playwright';
+import { serveDist } from './serve.ts';
 
 const { values: args } = parseArgs({
   options: { gpu: { type: 'boolean', default: false }, url: { type: 'string' }, seconds: { type: 'string' } },
@@ -27,25 +26,7 @@ const BUDGETS = {
 } as const;
 type Key = keyof typeof BUDGETS;
 
-async function serve(): Promise<{ url: string; stop: () => void }> {
-  if (args.url) return { url: args.url, stop: () => {} };
-  const port = 4300 + Math.floor(Math.random() * 500);
-  const vite = spawn('npx', ['vite', 'preview', '--port', String(port), '--strictPort'], {
-    cwd: resolve(import.meta.dirname, '../client'),
-    stdio: 'ignore',
-  });
-  const url = `http://localhost:${port}/`;
-  for (let i = 0; i < 50; i++) {
-    try {
-      if ((await fetch(url)).ok) return { url, stop: () => vite.kill() };
-    } catch {}
-    await new Promise((r) => setTimeout(r, 200));
-  }
-  vite.kill();
-  throw new Error('perf: vite preview did not start (did you run pnpm build?)');
-}
-
-const { url, stop } = await serve();
+const { url, stop } = args.url ? { url: args.url, stop: () => {} } : await serveDist();
 const browser = await chromium.launch({
   headless: !args.gpu,
   args: args.gpu ? [] : ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'],

@@ -17,6 +17,7 @@
     "size": "node tools/size.ts",
     "perf": "node tools/perf.ts",
     "a11y": "node tools/a11y.ts",
+    "screenshots": "node tools/screenshots.ts",
     "check": "pnpm typecheck && pnpm lint && pnpm test && pnpm build && pnpm size",
     "greybox": "node tools/greybox/build.ts && node tools/bake-navgrid.ts",
     "navgrid": "node tools/bake-navgrid.ts",

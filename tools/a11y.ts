@@ -1,25 +1,12 @@
 // pnpm a11y — accessibility check (T-504). Serves client/dist (run `pnpm build` first), walks the
 // main screens in Chromium, runs axe-core on each and fails on any serious or critical issue.
 // Also checks the directory → shop → link flow works from the keyboard alone.
-import { spawn } from 'node:child_process';
 import { appendFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 import AxeBuilder from '@axe-core/playwright';
 import { chromium, type Page } from 'playwright';
+import { serveDist } from './serve.ts';
 
-const port = 4800 + Math.floor(Math.random() * 500);
-const vite = spawn('npx', ['vite', 'preview', '--port', String(port), '--strictPort'], {
-  cwd: resolve(import.meta.dirname, '../client'),
-  stdio: 'ignore',
-});
-const url = `http://localhost:${port}/`;
-for (let i = 0; i < 50; i++) {
-  try {
-    if ((await fetch(url)).ok) break;
-  } catch {}
-  await new Promise((r) => setTimeout(r, 200));
-}
-
+const { url, stop } = await serveDist();
 const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 type Row = { screen: string; issues: string[] };
 const rows: Row[] = [];
@@ -78,7 +65,7 @@ try {
   await scan(page, 'Chat');
 } finally {
   await browser.close();
-  vite.kill();
+  stop();
 }
 
 const failed = rows.some((r) => r.issues.length);
