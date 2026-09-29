@@ -1,6 +1,7 @@
 import { effect } from '@preact/signals';
 import { ACESFilmicToneMapping, PerspectiveCamera, SRGBColorSpace, WebGLRenderer } from 'three';
 import { TIERS, tier } from '../quality';
+import { resolutionScale } from './resolution';
 
 export function createRenderer(canvas: HTMLCanvasElement) {
   const renderer = new WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
@@ -16,9 +17,9 @@ export function createRenderer(canvas: HTMLCanvasElement) {
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
   }
-  // the quality tier caps the pixel ratio, live
+  // the quality tier caps the pixel ratio, and dynamic resolution trims it under load, live
   effect(() => {
-    renderer.setPixelRatio(Math.min(devicePixelRatio, TIERS[tier.value].dpr));
+    renderer.setPixelRatio(Math.min(devicePixelRatio, TIERS[tier.value].dpr) * resolutionScale.value);
     resize();
   });
   new ResizeObserver(resize).observe(canvas);

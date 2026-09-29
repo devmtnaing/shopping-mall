@@ -21,10 +21,11 @@ import { PathFinder } from './player/path';
 import { createTouchControls } from './player/touch';
 import { Travel } from './player/travel';
 import { WalkTo } from './player/walkto';
-import { AutoQuality, TIERS } from './quality';
+import { AutoQuality, TIERS, tier } from './quality';
 import type { DebugOverlay } from './render/debug';
 import { installEnvironment } from './render/environment';
 import { createRenderer } from './render/renderer';
+import { DynamicResolution } from './render/resolution';
 import {
   mallMeta,
   nearbyShop,
@@ -161,6 +162,12 @@ const bounds = {
 };
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
 const autoQuality = new AutoQuality();
+const dynamicRes = new DynamicResolution();
+effect(() => dynamicRes.setBudget(tier.value === 'low' ? 1000 / 30 : 1000 / 60));
+/** Last time anything moved or was touched (for the idle frame rate). */
+let activeAt = performance.now();
+/** Nothing for this long, and the mall drops to 30 fps. */
+const IDLE_AFTER = 10_000;
 
 // shared links: start at a shop (its panel opens after the fly-in) or at an exact spot
 const link = parseLink(location.search);
@@ -228,6 +235,7 @@ if (debugMode) {
 }
 
 startLoop({
+  idle: () => performance.now() - activeAt > IDLE_AFTER && !multi.anyoneMoving(),
   step: (dt) => {
     // while a dialog is open the keyboard belongs to the UI
     const manual = uiHasFocus.value ? still : input.move();
@@ -256,7 +264,10 @@ startLoop({
   },
   render: (alpha, dt) => {
     const t0 = performance.now();
-    if (phase.value === 'playing' && intro.done) autoQuality.frame(dt * 1000);
+    if (phase.value === 'playing' && intro.done) {
+      autoQuality.frame(dt * 1000);
+      dynamicRes.frame(dt * 1000);
+    }
     body.position.lerpVectors(player.prev, player.pos, alpha);
     body.rotation.y = player.facing;
     if (avatar) {
@@ -281,7 +292,19 @@ startLoop({
       };
     }
     const moving = player.speed > 0.3;
-    orbit.update(dt, body.position, player.facing, moving, input.takeLook(), input.takeZoom());
+    const look = input.takeLook();
+    const zoom = input.takeZoom();
+    if (
+      moving ||
+      look.yaw !== 0 ||
+      look.pitch !== 0 ||
+      zoom !== 0 ||
+      !player.grounded ||
+      !intro.done ||
+      over.t > 0
+    )
+      activeAt = now;
+    orbit.update(dt, body.position, player.facing, moving, look, zoom);
     over.active = overview.value;
     const floorY = mall.meta.floors[mall.nav.floorAt(player.pos.y + 0.1)]?.y ?? 0;
     over.update(dt, reduceMotion.matches, orbit, bounds, floorY, camera.fov, camera.aspect);

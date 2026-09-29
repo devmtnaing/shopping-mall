@@ -45,8 +45,8 @@ T-104 uses a "floating capsule" (body capsule from step height up, with ground r
 
 | ID | Task | Size | Labels | Acceptance criteria |
 |---|---|---|---|---|
-| T-201 | Modular kit: storefront ×3 widths, column, rail, bench, planter, light, escalator | L | art | Every piece within the asset budgets. Pivot and naming conventions followed. 🟡 *(Props done: a 260 KB props pack of 14 kinds, with bench, fountain and tree from Higgsfield and the rest from Kenney CC0, placed by `meta.props` and drawn instanced. The building itself is still the greybox; architectural kit pieces need Blender.)* |
-| T-202 | Final `mall.blend` + Cycles lightmap bake to `uv1` per zone chunk | L | art | No seams or light leaks visible at Medium. Bake script is reproducible |
+| T-201 | Modular kit: storefront ×3 widths, column, rail, bench, planter, light, escalator | L | art | Every piece within the asset budgets. Pivot and naming conventions followed. 🟡 *(Props done: a 260 KB props pack of 14 kinds, with bench, fountain and tree from Higgsfield and the rest from Kenney CC0, placed by `meta.props` and drawn instanced. The building itself is still the greybox; architectural kit pieces need Blender: #2.)* |
+| T-202 | Final `mall.blend` + Cycles lightmap bake to `uv1` per zone chunk | L | art | No seams or light leaks visible at Medium. Bake script is reproducible. *(Tracked in #2.)* |
 | T-203 | `tools/optimize-assets.ts` (gltf-transform: dedup, prune, join, meshopt, KTX2, resize) | M | tooling | One command processes every file in `assets-src/`. Deterministic output. ✅ *(`pnpm assets` builds the avatar and props packs: joins, dedup, prune, weld, meshopt, 512 px WebP. The same inputs give the same bytes. The greybox mall isn't meshopt-compressed yet, because the decoder would add to the first-load JS for about 100 KB saved after gzip.)* |
 | T-204 | Asset budget CI: `gltf-transform inspect` on changed `.glb` files | S | tooling perf | Fails the PR with a table when over budget. ✅ *(A vitest over every shipped asset: size and triangles against the budget table in `docs/art-direction.md`.)* |
 | T-205 | Zone chunk streaming: load within 25 m or on panel open, LRU unload, dispose GPU resources | M | client perf | Memory stays flat after walking the mall 5 times (heap + `renderer.info`) |
@@ -111,7 +111,7 @@ T-104 uses a "floating capsule" (body capsule from step height up, with ground r
 | ID | Task | Size | Labels | Acceptance criteria |
 |---|---|---|---|---|
 | T-501 | `pnpm perf` Playwright gate (Fast 4G, 4× CPU): time to playable, frame times, draw calls, heap → PR comment | M | tooling perf | Fails the PR when any budget in `performance.md` is exceeded |
-| T-502 | Dynamic resolution (0.75–1.0) + idle 30 fps + hidden-tab pause | S | client perf | p90 frame time stays under budget on the Low device |
+| T-502 | Dynamic resolution (0.75–1.0) + idle 30 fps + hidden-tab pause | S | client perf | p90 frame time stays under budget on the Low device. ✅ *(Scale drops 0.05 after 30 frames over budget (33 ms on Low, 16.7 ms otherwise) and climbs back after 180 with headroom. Idle means 10 s with no input, no movement and nobody walking in view; it measured 29 fps against 144 when active.)* |
 | T-503 | Zero-allocation audit: scratch pools, preallocated buffers | M | client perf | Chrome allocation timeline shows ~0 B/frame while walking |
 | T-504 | a11y audit: axe-core in e2e, focus order, labels, reduced motion, live-region chat | M | a11y | 0 serious or critical axe issues. The whole directory → shop → link flow works with a screen reader |
 | T-505 | Phone layout pass: safe areas, centre kept clear, sheets, landscape | M | ui | Verified on iOS Safari + Android Chrome. Screenshots in the PR |
