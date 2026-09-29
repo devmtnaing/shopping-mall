@@ -136,15 +136,64 @@ LOOK = {
 }
 
 
-# tiling detail textures, generated here so the build needs no image files: name → metres per repeat
+# tiling detail textures: name → metres per repeat. A photo in assets-src/mall/textures/<name>.png
+# (generated for issue #4, batch 4) supplies the pattern; without one, it's generated here.
 TEX_SIZE = 512
 TILED = {'floor': 1.2, 'wall': 2.4, 'ceiling': 2.4, 'shopfloor': 2.0}
+TEX_DIR = os.path.join(ROOT, 'assets-src/mall/textures')
+# how a photo becomes detail: mean brightness and the most contrast it may keep, so the palette
+# (LOOK) still sets the colour and the bake stays even
+PHOTO = {'floor': (0.95, 0.06), 'wall': (0.96, 0.015), 'shopfloor': (0.92, 0.09)}
+
+
+def photo_detail(name, path):
+    """Greyscale detail from a photo: its luminance, normalised to PHOTO[name], made to tile."""
+    import numpy as np
+
+    n = TEX_SIZE
+    img = bpy.data.images.load(path)
+    img.scale(n, n)
+    px = np.empty(n * n * 4, dtype=np.float32)
+    img.pixels.foreach_get(px)
+    bpy.data.images.remove(img)
+    rgb = px.reshape(n, n, 4)[::-1, :, :3]  # Blender stores rows bottom-up
+    lin = np.where(rgb <= 0.04045, rgb / 12.92, ((rgb + 0.055) / 1.055) ** 2.4)
+    lum = lin @ np.array([0.2126, 0.7152, 0.0722])
+    mean, most = PHOTO[name]
+    v = lum / lum.mean()
+    if name == 'floor':
+        # four tiles, repeated every 1.2 m: tone them closer together, or the floor reads as a checkerboard
+        h = n // 2
+        for qy in (slice(0, h), slice(h, n)):
+            for qx in (slice(0, h), slice(h, n)):
+                q = v[qy, qx]
+                v[qy, qx] = q / q.mean() * (1 + (q.mean() - 1) * 0.4)
+    v = 1 + (v - 1) * min(1, most / max(v.std(), 1e-6))  # cap the contrast
+    if name == 'wall':
+        # plaster has no joints to hide a seam: blend in a half-offset copy towards the edges
+        y, x = np.mgrid[0:n, 0:n] / (n - 1)
+        w = np.minimum(np.minimum(x, 1 - x), np.minimum(y, 1 - y)) * 2  # 0 at the edges, 1 in the middle
+        w = np.clip(w * 2, 0, 1)
+        v = v * w + np.roll(v, (n // 2, n // 2), axis=(0, 1)) * (1 - w)
+    elif name == 'floor':
+        # crisp grout between the 0.6 m tiles (the photo's own is too faint at this size), including
+        # along the image's edges, where the tiles meet when it repeats
+        for i in (0, 1, n // 2 - 1, n // 2, n - 1):
+            v[i, :] = v[:, i] = 0.82
+    else:
+        # planks meet at the image's top and bottom edges: draw that gap as dark as the photo's own
+        v[0, :] = v.mean(axis=1).min()
+    return np.clip(v * mean, 0, 1)
 
 
 def detail(name):
     """Greyscale detail (≈0.8–1.0) for a surface, TEX_SIZE² covering TILED[name] metres, tileable."""
     import numpy as np
 
+    path = os.path.join(TEX_DIR, f'{name}.png')
+    if os.path.exists(path):
+        log(f'{name}: detail from {os.path.relpath(path, ROOT)}')
+        return photo_detail(name, path)
     n = TEX_SIZE
     rng = np.random.default_rng(abs(hash(name)) % 2**32)
     y, x = np.mgrid[0:n, 0:n] / n

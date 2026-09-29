@@ -9,7 +9,7 @@ import { existsSync, statSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { NodeIO } from '@gltf-transform/core';
 import { ALL_EXTENSIONS } from '@gltf-transform/extensions';
-import { dedup, prune, weld } from '@gltf-transform/functions';
+import { dedup, prune, textureCompress, weld } from '@gltf-transform/functions';
 import sharp from 'sharp';
 
 const SRC = resolve(import.meta.dirname, '../../.cache/mall');
@@ -46,7 +46,13 @@ for (const m of doc.getRoot().listMaterials()) {
   });
   lit++;
 }
-await doc.transform(dedup(), prune({ keepAttributes: true }), weld());
+await doc.transform(
+  dedup(),
+  prune({ keepAttributes: true }),
+  weld(),
+  // the detail textures leave Blender as PNG; from photos (assets-src/mall/textures) that's ~250 KB each
+  textureCompress({ encoder: sharp, targetFormat: 'webp', quality: 85, slots: /^baseColorTexture$/ }),
+);
 await io.write(`${OUT}/mall.glb`, doc);
 console.log(
   `mall: ${lit} lightmapped materials, lightmap ${(png.byteLength / 1024).toFixed(0)} KB, ` +
