@@ -148,6 +148,11 @@ const multi = createMultiplayer({
   floorAt: (y) => mall.nav.floorAt(y),
   onSelfEmote: (e) => avatar?.emote(e),
   seated: () => seated !== null,
+  // someone hugged you: turn to face them, if you're standing still
+  onHugFrom: (x, z) => {
+    if (seated || player.speed > 0.2) return;
+    player.facing = Math.atan2(-(x - player.pos.x), -(z - player.pos.z));
+  },
 });
 // avatars load after the world (capsules until then); a failure just keeps the capsules
 import('./avatars/kit')
@@ -296,7 +301,9 @@ if (debugMode) {
 }
 if (debugMode || perfMode) {
   // handle for Playwright tests and console poking; never present without ?debug or ?perf
-  Object.assign(window, { mallDebug: { scene, camera, renderer, mall, player, input, follower } });
+  Object.assign(window, {
+    mallDebug: { scene, camera, renderer, mall, player, input, follower, avatar: () => avatar, multi },
+  });
 }
 
 startLoop({

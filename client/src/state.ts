@@ -92,7 +92,7 @@ export function toggleMute(id: number) {
   muted.value = next;
 }
 
-/** The emoji bar (phones open it from the dock; desktop has keys 1–6). */
+/** The emoji bar (phones open it from the dock; desktop has keys 1–8). */
 export const emoteBar = signal(false);
 
 /** Top-down overview camera on/off. */

@@ -42,7 +42,7 @@ Open <http://localhost:8080/admin/>, sign in with your `HOST_SECRET`, and start 
 |---|---|
 | **The mall** | A two-floor mall with 25 shop units, escalators, a fountain court, benches, plants and baked lighting. Replace the building from the admin page with your own Blender export ([art guide](../art-direction#replacing-the-building-mall-package)). |
 | **Shops** | A sign on the storefront, a panel with a description, features, links and products (listed in the admin page, or fetched from your own JSON feed). |
-| **People** | 12 animated characters, name tags, chat, emotes, sitting on benches. Up to 100 people per room, and busy malls overflow into more rooms. |
+| **People** | 15 animated characters, name tags, chat, emotes (including a dance and a hug that turns you both to face each other), sitting on benches. Up to 100 people per room, and busy malls overflow into more rooms. |
 | **Hosts** | Sign in as the host for a gold name and announcements, and moderate with mute and report. |
 | **Languages** | English and Burmese, with more addable in `client/src/i18n`. |
 | **Quality** | Automatic Low, Medium and High tiers, a 30 fps idle mode, and screen-reader and keyboard support. |

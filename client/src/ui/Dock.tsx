@@ -27,7 +27,7 @@ export function Dock() {
           <span>{t('chat.open')}</span>
         </button>
       )}
-      {/* phones open the emoji bar from here; desktop has keys 1–6 and the side bar */}
+      {/* phones open the emoji bar from here; desktop has keys 1–8 and the side bar */}
       {coarse && (
         <button
           type="button"

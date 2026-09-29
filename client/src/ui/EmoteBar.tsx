@@ -1,4 +1,4 @@
-// Emoji reactions. Desktop: keys 1–6 (shown on the buttons). Phones: opened from the dock.
+// Emoji reactions. Desktop: keys 1–8 (shown on the buttons). Phones: opened from the dock.
 import { EMOTES } from '@shopping-mall/shared/protocol';
 import { commands } from '../commands';
 import { t } from '../i18n';

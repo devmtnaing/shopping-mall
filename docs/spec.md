@@ -89,7 +89,7 @@ Priority: **P0** = MVP, **P1** = v1.0, **P2** = later.
 | Sit / stand | C | Sit button |
 | Visit shop | E | Tap shop / prompt |
 | Chat | Enter | Chat button |
-| Emoji | 1–6 | Emoji bar |
+| Emoji (7 dances, 8 hugs) | 1–8 | Emoji bar |
 | Overview | M | Dock |
 | Directory | / or K | Dock |
 | Close panel | Esc | ✕ / swipe down |

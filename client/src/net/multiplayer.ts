@@ -28,6 +28,10 @@ import {
 import { Remotes } from './remotes';
 import { NetClient, serverUrl } from './socket';
 
+const HUG = '🤗';
+/** How close (m) someone must be for a hug to turn you both to face each other. */
+const HUG_RANGE = 1.8;
+
 export function createMultiplayer(opts: {
   scene: Scene;
   player: PlayerController;
@@ -38,8 +42,10 @@ export function createMultiplayer(opts: {
   onSelfEmote: (e: string) => void;
   /** Whether you're sitting on a bench (others see you sit). */
   seated: () => boolean;
+  /** Someone within hugging range hugged you (turn to face them). */
+  onHugFrom?: (x: number, z: number) => void;
 }) {
-  const { scene, player, travel, floorAt, onSelfEmote, seated } = opts;
+  const { scene, player, travel, floorAt, onSelfEmote, seated, onHugFrom } = opts;
   const room = new URLSearchParams(location.search).get('room') ?? 'main';
   const remotes = new Remotes();
   const crowd = new Crowd();
@@ -60,6 +66,9 @@ export function createMultiplayer(opts: {
       if (m.t === 'emote') {
         if (m.id === net.selfId) onSelfEmote(m.e);
         else crowd.emote(m.id, m.e);
+        const from = remotes.players.get(m.id);
+        if (m.e === HUG && from?.visible && near(from.pose.x, from.pose.z, HUG_RANGE))
+          onHugFrom?.(from.pose.x, from.pose.z);
         return bubbles.show(m.id === net.selfId ? 'me' : m.id, m.e, true);
       }
       if (m.t === 'error' && m.code === 'rate') return toast(t('chat.slowDown'));
@@ -123,6 +132,21 @@ export function createMultiplayer(opts: {
     if (e.persisted && phase.value === 'playing') connect(); // restored from the back/forward cache
   });
 
+  const near = (x: number, z: number, r: number) => Math.hypot(x - player.pos.x, z - player.pos.z) < r;
+  /** The closest other person within `r` metres, if any. */
+  const nearest = (r: number) => {
+    let best: { x: number; z: number } | null = null;
+    let d = r;
+    for (const o of remotes.players.values()) {
+      const dist = Math.hypot(o.pose.x - player.pos.x, o.pose.z - player.pos.z);
+      if (o.visible && dist < d && Math.abs(o.pose.y - player.pos.y) < 1) {
+        d = dist;
+        best = { x: o.pose.x, z: o.pose.z };
+      }
+    }
+    return best;
+  };
+
   const wire = { x: 0, y: 0, z: 0, yaw: 0, anim: 0, flags: 0 };
   let steps = 0;
   let dotsAt = 0;
@@ -134,6 +158,9 @@ export function createMultiplayer(opts: {
     report: (id: number) => net.send({ t: 'report', id }),
     /** Emote: shown right away for you, and sent to people nearby when online. */
     emote(e: string) {
+      // a hug turns you to the nearest person (they turn back when it reaches them)
+      const to = e === HUG ? nearest(HUG_RANGE) : null;
+      if (to) player.facing = Math.atan2(-(to.x - player.pos.x), -(to.z - player.pos.z));
       if (net.online) net.send({ t: 'emote', e });
       else {
         onSelfEmote(e);

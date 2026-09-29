@@ -22,6 +22,7 @@ import {
 import { AVATARS, CLIPS } from '@shopping-mall/shared/avatars';
 import { MeshoptEncoder } from 'meshoptimizer';
 import sharp from 'sharp';
+import { addSocialClips, SOCIAL_CLIPS } from './social-clips.ts';
 
 const SRC = resolve(import.meta.dirname, '../../assets-src/avatars/kenney-mini-characters');
 const RIGGED = resolve(import.meta.dirname, '../../assets-src/avatars/higgsfield/rigged');
@@ -43,7 +44,12 @@ async function character(id: string, keepClips: boolean): Promise<Document> {
   const doc = await io.read(model(id));
   const root = doc.getRoot();
   for (const a of root.listAnimations()) {
-    if (keepClips && (CLIPS as readonly string[]).includes(a.getName())) continue;
+    if (
+      keepClips &&
+      (CLIPS as readonly string[]).includes(a.getName()) &&
+      !SOCIAL_CLIPS.includes(a.getName())
+    )
+      continue;
     // samplers outlive their animation otherwise, and keep every keyframe alive through prune()
     for (const x of [...a.listChannels(), ...a.listSamplers(), a]) x.dispose();
   }
@@ -84,6 +90,14 @@ for (const s of out.getRoot().listScenes()) {
   s.dispose();
 }
 out.getRoot().setDefaultScene(scene);
+// dance and hug, keyframed in social-clips.ts, on the same joints as Kenney's clips
+const joints = new Map<string, Node>();
+for (const a of out.getRoot().listAnimations())
+  for (const c of a.listChannels()) {
+    const node = c.getTargetNode();
+    if (node) joints.set(node.getName(), node);
+  }
+addSocialClips(out, joints);
 
 await out.transform(
   unpartition(),

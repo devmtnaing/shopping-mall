@@ -2,6 +2,8 @@
 // Drag (any button, or one finger) looks around; a quick click or tap is reported for tap-to-walk.
 // Rules: typing in a text field never moves the player; browser shortcuts (Ctrl/⌘ + key) always pass through.
 
+import { EMOTES } from '@shopping-mall/shared/protocol';
+
 /** Keys the game owns (their default browser action is suppressed while playing). */
 const GAME_KEYS = new Set([
   'KeyW',
@@ -18,12 +20,7 @@ const GAME_KEYS = new Set([
   'KeyC',
   'KeyE',
   'KeyM',
-  'Digit1',
-  'Digit2',
-  'Digit3',
-  'Digit4',
-  'Digit5',
-  'Digit6',
+  ...EMOTES.map((_, i) => `Digit${i + 1}`), // emotes: 1, 2, 3…
 ]);
 
 type KeyEventLike = {

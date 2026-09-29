@@ -11,6 +11,7 @@ import {
   AnimationMixer,
   Group,
   LoopOnce,
+  LoopRepeat,
   type Object3D,
   type SkinnedMesh,
   Sphere,
@@ -37,8 +38,10 @@ const CLIP_FOR_STATE: Record<number, string> = {
   [ANIM.fall]: 'fall',
   [ANIM.sit]: 'sit',
 };
-/** Emotes play a one-shot gesture on top of whatever you're doing. */
-const CLIP_FOR_EMOTE: Record<string, string> = { '👋': 'interact-right' };
+/** Emotes play a gesture while you stand still: a one-shot, or a few bars of dancing. */
+const CLIP_FOR_EMOTE: Record<string, string> = { '👋': 'interact-right', '💃': 'dance', '🤗': 'hug' };
+/** Bars of dance per 💃 (one bar is a second). */
+const DANCE_BARS = 6;
 
 export class Avatar {
   readonly object: Object3D;
@@ -54,13 +57,14 @@ export class Avatar {
     this.object = object;
     this.mixer = new AnimationMixer(object);
     for (const c of clips) this.actions.set(c.name, this.mixer.clipAction(c));
-    for (const name of ['jump', 'emote-yes', 'emote-no', 'interact-right']) {
+    for (const name of ['jump', 'emote-yes', 'emote-no', 'interact-right', 'hug']) {
       const a = this.actions.get(name);
       if (a) {
         a.setLoop(LoopOnce, 1);
         a.clampWhenFinished = true;
       }
     }
+    this.actions.get('dance')?.setLoop(LoopRepeat, DANCE_BARS);
     this.mixer.addEventListener('finished', (e) => {
       if (e.action === this.gesture) this.endGesture();
     });
@@ -69,6 +73,11 @@ export class Avatar {
 
   /** Movement state (ANIM.*) and ground speed; walk and run play faster or slower to match it. */
   setState(state: number, speed: number) {
+    // walking off (or sitting down) ends a dance or a hug
+    if (state !== this.state && state !== ANIM.idle && this.gesture) {
+      this.gesture.fadeOut(FADE);
+      this.gesture = null;
+    }
     if (state !== this.state) {
       const next = this.actions.get(CLIP_FOR_STATE[state] ?? 'idle');
       if (next && next !== this.current) {

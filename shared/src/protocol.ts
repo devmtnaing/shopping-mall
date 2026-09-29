@@ -144,7 +144,7 @@ export type ServerMessage =
   | { t: 'error'; code: 'bad-name' | 'rate' | 'full' | 'bad-token' | 'bad-message'; message: string };
 
 /** Emotes anyone can send (keeps the wire and the UI in agreement). */
-export const EMOTES = ['👋', '😂', '❤️', '🔥', '👍', '😮'] as const;
+export const EMOTES = ['👋', '😂', '❤️', '🔥', '👍', '😮', '💃', '🤗'] as const;
 export const CHAT_MAX = 200;
 export const NAME_MIN = 2;
 export const NAME_MAX = 20;

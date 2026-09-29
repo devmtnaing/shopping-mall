@@ -24,7 +24,7 @@ export const DEFAULT_AVATAR: AvatarId = 'female-a';
 
 export const isAvatar = (id: unknown): id is AvatarId => AVATARS.includes(id as AvatarId);
 
-/** Animation clips shipped in avatars.glb (Kenney's names), in the order the state machine uses them. */
+/** Animation clips shipped in avatars.glb (Kenney's names, then dance and hug, keyframed in tools/assets/social-clips.ts). */
 export const CLIPS = [
   'idle',
   'walk',
@@ -35,5 +35,7 @@ export const CLIPS = [
   'emote-yes',
   'emote-no',
   'interact-right',
+  'dance',
+  'hug',
 ] as const;
 export type ClipName = (typeof CLIPS)[number];
