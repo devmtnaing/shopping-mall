@@ -1,6 +1,7 @@
 {
   "extends": "../tsconfig.base.json",
   // Node runs these files directly (type stripping), so only erasable TypeScript syntax is allowed.
-  "compilerOptions": { "types": ["node"], "erasableSyntaxOnly": true },
+  // DOM: perf.ts and a11y.ts run code inside the page (page.evaluate)
+  "compilerOptions": { "types": ["node"], "erasableSyntaxOnly": true, "lib": ["ES2023", "DOM"] },
   "include": ["."]
 }

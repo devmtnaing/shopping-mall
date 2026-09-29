@@ -73,15 +73,17 @@ The reference downloads ~5.1 MB of models on the landing page alone.
 |---|---|
 | GC while walking with shoppers (8 s) | 1 minor GC (0.8 ms), 0 major |
 | Idle frame rate | 29 fps (144 when active) |
+| `pnpm perf --gpu` | playable 1.4 s after 521 KB, 64 draw calls, 51k tris, 21 MB heap, frame p90 8.3 ms |
 
 ## Measuring
 
 - `?debug`: an overlay with fps, frame-time graph, draw calls, triangles, textures, geometries, heap, net KB/s and quality tier. It uses `renderer.info` and no extra dependencies.
-- `pnpm perf`: a Playwright script (`tools/perf-smoke.ts`):
+- `pnpm perf`: a Playwright script (`tools/perf.ts`, run after `pnpm build`; `--gpu` to enforce frame time):
   1. Throttles to Fast 4G + 4× CPU slowdown.
   2. Measures landing → first-playable time (a `performance.mark('playable')` in code).
   3. Walks a scripted path through the atrium for 20 s, records frame times, draw calls and heap.
-  4. Fails if any budget above is exceeded. Posts a Markdown table as a PR comment.
+  4. Fails if any budget above is exceeded. Writes a Markdown table to the CI job summary.
+- `pnpm a11y`: axe-core on every main screen, plus a keyboard-only directory → shop run (`tools/a11y.ts`).
 - `pnpm size`: checks the size of every file in `dist/` against `budgets.json`.
 - Asset CI: `gltf-transform inspect` on every `.glb` and a fail when triangles, textures or size exceed the per-asset limits.
 

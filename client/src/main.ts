@@ -50,7 +50,10 @@ import './style.css';
 effect(() => {
   document.title = content.value.mall.name;
 });
-const debugMode = new URLSearchParams(location.search).has('debug');
+const params = new URLSearchParams(location.search);
+const debugMode = params.has('debug');
+/** ?perf: the test handle below, without the overlay and gizmos (they'd skew draw calls). */
+const perfMode = params.has('perf');
 
 const canvas = document.getElementById('gl') as HTMLCanvasElement;
 const { renderer, camera } = createRenderer(canvas);
@@ -230,7 +233,9 @@ if (debugMode) {
   ]);
   debug = createDebugOverlay(renderer);
   scene.add(createGizmos(mall.meta, mall.nav));
-  // handle for Playwright tests and console poking; never present without ?debug
+}
+if (debugMode || perfMode) {
+  // handle for Playwright tests and console poking; never present without ?debug or ?perf
   Object.assign(window, { mallDebug: { scene, camera, renderer, mall, player, input, follower } });
 }
 

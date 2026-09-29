@@ -15,6 +15,8 @@
     "format": "biome check --write .",
     "test": "vitest run",
     "size": "node tools/size.ts",
+    "perf": "node tools/perf.ts",
+    "a11y": "node tools/a11y.ts",
     "check": "pnpm typecheck && pnpm lint && pnpm test && pnpm build && pnpm size",
     "greybox": "node tools/greybox/build.ts && node tools/bake-navgrid.ts",
     "navgrid": "node tools/bake-navgrid.ts",
@@ -24,6 +26,7 @@
     "db:migrate": "node server/src/db/migrate-cli.ts"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
     "@biomejs/biome": "^2.5.14",
     "@gltf-transform/core": "^4.5.1",
     "@gltf-transform/extensions": "4.5.1",
@@ -32,6 +35,7 @@
     "@types/node": "^24.19.0",
     "@types/three": "^0.186.0",
     "meshoptimizer": "^1.3.0",
+    "playwright": "^1.63.0",
     "sharp": "^0.35.5",
     "three": "^0.186.1",
     "three-mesh-bvh": "^0.9.15",
