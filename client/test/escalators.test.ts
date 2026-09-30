@@ -1,6 +1,6 @@
 import { STEP } from '@shopping-mall/shared/constants';
 import type { Escalator } from '@shopping-mall/shared/meta';
-import { type InstancedMesh, Matrix4, Vector3 } from 'three';
+import { type InstancedMesh, Matrix4, Quaternion, Vector3 } from 'three';
 import { describe, expect, it } from 'vitest';
 import { PlayerController } from '../src/player/controller';
 import { escalatorCarry, escalatorSteps } from '../src/world/escalators';
@@ -130,6 +130,26 @@ describe('escalatorSteps', () => {
     const after = heights(steps);
     const i = Math.floor(before.length / 2);
     expect((after[i] as Vector3).y).toBeLessThan((before[i] as Vector3).y);
+  });
+
+  it('keeps steps reaching over the top landing inside its 0.3 m floor (a bridge, with people under it), up or down', () => {
+    for (const esc of [e, { ...e, from: e.to, to: e.from }]) {
+      const steps = escalatorSteps([esc]);
+      const treads = steps.group.children[0] as InstancedMesh;
+      const m = new Matrix4();
+      const pos = new Vector3();
+      const scale = new Vector3();
+      for (let f = 0; f < 12; f++) {
+        steps.update(0.033);
+        for (let i = 0; i < treads.count; i++) {
+          treads.getMatrixAt(i, m);
+          m.decompose(pos, new Quaternion(), scale);
+          // the top landing is z ≤ −4 either way; a step is 0.4 m deep
+          if (scale.y === 0 || pos.z - 0.2 >= -4) continue;
+          expect(pos.y - 0.26 * scale.y).toBeGreaterThan(3 - 0.3);
+        }
+      }
+    }
   });
 
   it('moves them up', () => {

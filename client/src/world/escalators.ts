@@ -53,8 +53,12 @@ export function escalatorCarry(escalators: readonly Escalator[], feet: Vector3, 
 /** The steps' tread (dark metal) and the yellow strip along each step's edge. */
 const TREAD = new MeshStandardMaterial({ color: '#3b3c3f', metalness: 0.6, roughness: 0.45 });
 const EDGE = new MeshStandardMaterial({ color: '#e2b43a', roughness: 0.6 });
-/** How far a step reaches below its tread, so the risers on the incline close up. */
+/** How far a step reaches below its tread on the incline, so the risers close up. On the flat it's
+ * only as deep as the drop to its neighbours: a full-depth step on the top landing would hang out of
+ * the bridge's underside. */
 const RISER = 0.26;
+/** The upper floor's thickness (m): steps must stay inside it where they reach over the top landing. */
+const SLAB = 0.3;
 /** The comb plates at each end (m, tools/greybox/layout.ts): steps slip under them. */
 const PLATE = 0.5;
 
@@ -80,6 +84,7 @@ export function escalatorSteps(escalators: readonly Escalator[]): EscalatorSteps
       yaw: Math.atan2(-dir.x, -dir.z), // yaw 0 faces −z
       run,
       rise,
+      top: Math.max(from.y, to.y), // the upper landing's floor
       end: run + 2 * F,
       speed: (e.speed * run) / Math.hypot(run, rise), // along the floor
       count: Math.ceil((run + 2 * F) / step),
@@ -106,6 +111,7 @@ export function escalatorSteps(escalators: readonly Escalator[]): EscalatorSteps
   const at = new Vector3();
   const one = new Vector3(1, 1, 1);
   const gone = new Vector3(0, 0, 0);
+  const deep = new Vector3(1, 1, 1);
   const update = (dt: number) => {
     t += dt;
     let k = 0;
@@ -114,16 +120,23 @@ export function escalatorSteps(escalators: readonly Escalator[]): EscalatorSteps
       const shift = (t * r.speed) % step;
       for (let i = 0; i < r.count; i++) {
         const a = i * step + shift;
-        const climb = Math.min(1, Math.max(0, (a - F) / r.run));
+        const height = (x: number) => Math.min(1, Math.max(0, (x - F) / r.run)) * r.rise;
         at.copy(r.start).addScaledVector(r.dir, a);
-        at.y += climb * r.rise + 0.015;
+        at.y += height(a) + 0.015;
+        const drop = Math.max(Math.abs(height(a) - height(a - step)), Math.abs(height(a + step) - height(a)));
+        let depth = Math.min(RISER, drop + 0.04);
+        // a step reaching over the top landing stays inside its floor (0.3 m: the bridge), even one
+        // still half on the incline
+        const onTop = r.rise > 0 ? a + step / 2 > F + r.run : a - step / 2 < F;
+        if (onTop) depth = Math.min(depth, at.y - (r.top - SLAB + 0.02));
+        deep.set(1, Math.max(0.01, depth) / RISER, 1);
         // under a comb plate (or past the end): dip just below it, then vanish. They mustn't sink
         // further: at the top the landing is the bridge, only 0.3 m thick, with people under it.
         const under = Math.max(PLATE + step / 2 - a, a - (r.end - PLATE - step / 2), 0);
         at.y -= Math.min(under, 0.03);
-        m.compose(at, q, under > step / 2 ? gone : one);
-        treads.setMatrixAt(k, m);
-        edges.setMatrixAt(k, m);
+        const hidden = under > step / 2;
+        treads.setMatrixAt(k, m.compose(at, q, hidden ? gone : deep));
+        edges.setMatrixAt(k, m.compose(at, q, hidden ? gone : one));
         k++;
       }
     }
