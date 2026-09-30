@@ -380,19 +380,36 @@ function escalator(
     const x = xc + s * (hw + deck / 2);
     balustrade(x);
   }
-  // comb plates where the steps go into the floor at each end
-  piece('escalator', xc - hw, xc + hw, [
-    [0, 0],
-    [0.5, 0],
-    [0.5, 0.03],
-    [0, 0.03],
-  ]);
-  piece('escalator', xc - hw, xc + hw, [
-    [end - 0.5, UP],
-    [end, UP],
-    [end, UP + 0.03],
-    [end - 0.5, UP + 0.03],
-  ]);
+  // a dark base under the steps on each landing, so the gaps between them don't show the floor
+  for (const [a0, a1, y] of [
+    [0, F, 0],
+    [top, end, UP],
+  ] as const)
+    piece('escalator', xc - hw, xc + hw, [
+      [a0, y],
+      [a1, y],
+      [a1, y + 0.004],
+      [a0, y + 0.004],
+    ]);
+  // comb plates where the steps go into the floor at each end: dark like the steps, with a yellow
+  // edge where the steps meet them
+  for (const [a0, a1, y, e0, e1] of [
+    [0, 0.5, 0, 0.45, 0.5],
+    [end - 0.5, end, UP, end - 0.5, end - 0.45],
+  ] as const) {
+    piece('escalator', xc - hw, xc + hw, [
+      [a0, y],
+      [a1, y],
+      [a1, y + 0.03],
+      [a0, y + 0.03],
+    ]);
+    piece('comb', xc - hw, xc + hw, [
+      [e0, y + 0.03],
+      [e1, y + 0.03],
+      [e1, y + 0.034],
+      [e0, y + 0.034],
+    ]);
+  }
   // from → to is the way the steps move: A takes you up to the bridge, B brings you back down
   const bottom: [number, number, number] = [xc, 0, zBottom];
   const topEnd: [number, number, number] = [xc, UP, zTop];

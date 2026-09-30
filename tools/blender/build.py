@@ -131,7 +131,8 @@ LOOK = {
     'rail': ('#e6dfd2', 0.7, 0.0, 0),  # parapets round the atrium: solid stone
     'panel': ('#b3b6b9', 0.35, 0.0, 0),  # escalator truss and skirts: stainless
     'rubber': ('#1d1d1f', 0.6, 0.0, 0),  # escalator handrails
-    'escalator': ('#5f5c57', 0.45, 0.4, 0),
+    'escalator': ('#232426', 0.45, 0.4, 0),  # comb plates: dark like the steps
+    'comb': ('#e2b43a', 0.6, 0.0, 0),  # their yellow edge
     'planter': ('#e9e2d6', 0.8, 0.0, 0),
     'glass': ('#bcd4dc', 0.05, 0.0, 0),
     'skylight': ('#fff8ea', 1.0, 0.0, 6),
