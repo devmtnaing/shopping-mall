@@ -22,7 +22,8 @@ export const metaSchema = z.object({
       interior: aabb,
     }),
   ),
-  seats: z.array(pose.extend({ id: z.string(), kind: z.enum(['bench', 'chair']) })),
+  /** Places to sit: pos is where your back goes (the backrest's face, at seat height), yaw the way you face. */
+  seats: z.array(pose.extend({ id: z.string(), kind: z.enum(['bench', 'chair', 'sofa']) })),
   /** Named areas for the "You are in …" label. The highest priority containing the player wins. */
   zones: z.array(
     aabb.extend({ id: z.string(), name: z.string(), priority: z.number(), slot: z.string().optional() }),

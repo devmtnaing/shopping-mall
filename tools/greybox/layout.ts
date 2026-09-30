@@ -353,19 +353,25 @@ function props(g: Geo, meta: MallMeta) {
   };
 
   /**
-   * A bench facing `yaw`; it's a seat too. A seat's pos is where your hips go: the bench model's seat
-   * runs from 0.4 m in front of its middle back to the backrest, so 0.12 m in from its front edge
-   * (sitting any further back pushes you into the backrest).
+   * A seat facing `yaw`. Its pos is where your back goes, `back` metres behind the piece's middle
+   * (measured off the models), `h` up; each character sits as far forward as its own back needs.
    */
+  const seat = (
+    kind: 'bench' | 'sofa',
+    x: number,
+    y: number,
+    z: number,
+    yaw: number,
+    back: number,
+    h: number,
+  ) => {
+    const [bx, bz] = [Math.sin(yaw) * back, Math.cos(yaw) * back]; // behind: opposite of facing
+    meta.seats.push({ id: `${kind}-${meta.seats.length}`, kind, pos: [x + bx, y + h, z + bz], yaw });
+  };
+  /** A bench facing `yaw`: its seat is 0.46 m up, its backrest 0.17 m behind its middle. */
   const bench = (x: number, y: number, z: number, yaw: number) => {
     place('bench', x, y, z, yaw);
-    const [fx, fz] = [-Math.sin(yaw) * 0.28, -Math.cos(yaw) * 0.28];
-    meta.seats.push({
-      id: `bench-${meta.seats.length}`,
-      kind: 'bench',
-      pos: [x + fx, y + 0.45, z + fz],
-      yaw,
-    });
+    seat('bench', x, y, z, yaw, 0.17, 0.45);
   };
   const inward = (x: number) => (x > 0 ? PI / 2 : -PI / 2); // facing the middle of the mall
   // Benches along the shop fronts on the ground floor, in front of the pillars between units (units
@@ -374,10 +380,16 @@ function props(g: Geo, meta: MallMeta) {
   for (const z of [-16, -26, -46, -56]) for (const x of [-edge, edge]) bench(x, 0, z, inward(x));
   for (const z of [-16, -46])
     for (const x of [-edge - 0.3, edge + 0.3]) place('recycling', x, 0, z + 1.9, inward(x));
-  // upstairs, benches and sofas along the balustrade, looking out over the atrium
+  // upstairs, benches and sofas along the parapet, backs to it, facing the walkway and the shops
   const rail = VOID.x + 0.9;
-  for (const z of [-16, -56]) for (const x of [-rail, rail]) bench(x, UP, z, inward(x));
-  for (const z of [-26, -46]) for (const x of [-rail, rail]) place('sofa', x, UP, z, inward(x));
+  for (const z of [-16, -56]) for (const x of [-rail, rail]) bench(x, UP, z, inward(-x));
+  for (const z of [-26, -46])
+    for (const x of [-rail, rail]) {
+      // the sofa model faces the other way to its yaw; its backrest is 0.28 m behind its middle, and
+      // its cushion (0.52 m) is a touch above a bench's seat, so you sink into it a little
+      place('sofa', x, UP, z, inward(x));
+      seat('sofa', x, UP, z, inward(-x), 0.28, 0.45);
+    }
 
   // floor lamps in front of the pillars in the middle of each row, plants upstairs
   for (const z of [-36, -66]) for (const x of [-X_CON + 0.7, X_CON - 0.7]) place('lamp', x, 0, z);
@@ -412,8 +424,9 @@ function props(g: Geo, meta: MallMeta) {
   const island = { x: -6.5, z: -50 };
   place('island', island.x, 0, island.z);
   place('tree', island.x, 0.45, island.z);
-  // its seat is a ring 0.95–1.2 m out from the middle: hips 0.1 m in from the outer edge
-  for (const dx of [-1.1, 1.1]) {
+  // its seat is a narrow ring 0.95–1.2 m out from the middle, with no backrest: your back goes over
+  // the inside of the ring, so a (deep) body sits centred on it
+  for (const dx of [-0.72, 0.72]) {
     const yaw = dx > 0 ? -PI / 2 : PI / 2; // facing out
     meta.seats.push({
       id: `bench-${meta.seats.length}`,

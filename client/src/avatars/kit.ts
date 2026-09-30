@@ -27,13 +27,15 @@ const FADE = 0.18;
 /** Ground speed (m/s) at which the walk and sprint cycles' feet don't slide at timeScale 1. */
 const WALK_NOMINAL = 2.4;
 const RUN_NOMINAL = 5.6;
-/** Bench seat height (m, tools/greybox/props.ts), and the hips' height at rest in rig units (every rig). */
-const SEAT = 0.45;
-const HIPS = 0.176;
+/** Seat height (m): benches, the island and sofas (tools/greybox/layout.ts). */
+const SEAT = 0.46;
 /** Held things are drawn this much bigger, so they read at a distance next to the big chibi hands. */
 const HELD_SCALE = 1.6;
-/** The hip joint sits this far above the bottom of the hips (m). */
-const HIP_DEPTH = 0.03;
+/** Sitting, a character's back stops this far short of the backrest (m). */
+const BACK_GAP = 0.03;
+/** Each character's body, measured once: how far its back is behind its origin, and its seat's height (m). */
+const bodyOf = new Map<string, Body>();
+type Body = { back: number; bottom: number };
 
 const BOUNDS = new Sphere(new Vector3(0, 0.3, 0), 0.55);
 
@@ -61,6 +63,8 @@ export class Avatar {
   /** The character under `object`, and how far to raise it to sit on a bench (its size varies). */
   private readonly rig: Object3D | undefined;
   private readonly sitLift: number;
+  /** How far forward it slides to sit: seats mark the backrest, and characters differ in depth. */
+  private readonly sitForward: number;
   /** What's in the right hand (an apple), and where the hand is on its bone. */
   private held: Object3D | null = null;
   private hand: { bone: Object3D; at: Vector3 } | null = null;
@@ -69,7 +73,13 @@ export class Avatar {
     this.id = id;
     this.object = object;
     this.rig = object.children[0];
-    this.sitLift = SEAT + HIP_DEPTH - HIPS * (this.rig?.scale.y ?? 2);
+    let body = bodyOf.get(id);
+    if (!body) {
+      body = measureBody(object);
+      bodyOf.set(id, body);
+    }
+    this.sitLift = SEAT - body.bottom; // the bottom of the body onto the seat
+    this.sitForward = body.back + BACK_GAP;
     this.mixer = new AnimationMixer(object);
     for (const c of clips) this.actions.set(c.name, this.mixer.clipAction(c));
     for (const name of ['jump', 'emote-yes', 'emote-no', 'interact-right', 'hug']) {
@@ -149,7 +159,8 @@ export class Avatar {
     this.mixer.update(dt);
     // onto the seat as the sit fades in, and back down as it fades out
     const sit = this.actions.get('sit');
-    if (this.rig) this.rig.position.y = sit?.isRunning() ? this.sitLift * sit.getEffectiveWeight() : 0;
+    const w = sit?.isRunning() ? sit.getEffectiveWeight() : 0;
+    if (this.rig) this.rig.position.set(0, this.sitLift * w, -this.sitForward * w); // up, and forward (−z)
   }
 
   dispose() {
@@ -157,6 +168,41 @@ export class Avatar {
     this.mixer.uncacheRoot(this.object);
     this.object.removeFromParent();
   }
+}
+
+/**
+ * A character's body, from what its torso bone carries, at rest, in its own space (it faces −z):
+ * `bottom`, the lowest point (what sits on a seat), and `back`, how far the back is behind the
+ * origin over the bottom 35 cm (where it meets a backrest; a big head or long hair hangs further
+ * back higher up, over the backrest).
+ */
+function measureBody(root: Object3D): Body {
+  root.updateMatrixWorld(true);
+  const toRoot = root.matrixWorld.clone().invert();
+  const v = new Vector3();
+  const pts: Vector3[] = [];
+  root.traverse((o) => {
+    const mesh = o as SkinnedMesh;
+    if (!mesh.isSkinnedMesh) return;
+    const i = mesh.skeleton.bones.findIndex((b) => b.name === 'torso');
+    const idx = mesh.geometry.attributes.skinIndex;
+    const weight = mesh.geometry.attributes.skinWeight;
+    const count = mesh.geometry.attributes.position?.count ?? 0;
+    if (i < 0 || !idx || !weight) return;
+    mesh.skeleton.update();
+    const on = (k: number) => {
+      for (let j = 0; j < 4; j++)
+        if (idx.getComponent(k, j) === i && weight.getComponent(k, j) > 0.5) return true;
+      return false;
+    };
+    for (let k = 0; k < count; k++)
+      if (on(k))
+        pts.push(mesh.getVertexPosition(k, v).applyMatrix4(mesh.matrixWorld).applyMatrix4(toRoot).clone());
+  });
+  if (!pts.length) return { back: 0.2, bottom: 0.33 };
+  const bottom = Math.min(...pts.map((p) => p.y));
+  const back = Math.max(0, ...pts.filter((p) => p.y < bottom + 0.35).map((p) => p.z));
+  return { back, bottom };
 }
 
 /**
