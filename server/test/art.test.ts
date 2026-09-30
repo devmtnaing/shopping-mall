@@ -106,7 +106,7 @@ describe.runIf(TEST_DB && S3)('mall art', () => {
 
     // spawning inside a wall
     const walled = greyMeta();
-    walled.spawns[0] = { id: 'entrance', pos: [-15.9, 0, -20], yaw: 0 };
+    walled.spawns[0] = { id: 'entrance', pos: [-21.9, 0, -24], yaw: 0 };
     await expectRefused({ model, collision, meta: await uploadMeta(walled) }, /Spawn point "entrance"/);
 
     // files of the wrong kind, and missing ones
