@@ -6,6 +6,8 @@ Walk around with friends, go into shops, browse their products and chat. It load
 > Status: **v1.1.1.** A furnished two-floor mall with shops you can walk into, 15 characters, multiplayer (chat, emotes, dancing, hugs, throwing apples), baked lighting, English and Burmese, and live content: you edit shops, products, uploads and even the building at `/admin/`, and everyone sees the change within seconds.
 > **Live demo:** <https://web-production-cc219.up.railway.app> (Railway, Singapore). **Docs:** <https://devmtnaing.github.io/shopping-mall/>. Self-host with `docker compose up`, or [deploy on Railway](https://railway.com/deploy/shopping-mall). See the [changelog](CHANGELOG.md) and the [roadmap](docs/roadmap.md).
 
+[![Gameplay: picking a character, walking the mall with other visitors, dancing, visiting a shop, the overview map, throwing apples and sitting on a bench](docs/media/gameplay.webp)](https://web-production-cc219.up.railway.app)
+
 ---
 
 ## What it is
