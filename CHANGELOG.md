@@ -13,7 +13,7 @@ Polish on top of 1.1.0.
 
 The mall gets furnished, dressed and a bit more social: shops you can see into, a character set that looks like Myanmar, dancing and hugging, apples to throw, real textures and sound, and a smaller first load.
 
-**Live demo:** <https://web-production-cc219.up.railway.app> · **Docs:** <https://devmtnaing.github.io/shopping-mall/>
+**Live demo:** <https://mall.devmtnaing.com> · **Docs:** <https://devmtnaing.github.io/shopping-mall/>
 
 ### The mall
 - **Shop interiors.** Every shop is furnished to match its category (café, books, fashion, home, games, or a general store): a coffee bar and tables, bookcases, sneaker walls, plant stands, a row of arcade cabinets. The furniture is solid, and it follows the shops live when the host changes them. "For rent" units stay empty.
@@ -39,7 +39,7 @@ The mall gets furnished, dressed and a bit more social: shops you can see into, 
 
 The first release: a multiplayer 3D shopping mall that runs in the browser, which you host and run from an admin page.
 
-**Live demo:** <https://web-production-cc219.up.railway.app> · **Docs:** <https://devmtnaing.github.io/shopping-mall/>
+**Live demo:** <https://mall.devmtnaing.com> · **Docs:** <https://devmtnaing.github.io/shopping-mall/>
 
 ### The mall
 - A two-floor mall with 25 shop units, escalators, a skybridge, a fountain court and a flagship store, **baked in Blender** (Cycles lightmap, generated stone, plaster and wood textures). `pnpm mall` rebuilds it.

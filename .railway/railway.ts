@@ -59,6 +59,8 @@ export default defineRailway(() => {
       RAILWAY_DOCKERFILE_PATH: 'client/Dockerfile',
       PORT: '8080',
       API_UPSTREAM: '${{server.RAILWAY_PRIVATE_DOMAIN}}:8787',
+      // mall.devmtnaing.com is behind Cloudflare's proxy: visitors' addresses come from CF-Connecting-IP
+      CLIENT_IP_FROM: 'cloudflare',
     },
   });
 

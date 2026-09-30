@@ -37,13 +37,13 @@ You can run the whole mall two ways: with **docker compose** on any machine, or 
 
 ## Railway
 
-The production project `shopping-mall` (<https://web-production-cc219.up.railway.app>) runs in Singapore (`asia-southeast1`, bucket region `sin`). Every service builds from `main` on GitHub. Watch paths keep a docs-only push from rebuilding anything.
+The production project `shopping-mall` runs in Singapore (`asia-southeast1`, bucket region `sin`) and is served at <https://mall.devmtnaing.com>, through Cloudflare's proxy. Railway's own address for it, <https://web-production-cc219.up.railway.app>, still works too. Every service builds from `main` on GitHub. Watch paths keep a docs-only push from rebuilding anything.
 
 <div v-pre>
 
 | Service | Dockerfile (`RAILWAY_DOCKERFILE_PATH`) | Notable settings |
 |---|---|---|
-| `web` | `client/Dockerfile` | Public domain on port 8080, `PORT=8080`, `API_UPSTREAM=${{server.RAILWAY_PRIVATE_DOMAIN}}:8787`, health check `/` |
+| `web` | `client/Dockerfile` | Public domains on port 8080 (`mall.devmtnaing.com` and Railway's own), `PORT=8080`, `API_UPSTREAM=${{server.RAILWAY_PRIVATE_DOMAIN}}:8787`, `CLIENT_IP_FROM=cloudflare`, health check `/` |
 | `server` | `server/Dockerfile` | `PORT=8787`, `DATABASE_URL=${{Postgres.DATABASE_URL}}`, `S3_*=${{uploads.*}}`, `S3_URL_STYLE=virtual`, `HOST_SECRET`, health check `/health` |
 | `backup` | `tools/backup/Dockerfile` | Cron `0 3 * * *` (UTC), restart never, `PG_MAJOR=18`, same database and bucket references |
 | `Postgres` | Railway template | Volume `postgres-volume` |

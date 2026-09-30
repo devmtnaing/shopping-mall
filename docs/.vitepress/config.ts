@@ -17,7 +17,7 @@ export default defineConfig({
     nav: [
       { text: 'Guide', link: '/guide/' },
       { text: 'Contributing', link: '/guide/contributing' },
-      { text: 'Live demo', link: 'https://web-production-cc219.up.railway.app' },
+      { text: 'Live demo', link: 'https://mall.devmtnaing.com' },
     ],
     sidebar: [
       {

@@ -4,7 +4,7 @@ Shopping Mall is a 3D mall that runs in any modern browser. Visitors pick a name
 
 ## Try it
 
-- **Live demo:** <https://web-production-cc219.up.railway.app>
+- **Live demo:** <https://mall.devmtnaing.com>
 - **Controls on a computer:**
   - WASD or the arrow keys to walk, Shift to run, Space to jump. Drag to look around and scroll to zoom.
   - Click the floor to walk there.

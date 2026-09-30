@@ -10,7 +10,7 @@ hero:
       link: /guide/
     - theme: alt
       text: Try the live demo
-      link: https://web-production-cc219.up.railway.app
+      link: https://mall.devmtnaing.com
     - theme: alt
       text: GitHub
       link: https://github.com/devmtnaing/shopping-mall
