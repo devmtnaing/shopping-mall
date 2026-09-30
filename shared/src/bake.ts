@@ -1,7 +1,8 @@
 // Navgrid baking, shared by `pnpm navgrid` (the built-in greybox) and the server (uploaded malls).
 // A cell is walkable when (1) walkable ground lies under it within a metre of its floor and
 // (2) the player's body capsule fits there. Same rules as the character controller, so any
-// cell A* picks is somewhere the player can actually stand. Escalators become links between floors.
+// cell A* picks is somewhere the player can actually stand. Escalators become one-way links between
+// floors, from the end the steps leave to the end they arrive at.
 import { WebIO } from '@gltf-transform/core';
 import { Box3, BufferAttribute, BufferGeometry, DoubleSide, Line3, Matrix4, Ray, Vector3 } from 'three';
 import { MeshBVH } from 'three-mesh-bvh';

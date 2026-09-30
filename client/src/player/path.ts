@@ -21,7 +21,7 @@ export class PathFinder {
   private readonly heap: Int32Array;
   private readonly heapF: Float32Array;
   private heapSize = 0;
-  /** Links indexed by node, both directions. */
+  /** Links indexed by the node they leave from. */
   private readonly linksAt = new Map<number, { to: number; cost: number }[]>();
   /** 1 where a node has links, so the hot loop skips the Map lookup almost always. */
   private readonly hasLink: Uint8Array;
@@ -35,12 +35,10 @@ export class PathFinder {
     this.heap = new Int32Array(n);
     this.heapF = new Float32Array(n);
     this.hasLink = new Uint8Array(n);
-    for (const l of nav.links) {
-      const a = l.floorA * nav.size + l.cellA;
-      const b = l.floorB * nav.size + l.cellB;
-      this.link(a, b, l.cost);
-      this.link(b, a, l.cost);
-    }
+    // one way: an escalator's link runs the way its steps move (A up, B down), so paths never
+    // walk against one
+    for (const l of nav.links)
+      this.link(l.floorA * nav.size + l.cellA, l.floorB * nav.size + l.cellB, l.cost);
   }
 
   /**
@@ -130,20 +128,12 @@ export class PathFinder {
       const dz = Math.abs(r - tr);
       return (Math.max(dx, dz) + (SQRT2 - 1) * Math.min(dx, dz)) * cell * 1.001;
     };
-    // off the goal's floor, the way there is through an escalator: to its near end, along it, then
-    // from its far end to the goal (the nearest such route, so still never an overestimate)
+    // off the goal's floor, the way there is through an escalator that arrives on it: to its start,
+    // along it, then from its end to the goal (the nearest such route, so never an overestimate)
     const goalFloor = this.floorOf(goal);
-    const via = nav.links.flatMap((l) =>
-      l.floorA === goalFloor || l.floorB === goalFloor
-        ? [
-            {
-              floor: l.floorA === goalFloor ? l.floorB : l.floorA,
-              near: l.floorA === goalFloor ? l.cellB : l.cellA,
-              rest: l.cost + octileCell(l.floorA === goalFloor ? l.cellA : l.cellB),
-            },
-          ]
-        : [],
-    );
+    const via = nav.links
+      .filter((l) => l.floorB === goalFloor) // links are one way: only those arriving on it
+      .map((l) => ({ floor: l.floorA, near: l.cellA, rest: l.cost + octileCell(l.cellB) }));
     function octileCell(i: number) {
       const c = i % cols;
       return octile(c, (i - c) / cols, gc, gr);

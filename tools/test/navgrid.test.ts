@@ -49,12 +49,12 @@ describe('navgrid.bin', () => {
     expect(at(UPPER, 0, -24)).toBe(false); // over the atrium opening
   });
 
-  it('links the ground floor to the upper floor through both escalators', () => {
+  it('links the floors one way per escalator: A up, B down', () => {
     expect(nav.links).toHaveLength(2);
-    for (const l of nav.links) {
-      expect(l.floorA).toBe(GROUND);
-      expect(l.floorB).toBe(UPPER);
+    const [up, down] = nav.links;
+    expect([up?.floorA, up?.floorB]).toEqual([GROUND, UPPER]);
+    expect([down?.floorA, down?.floorB]).toEqual([UPPER, GROUND]);
+    for (const l of nav.links)
       expect(nav.walkable(l.floorA, l.cellA) && nav.walkable(l.floorB, l.cellB)).toBe(true);
-    }
   });
 });

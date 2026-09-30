@@ -27,7 +27,7 @@ const DOOR_H = 4.2;
 const RAIL_H = 1.1;
 const ENTRANCE = 5; // half-width of the glass entrance
 const FLAG_DOOR = 7; // half-width of the flagship's doorway
-/** Escalator A (west, up to the bridge's south edge) and B (east, up to its north edge): centre x, width. */
+/** Escalator A (west, up to the bridge's south edge) and B (east, down from its north edge): centre x, width. */
 const ESC = { a: -3, b: 3, w: ESCALATOR.width + 0.5 }; // w: overall, balustrades included
 /** Escalators rise at 30°, like real ones: this much run for the climb to the upper floor. */
 const ESC_RUN = UP / Math.tan(Math.PI / 6);
@@ -52,7 +52,7 @@ export function buildGreybox() {
   flagship(g, meta);
   upperFloor(g);
   escalator(g, meta, 'a', ESC.a, BRIDGE.z0 + ESC_RUN, BRIDGE.z0);
-  escalator(g, meta, 'b', ESC.b, BRIDGE.z1 - ESC_RUN, BRIDGE.z1);
+  escalator(g, meta, 'b', ESC.b, BRIDGE.z1 - ESC_RUN, BRIDGE.z1, 'down');
   props(g, meta);
   zones(meta);
   return { geo: g, meta };
@@ -204,7 +204,15 @@ function roofOrSlab(g: Geo, mat: string, y0: number, y1: number, collide: boolea
  * (client/src/world/escalators.ts); here the walking surface is an invisible ramp under them, and
  * invisible walls along the balustrades keep you on it.
  */
-function escalator(g: Geo, meta: MallMeta, id: string, xc: number, zBottom: number, zTop: number) {
+function escalator(
+  g: Geo,
+  meta: MallMeta,
+  id: string,
+  xc: number,
+  zBottom: number,
+  zTop: number,
+  runs: 'up' | 'down' = 'up',
+) {
   const { width: W, landing: F } = ESCALATOR;
   const run = Math.abs(zTop - zBottom);
   const top = F + run; // where the incline ends, along the escalator from its bottom end
@@ -299,7 +307,11 @@ function escalator(g: Geo, meta: MallMeta, id: string, xc: number, zBottom: numb
     [end, UP + 0.03],
     [end - 0.5, UP + 0.03],
   ]);
-  meta.escalators.push({ id, from: [xc, 0, zBottom], to: [xc, UP, zTop], width: W, speed: 1.2 });
+  // from → to is the way the steps move: A takes you up to the bridge, B brings you back down
+  const bottom: [number, number, number] = [xc, 0, zBottom];
+  const topEnd: [number, number, number] = [xc, UP, zTop];
+  const [from, to] = runs === 'up' ? [bottom, topEnd] : [topEnd, bottom];
+  meta.escalators.push({ id, from, to, width: W, speed: 1.2 });
 }
 
 /** Benches (seats), recycling stations, lamps, plants, lanterns, café tables, sofas, planters, fruit stands and a fountain. */

@@ -1,4 +1,5 @@
-// Escalators as moving surfaces: while you stand on one, it carries you from its bottom to its top.
+// Escalators as moving surfaces: while you stand on one, it carries you the way its steps run, landings
+// included (A up, B down).
 // And their moving steps, drawn here since they move (the rest of the escalator is in the mall).
 import { ESCALATOR } from '@shopping-mall/shared/constants';
 import type { Escalator } from '@shopping-mall/shared/meta';
@@ -31,11 +32,18 @@ export function escalatorCarry(escalators: readonly Escalator[], feet: Vector3, 
     const px = feet.x - e.from[0];
     const pz = feet.z - e.from[2];
     const t = (px * dx + pz * dz) / flat2;
-    if (t < 0 || t > 1) continue;
+    // the steps run flat across a landing at each end too, so they carry you off at the far end
+    const landing = ESCALATOR.landing / Math.sqrt(flat2);
+    if (t < -landing || t > 1 + landing) continue;
     const side = Math.abs(px * dz - pz * dx) / Math.sqrt(flat2);
     if (side > e.width / 2) continue;
-    const surfaceY = e.from[1] + dy * t;
+    const incline = t >= 0 && t <= 1;
+    const surfaceY = e.from[1] + dy * Math.min(1, Math.max(0, t));
     if (Math.abs(feet.y - surfaceY) > RIDE_TOLERANCE) continue;
+    if (!incline) {
+      const flat = Math.sqrt(flat2);
+      return out.set((dx / flat) * e.speed, 0, (dz / flat) * e.speed);
+    }
     const len = Math.hypot(dx, dy, dz);
     return out.set((dx / len) * e.speed, (dy / len) * e.speed, (dz / len) * e.speed);
   }

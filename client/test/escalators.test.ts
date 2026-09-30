@@ -27,9 +27,19 @@ describe('escalatorCarry', () => {
     expect(out.z).toBeLessThan(0);
   });
 
+  it('carries you flat across its landings, where the steps run level', () => {
+    escalatorCarry([e], new Vector3(0, 0, 0.8), out);
+    expect(out.length()).toBeCloseTo(1);
+    expect(out.y).toBe(0);
+    escalatorCarry([e], new Vector3(0, 3, -4.8), out);
+    expect(out.y).toBe(0);
+    expect(out.z).toBeLessThan(0);
+  });
+
   it('ignores you when beside it, past its ends, or not on its surface', () => {
     expect(escalatorCarry([e], new Vector3(0.8, 1.5, -2), out).length()).toBe(0);
-    expect(escalatorCarry([e], new Vector3(0, 0, 1), out).length()).toBe(0);
+    expect(escalatorCarry([e], new Vector3(0, 0, 1.5), out).length()).toBe(0); // past the landing
+    expect(escalatorCarry([e], new Vector3(0, 3, -5.5), out).length()).toBe(0);
     expect(escalatorCarry([e], new Vector3(0, 0, -2), out).length()).toBe(0); // under it
   });
 });
@@ -45,13 +55,13 @@ describe('riding the greybox escalators', () => {
     expect(p.pos.z).toBeGreaterThan(-34.5); // stepped off and stopped, didn't shoot across the bridge
   });
 
-  it('carries you up B too, which runs the other way (toward +z)', () => {
+  it('carries you down B, from the bridge back to the ground (toward −z)', () => {
     const p = new PlayerController(collider);
-    p.place(3, 0, -55.2, Math.PI);
-    ride(p, 0.3, { ...idle, y: 1, yaw: Math.PI });
+    p.place(3, 8, -40.6);
+    ride(p, 0.3, { ...idle, y: 1 }); // step on
     ride(p, 16);
-    expect(p.pos.y).toBeCloseTo(8, 2);
-    expect(p.pos.z).toBeGreaterThan(-41);
+    expect(p.pos.y).toBeCloseTo(0, 2);
+    expect(p.pos.z).toBeLessThan(-54.8);
   });
 
   it('lets you walk up faster than it moves, and walk down against it', () => {
@@ -105,6 +115,16 @@ describe('escalatorSteps', () => {
     }
     expect(at.some((p) => p.y < 0.05)).toBe(true);
     expect(at.some((p) => p.y > 2.95)).toBe(true);
+  });
+
+  it('moves them down on a down escalator (from the top, to the bottom)', () => {
+    const down: Escalator = { ...e, from: e.to, to: e.from };
+    const steps = escalatorSteps([down]);
+    const before = heights(steps);
+    steps.update(0.1);
+    const after = heights(steps);
+    const i = Math.floor(before.length / 2);
+    expect((after[i] as Vector3).y).toBeLessThan((before[i] as Vector3).y);
   });
 
   it('moves them up', () => {

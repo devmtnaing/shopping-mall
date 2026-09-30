@@ -100,6 +100,15 @@ describe('PathFollower with the real controller', () => {
     expect(Math.hypot(pos.x - to.x, pos.z - to.z)).toBeLessThan(0.4);
   });
 
+  it('comes back down by the down escalator, never against the up one', () => {
+    const path = finder.find({ x: 8.5, y: 8, z: -14 }, { x: 0, y: 0, z: -6 });
+    expect(path).not.toBeNull();
+    // the leg between floors is escalator B (x = 3), not A (x = −3)
+    const i = path?.findIndex((p) => p.y < 1) ?? -1;
+    expect(i).toBeGreaterThan(0);
+    expect(Math.abs((path?.[i - 1]?.x ?? 0) - 3)).toBeLessThan(0.8);
+  });
+
   it('walks upstairs via an escalator to the far end of the upper gallery', () => {
     const to = { x: -8, y: 8, z: -64 };
     const { pos } = walk(to);
