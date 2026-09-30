@@ -22,6 +22,8 @@ export const en = {
   'dock.shops': 'Shops',
   'dock.overview': 'Overview',
   'dock.help': 'Help',
+  'dock.character': 'Character',
+  'character.title': 'Your character',
   'map.title': 'Map',
   'prompt.visit': 'Visit',
   'dir.eyebrow': 'Directory',

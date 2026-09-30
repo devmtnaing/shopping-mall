@@ -132,6 +132,8 @@ export type ClientMessage =
   | { t: 'emote'; e: string }
   | { t: 'teleport' }
   | { t: 'report'; id: number; reason?: string }
+  /** You changed character or colour mid-visit. */
+  | { t: 'look'; look: Look }
   /** An apple thrown from `o` at velocity `v` (m/s); every client flies it the same way. */
   | { t: 'throw'; o: [number, number, number]; v: [number, number, number] };
 
@@ -141,6 +143,8 @@ export type ServerMessage =
   | { t: 'chat'; id: number; name: string; text: string; at: number; host?: boolean }
   | { t: 'emote'; id: number; e: string }
   | { t: 'throw'; id: number; o: [number, number, number]; v: [number, number, number] }
+  /** Someone in the room changed character or colour. */
+  | { t: 'look'; id: number; look: Look }
   | { t: 'announce'; text: string }
   /** Shops or mall details changed: refetch /api/content if your version is older. */
   | { t: 'content'; version: number }

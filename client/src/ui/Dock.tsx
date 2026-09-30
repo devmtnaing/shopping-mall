@@ -1,7 +1,7 @@
 // Bottom-centre dock.
 import { t } from '../i18n';
 import { chatOpen, dialog, emoteBar, netStatus, overview } from '../state';
-import { IconChat, IconHelp, IconLayers, IconStore } from './icons';
+import { IconChat, IconHelp, IconLayers, IconPerson, IconStore } from './icons';
 
 const coarse = typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches;
 
@@ -41,6 +41,10 @@ export function Dock() {
           <span>{t('emote.label')}</span>
         </button>
       )}
+      <button type="button" class="dock-btn" onClick={() => (dialog.value = 'character')}>
+        <IconPerson />
+        <span>{t('dock.character')}</span>
+      </button>
       <button type="button" class="dock-btn" onClick={() => (dialog.value = 'help')}>
         <IconHelp />
         <span>{t('dock.help')}</span>

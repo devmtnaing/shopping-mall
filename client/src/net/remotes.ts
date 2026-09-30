@@ -39,6 +39,14 @@ export class Remotes {
     this.version++;
   }
 
+  /** Someone changed character or colour. */
+  look(id: number, look: PlayerInfo['look']) {
+    const r = this.players.get(id);
+    if (!r) return;
+    r.info = { ...r.info, look };
+    this.version++;
+  }
+
   /** Call once per snapshot before its players, with the snapshot's tick and arrival time. */
   beginSnapshot(tick: number, now: number) {
     this.tickTime = this.clock.onTick(tick, now);

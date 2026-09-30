@@ -216,6 +216,15 @@ const multi = createMultiplayer({
     player.facing = Math.atan2(-(x - player.pos.x), -(z - player.pos.z));
   },
 });
+// a new character or colour mid-visit (dock → Character): tell the room
+let sentLook = `${profile.value.color} ${profile.value.avatar}`;
+effect(() => {
+  const { color, avatar } = profile.value;
+  const look = `${color} ${avatar}`;
+  if (look === sentLook) return;
+  sentLook = look;
+  multi.setLook({ color, avatar });
+});
 // avatars load after the world (capsules until then); a failure just keeps the capsules
 import('./avatars/kit')
   .then(({ loadAvatarKit }) => loadAvatarKit())

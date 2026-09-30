@@ -18,6 +18,7 @@ const clientMessage = z.discriminatedUnion('t', [
   z.object({ t: z.literal('chat'), text: z.string().max(CHAT_MAX * 4) }),
   z.object({ t: z.literal('emote'), e: z.enum(EMOTES) }),
   z.object({ t: z.literal('teleport') }),
+  z.object({ t: z.literal('look'), look }),
   z.object({
     t: z.literal('throw'),
     o: z.tuple([finite, finite, finite]),

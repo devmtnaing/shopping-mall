@@ -54,7 +54,7 @@ export const nearbyShop = signal<string | null>(null);
 export const panel = signal<string | null>(null);
 
 /** Which modal dialog is open. */
-export type DialogId = 'help' | 'directory';
+export type DialogId = 'help' | 'directory' | 'character';
 export const dialog = signal<DialogId | null>(null);
 
 /** Multiplayer connection state (see net/socket.ts) and how many people are in your room. */

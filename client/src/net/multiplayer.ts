@@ -73,6 +73,7 @@ export function createMultiplayer(opts: {
           onHugFrom?.(from.pose.x, from.pose.z);
         return bubbles.show(m.id === net.selfId ? 'me' : m.id, m.e, true);
       }
+      if (m.t === 'look') return remotes.look(m.id, m.look);
       if (m.t === 'throw') {
         if (m.id === net.selfId || muted.value.has(m.id)) return; // yours is already in the air
         crowd.gesture(m.id, 'interact-right');
@@ -175,6 +176,10 @@ export function createMultiplayer(opts: {
       }
     },
     /** Tell people nearby about an apple you threw. */
+    /** Tell the room you changed character or colour. */
+    setLook(look: { color: string; avatar?: string }) {
+      if (net.online) net.send({ t: 'look', look });
+    },
     throwApple(o: [number, number, number], v: [number, number, number]) {
       if (net.online) net.send({ t: 'throw', o, v });
     },

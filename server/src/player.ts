@@ -5,7 +5,8 @@ import { RateLimit } from './limits.ts';
 export class Player {
   readonly id: number;
   readonly name: string;
-  readonly look: Look;
+  /** Changes when they pick another character mid-visit. */
+  look: Look;
   host = false;
   socket: WebSocket | null;
   readonly pose: Pose = { x: 0, y: 0, z: 0, yaw: 0, anim: 0, flags: 0 };
@@ -18,6 +19,8 @@ export class Player {
   readonly emoteLimit = new RateLimit(4, 2);
   /** Apples: a burst of 3, then one a second. */
   readonly throwLimit = new RateLimit(3, 1);
+  /** Changing character: a burst of 3, then one every 2 s. */
+  readonly lookLimit = new RateLimit(3, 1 / 2);
   /** One report every 30 s. */
   readonly reportLimit = new RateLimit(1, 1 / 30);
 

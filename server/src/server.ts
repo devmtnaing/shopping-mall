@@ -354,6 +354,12 @@ export async function startServer(opts: ServerOptions = {}) {
     } else if (msg.t === 'emote') {
       if (player.emoteLimit.take())
         room.nearby(player, EMOTE_RADIUS, { t: 'emote', id: player.id, e: msg.e });
+    } else if (msg.t === 'look') {
+      // everyone in the room keeps your look (for the tag colour and the avatar), so tell them all
+      if (player.lookLimit.take()) {
+        player.look = msg.look;
+        room.broadcast({ t: 'look', id: player.id, look: msg.look }, player.id);
+      }
     } else if (msg.t === 'throw') {
       // from where you stand, no harder than a throw: anything else is dropped
       const [ox, oy, oz] = msg.o;

@@ -261,6 +261,27 @@ describe('apples', () => {
   });
 });
 
+describe('changing character', () => {
+  it('tells the room your new look, remembers it for newcomers, and drops one that is not allowed', async () => {
+    const a = client();
+    await a.join('Aye');
+    const b = client();
+    const wb = await b.join('Bo');
+    b.send({ t: 'look', look: { color: '#3a7bd5', avatar: 'student' } });
+    expect(await a.waitFor((m) => m.t === 'look')).toMatchObject({
+      id: wb.id,
+      look: { color: '#3a7bd5', avatar: 'student' },
+    });
+    const c = client();
+    const wc = await c.join('Cee');
+    expect(wc.players.find((p: { id: number }) => p.id === wb.id)?.look.avatar).toBe('student');
+    b.send({ t: 'look', look: { color: '#3a7bd5', avatar: 'dragon' } }); // not a character
+    b.send({ t: 'look', look: { color: 'red' } }); // not a colour
+    await sleep(150);
+    expect(a.messages.filter((m) => m.t === 'look')).toHaveLength(1);
+  });
+});
+
 describe('chat limits', () => {
   it('lets a burst through, then asks the sender to slow down', async () => {
     const a = client();

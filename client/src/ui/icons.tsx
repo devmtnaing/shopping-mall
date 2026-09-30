@@ -32,4 +32,5 @@ export const IconGlobe = svg(
 );
 export const IconSound = svg('M11 5 6 9H2v6h4l5 4V5zM15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14');
 export const IconMuted = svg('M11 5 6 9H2v6h4l5 4V5zM22 9l-6 6M16 9l6 6');
+export const IconPerson = svg('M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21a8 8 0 0 1 16 0');
 export const IconChat = svg('M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z');

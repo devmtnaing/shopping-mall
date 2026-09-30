@@ -1,12 +1,12 @@
 // Welcome screen, shown over a slowly orbiting view of the mall while the world loads behind it.
 import { useSignal } from '@preact/signals';
-import { AVATARS } from '@shopping-mall/shared/avatars';
 import { useEffect, useRef } from 'preact/hooks';
 import { content } from '../content';
 import { t } from '../i18n';
 import { type Health, health } from '../net/socket';
-import { BODY_COLORS, mallMeta, phase, profile, saveProfile } from '../state';
+import { mallMeta, phase, profile, saveProfile } from '../state';
 import { HostSignIn } from './HostSignIn';
+import { LookPicker } from './LookPicker';
 
 export function Landing() {
   const name = useSignal(profile.value.name);
@@ -77,39 +77,12 @@ export function Landing() {
         </p>
       )}
 
-      <fieldset class="avatars">
-        <legend class="field-label">{t('landing.avatar')}</legend>
-        {AVATARS.map((a, i) => (
-          <label key={a} class="avatar-pick">
-            <input
-              type="radio"
-              name="avatar"
-              value={a}
-              checked={avatar.value === a}
-              onChange={() => (avatar.value = a)}
-              aria-label={t('landing.avatarOption', { n: String(i + 1) })}
-            />
-            <img src={`${import.meta.env.BASE_URL}assets/avatars/${a}.png`} alt="" width={40} height={40} />
-          </label>
-        ))}
-      </fieldset>
-
-      <fieldset class="swatches">
-        <legend class="field-label">{t('landing.colour')}</legend>
-        {BODY_COLORS.map((c) => (
-          <label key={c} class="swatch-pick" style={{ '--c': c }}>
-            <input
-              type="radio"
-              name="color"
-              value={c}
-              checked={color.value === c}
-              onChange={() => (color.value = c)}
-              aria-label={t('landing.colourOption', { c })}
-            />
-            <span />
-          </label>
-        ))}
-      </fieldset>
+      <LookPicker
+        avatar={avatar.value}
+        color={color.value}
+        onAvatar={(a) => (avatar.value = a)}
+        onColor={(c) => (color.value = c)}
+      />
 
       <button ref={enterRef} type="submit" class="enter" disabled={waiting.value}>
         {waiting.value

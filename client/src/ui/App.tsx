@@ -91,6 +91,7 @@ function App() {
       <Fade />
       {dialogs.value && dialog.value === 'help' && <dialogs.value.Help />}
       {dialogs.value && dialog.value === 'directory' && <dialogs.value.Directory />}
+      {dialogs.value && dialog.value === 'character' && <dialogs.value.Character />}
       {dialogs.value && panel.value && <dialogs.value.ShopPanel id={panel.value} key={panel.value} />}
     </>
   );

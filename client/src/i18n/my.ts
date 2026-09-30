@@ -22,6 +22,8 @@ export const my: Partial<Record<Key, string>> = {
   'dock.label': 'မောလ် ထိန်းချုပ်ခလုတ်များ',
   'dock.shops': 'ဆိုင်များ',
   'dock.overview': 'မြင်ကွင်းကျယ်',
+  'dock.character': 'ဇာတ်ကောင်',
+  'character.title': 'သင့် ဇာတ်ကောင်',
   'dock.help': 'အကူအညီ',
   'map.title': 'မြေပုံ',
   'prompt.visit': 'ဝင်ကြည့်မယ်',
