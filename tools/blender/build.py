@@ -126,7 +126,7 @@ LOOK = {
     'shopfloor': ('#c8bdab', 0.6, 0.0, 0),
     'trim': ('#b8955e', 0.35, 1.0, 0),
     'dark': ('#3a3732', 0.6, 0.0, 0),
-    'rail': ('#9c9892', 0.3, 0.8, 0),
+    'rail': ('#e6dfd2', 0.7, 0.0, 0),  # parapets round the atrium: solid stone
     'panel': ('#8f8b85', 0.35, 0.0, 0),  # escalator side panels
     'escalator': ('#5f5c57', 0.45, 0.4, 0),
     'planter': ('#e9e2d6', 0.8, 0.0, 0),
@@ -137,7 +137,6 @@ LOOK = {
     'skirting': ('#6f665b', 0.5, 0.0, 0),  # stone skirting
     'cornice': ('#e6dfd2', 0.7, 0.0, 0),
     'handrail': ('#b8955e', 0.3, 1.0, 0),  # brass, like the trim
-    'railglass': ('#d7e6ea', 0.05, 0.0, 0),
 }
 
 
@@ -266,8 +265,8 @@ def material(name):
     if emit:
         bsdf.inputs['Emission Color'].default_value = srgb(col)
         bsdf.inputs['Emission Strength'].default_value = emit * EXPOSURE / 0.25  # tuned at 0.25
-    if name in ('glass', 'railglass'):
-        bsdf.inputs['Alpha'].default_value = 0.25 if name == 'glass' else 0.18
+    if name == 'glass':
+        bsdf.inputs['Alpha'].default_value = 0.25
         m.surface_render_method = 'BLENDED'
     if name in TILED and not any(n.type == 'TEX_IMAGE' for n in m.node_tree.nodes):
         t = m.node_tree.nodes.new('ShaderNodeTexImage')
@@ -352,29 +351,24 @@ for s in (-1, 1):
         # a cornice band along the whole row, just under the ceiling
         side_box('cornice', s, X_CON - 0.1, X_CON + 0.01, top - 0.42, top - 0.22, VOID_Z1, SLOT_Z0)
 
-# brass handrails on the balustrades (the rail panels themselves turn to glass below)
+# a brass handrail along the top of each parapet (the parapets are the greybox's "rail" boxes)
 HR = 0.04
+R = 0.2  # parapet thickness (tools/greybox/layout.ts)
 rail_segments = []
 for s in (-1, 1):
-    x0 = -VOID_X if s < 0 else VOID_X - 0.08
-    rail_segments += [(x0, x0 + 0.08, VOID_Z1, BRIDGE_Z1), (x0, x0 + 0.08, BRIDGE_Z0, VOID_Z0)]
+    x0 = -VOID_X - R if s < 0 else VOID_X
+    rail_segments += [(x0, x0 + R, VOID_Z1, BRIDGE_Z1), (x0, x0 + R, BRIDGE_Z0, VOID_Z0)]
 GAP = ESC_W / 2 + 0.1  # where the escalators arrive on the bridge (tools/greybox/layout.ts)
 rail_segments += [
-    (-VOID_X, VOID_X, VOID_Z0, VOID_Z0 + 0.08),
-    (-VOID_X, VOID_X, VOID_Z1 - 0.08, VOID_Z1),
-    (-VOID_X, ESC_A - GAP, BRIDGE_Z0 - 0.08, BRIDGE_Z0),
-    (ESC_A + GAP, VOID_X, BRIDGE_Z0 - 0.08, BRIDGE_Z0),
-    (-VOID_X, ESC_B - GAP, BRIDGE_Z1, BRIDGE_Z1 + 0.08),
-    (ESC_B + GAP, VOID_X, BRIDGE_Z1, BRIDGE_Z1 + 0.08),
+    (-VOID_X - R, VOID_X + R, VOID_Z0, VOID_Z0 + R),
+    (-VOID_X - R, VOID_X + R, VOID_Z1 - R, VOID_Z1),
+    (-VOID_X, ESC_A - GAP, BRIDGE_Z0 - R, BRIDGE_Z0),
+    (ESC_A + GAP, VOID_X, BRIDGE_Z0 - R, BRIDGE_Z0),
+    (-VOID_X, ESC_B - GAP, BRIDGE_Z1, BRIDGE_Z1 + R),
+    (ESC_B + GAP, VOID_X, BRIDGE_Z1, BRIDGE_Z1 + R),
 ]
 for xa, xb, za, zb in rail_segments:
     details.append(box('handrail', 'handrail', (xa - HR, UP + RAIL_H, za - HR), (xb + HR, UP + RAIL_H + 0.06, zb + HR)))
-
-# rail panels become glass balustrades (escalator side panels are "panel" and stay solid)
-for o in list(bpy.context.scene.objects):
-    if o.type == 'MESH' and o.name.split('.')[0] == 'rail':
-        o.data.materials[0] = material('railglass')
-        o.name = 'railglass'
 
 lights = []
 # each panel also gets an area light just below it (the emission alone is noisy to bake)
@@ -432,7 +426,7 @@ bg.inputs['Strength'].default_value = 0.08
 bpy.ops.object.select_all(action='DESELECT')
 # see-through things stay separate and unlit
 meshes = [
-    o for o in bpy.context.scene.objects if o.type == 'MESH' and o.name.split('.')[0] not in ('glass', 'railglass')
+    o for o in bpy.context.scene.objects if o.type == 'MESH' and o.name.split('.')[0] != 'glass'
 ]
 for o in meshes:
     o.select_set(True)

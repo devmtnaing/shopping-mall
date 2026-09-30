@@ -42,7 +42,7 @@ The Blender mall (Phase 2) replaces these files with the same names and formats.
 |---|---|---|
 | Shop units | `w0–w5` at x ∈ [−22, −10], `e0–e5` at x ∈ [10, 22]; unit *i* spans z ∈ [−6 − 10i − 10, −6 − 10i] | 11.7 × 10 m inside, doorway 7 × 4.2 m |
 | Upper floor | y = 8. Same units, prefixed `u-` | walls 7 m high, roof at 15 m |
-| Atrium opening | upper floor, x ∈ [−6, 6], z ∈ [−66, −10] | railings 1.1 m; 4 m galleries either side |
+| Atrium opening | upper floor, x ∈ [−6, 6], z ∈ [−66, −10] | solid parapets 1.1 m high; 4 m galleries either side |
 | Sky bridge | upper floor, x ∈ [−6, 6], z ∈ [−41, −33] | |
 | Escalator A | x = −3, rises from z ≈ −19.1 (ground) to −33 (bridge) | 1.2 m wide, 30°, 1.2 m/s |
 | Escalator B | x = 3, rises from z ≈ −54.9 (ground) to −41 (bridge) | 1.2 m wide, 30°, 1.2 m/s |

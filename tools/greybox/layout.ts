@@ -164,21 +164,21 @@ function flagship(g: Geo, meta: MallMeta) {
   });
 }
 
-/** Upper slab (open over the atrium, with a bridge across) and railings around the opening. */
+/** Upper slab (open over the atrium, with a bridge across) and solid parapets around the opening. */
 function upperFloor(g: Geo) {
   roofOrSlab(g, 'floor', CEIL, UP, true);
   g.box('floor', [-VOID.x, CEIL, BRIDGE.z1], [VOID.x, UP, BRIDGE.z0]);
 
   const y0 = UP;
   const y1 = UP + RAIL_H;
-  const r = 0.08;
+  const r = 0.2; // a solid stone parapet, not a glass balustrade, standing on the slab's edge
   for (const s of [-1, 1]) {
-    const x0 = s < 0 ? -VOID.x : VOID.x - r;
+    const x0 = s < 0 ? -VOID.x - r : VOID.x;
     g.box('rail', [x0, y0, VOID.z1], [x0 + r, y1, BRIDGE.z1]);
     g.box('rail', [x0, y0, BRIDGE.z0], [x0 + r, y1, VOID.z0]);
   }
-  g.box('rail', [-VOID.x, y0, VOID.z0], [VOID.x, y1, VOID.z0 + r]);
-  g.box('rail', [-VOID.x, y0, VOID.z1 - r], [VOID.x, y1, VOID.z1]);
+  g.box('rail', [-VOID.x - r, y0, VOID.z0], [VOID.x + r, y1, VOID.z0 + r]);
+  g.box('rail', [-VOID.x - r, y0, VOID.z1 - r], [VOID.x + r, y1, VOID.z1]);
   // bridge edges, with gaps where the escalators arrive
   const gap = ESC.w / 2 + 0.1;
   g.box('rail', [-VOID.x, y0, BRIDGE.z0 - r], [ESC.a - gap, y1, BRIDGE.z0]);

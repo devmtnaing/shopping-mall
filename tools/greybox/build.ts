@@ -16,7 +16,7 @@ const MATERIALS: Record<string, [string, number, number, number?, boolean?]> = {
   shopfloor: ['#b9b0a1', 0.6, 0],
   trim: ['#b08d57', 0.35, 0.9],
   dark: ['#34322e', 0.6, 0],
-  rail: ['#8e8b86', 0.4, 0.6],
+  rail: ['#e2dace', 0.7, 0], // parapets round the atrium: stone, like the walls
   panel: ['#8e8b86', 0.4, 0.6], // escalator side panels (solid, where rails turn to glass in Blender)
   glass: ['#a9c4cf', 0.05, 0, 0.25],
   escalator: ['#5d5a55', 0.5, 0.3],

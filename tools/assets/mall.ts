@@ -17,7 +17,7 @@ const OUT = resolve(import.meta.dirname, '../../client/public/assets/mall');
 /** Must match LIGHT_SCALE in tools/blender/build.py. */
 const LIGHT_SCALE = 2;
 /** Surfaces that make their own light or are see-through: no lightmap. */
-const UNLIT = new Set(['glass', 'railglass', 'skylight', 'lightpanel']);
+const UNLIT = new Set(['glass', 'skylight', 'lightpanel']);
 /** Lightmapped surfaces that also show a faint reflection of the mall (polished stone). */
 const REFLECT: Record<string, number> = { floor: 0.12 };
 
