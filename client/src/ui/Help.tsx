@@ -16,6 +16,7 @@ const desktop = (): [string, string][] => [
   ['1 – 8', t('emote.label')],
   ['/', t('help.findShop')],
   ['M', t('help.overview')],
+  ['N', t('help.mute')],
   ['E', t('help.visit')],
   ['F', t('help.apple')],
   ['?', t('help.thisHelp')],

@@ -1,10 +1,12 @@
-// Always-on overlay: brand pill (top left), zone label (top centre), share / language / fullscreen (top right).
+// Always-on overlay: brand pill (top left), zone label (top centre), share / sound / language /
+// fullscreen (top right).
 
+import { soundOn, toggleSound } from '../audio';
 import { content } from '../content';
 import { locales, nextLocale, setLocale, t, zoneName } from '../i18n';
 import { linkUrl } from '../links';
 import { netStatus, pose, roomCount, zone } from '../state';
-import { IconExpand, IconGlobe, IconShare } from './icons';
+import { IconExpand, IconGlobe, IconMuted, IconShare, IconSound } from './icons';
 import { share } from './share';
 
 function initials(name: string) {
@@ -68,6 +70,16 @@ export function TopRight({ playing }: { playing: boolean }) {
           <IconShare />
         </button>
       )}
+      <button
+        type="button"
+        class="icon-btn glass"
+        aria-label={t('hud.sound')}
+        aria-pressed={!soundOn.value}
+        title={`${t('hud.sound')} (N)`}
+        onClick={toggleSound}
+      >
+        {soundOn.value ? <IconSound /> : <IconMuted />}
+      </button>
       {locales.length > 1 && (
         <button
           type="button"

@@ -2,7 +2,8 @@
 // require it, and a silent start is kinder). Then: a soft ambience loop, the fountain as a positional
 // source you can walk up to, a gentle tap for buttons and a door chime when a shop opens. The tap
 // and chime are short generated clips (11 KB together); until they load, or if they can't, they're
-// synthesized. Volumes live in `volume` (Help dialog).
+// synthesized. Volumes live in `volume` (Help dialog); `soundOn` mutes everything (N, or the
+// speaker button).
 import { effect, signal } from '@preact/signals';
 import { AUDIO_LOOPS, LOOP_OVERLAP } from '@shopping-mall/shared/constants';
 import { load, save } from './storage';
@@ -13,6 +14,11 @@ export const volume = signal<Volume>({ ambience: saved.ambience ?? 0.6, effects:
 export function setVolume(v: Partial<Volume>) {
   volume.value = { ...volume.value, ...v };
   save('volume', volume.value);
+}
+export const soundOn = signal(load('soundOn', true));
+export function toggleSound() {
+  soundOn.value = !soundOn.value;
+  save('soundOn', soundOn.value);
 }
 
 const BASE = `${import.meta.env.BASE_URL}assets/audio/`;
@@ -52,8 +58,9 @@ async function start(fountain: Vec | null): Promise<Sound> {
   ambience.connect(ctx.destination);
   effects.connect(ctx.destination);
   effect(() => {
-    ambience.gain.setTargetAtTime(volume.value.ambience, ctx.currentTime, 0.1);
-    effects.gain.setTargetAtTime(volume.value.effects, ctx.currentTime, 0.1);
+    const on = soundOn.value ? 1 : 0;
+    ambience.gain.setTargetAtTime(volume.value.ambience * on, ctx.currentTime, 0.1);
+    effects.gain.setTargetAtTime(volume.value.effects * on, ctx.currentTime, 0.1);
   });
   // a hidden tab goes quiet
   document.addEventListener('visibilitychange', () => {

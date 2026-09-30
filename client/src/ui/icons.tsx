@@ -30,4 +30,6 @@ export const IconShare = svg('M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M16 6l-4-
 export const IconGlobe = svg(
   'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18',
 );
+export const IconSound = svg('M11 5 6 9H2v6h4l5 4V5zM15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14');
+export const IconMuted = svg('M11 5 6 9H2v6h4l5 4V5zM22 9l-6 6M16 9l6 6');
 export const IconChat = svg('M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z');

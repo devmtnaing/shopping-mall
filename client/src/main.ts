@@ -2,7 +2,7 @@ import { effect } from '@preact/signals';
 import { APPLE, EMOTES } from '@shopping-mall/shared/protocol';
 import { Color, DirectionalLight, Fog, HemisphereLight, Ray, Scene, Vector3 } from 'three';
 import { track } from './analytics';
-import { type Sound, soundOnFirstInteraction } from './audio';
+import { type Sound, soundOnFirstInteraction, toggleSound } from './audio';
 import type { Avatar } from './avatars/kit';
 import { installCommands } from './commands';
 import { art, content, loadContent } from './content';
@@ -386,6 +386,7 @@ startLoop({
     const arrived = intro.done ? travel.arrived(near) : null;
     if (arrived) openShop(arrived);
     if (input.keys.consume('KeyM') && !uiHasFocus.value) overview.value = !overview.value;
+    if (input.keys.consume('KeyN') && !uiHasFocus.value) toggleSound();
     multi.step();
     for (let i = 0; i < EMOTES.length; i++) {
       if (input.keys.consume(`Digit${i + 1}`) && !uiHasFocus.value) multi.emote(EMOTES[i] as string);

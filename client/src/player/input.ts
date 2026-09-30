@@ -20,6 +20,7 @@ const GAME_KEYS = new Set([
   'KeyC',
   'KeyE',
   'KeyM',
+  'KeyN',
   'KeyF',
   ...EMOTES.map((_, i) => `Digit${i + 1}`), // emotes: 1, 2, 3…
 ]);

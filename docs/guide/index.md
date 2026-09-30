@@ -5,7 +5,7 @@ Shopping Mall is a 3D mall that runs in any modern browser. Visitors pick a name
 ## Try it
 
 - **Live demo:** <https://web-production-cc219.up.railway.app>
-- **Controls:** WASD or the arrow keys to walk, Shift to run, Space to jump, drag to look, scroll to zoom, click the floor to walk there, E to visit a shop or sit on a bench, F to pick or throw an apple, 1–8 for emotes (7 dances, 8 hugs), / to search shops, M for the overview, ? for help. On a phone: a left-thumb joystick, drag to look, pinch to zoom, tap to walk.
+- **Controls:** WASD or the arrow keys to walk, Shift to run, Space to jump, drag to look, scroll to zoom, click the floor to walk there, E to visit a shop or sit on a bench, F to pick or throw an apple, 1–8 for emotes (7 dances, 8 hugs), / to search shops, M for the overview, N to mute, ? for help. On a phone: a left-thumb joystick, drag to look, pinch to zoom, tap to walk.
 
 ## Run it on your machine
 
