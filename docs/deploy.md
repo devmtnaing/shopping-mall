@@ -21,6 +21,8 @@ You can run the whole mall two ways: with **docker compose** on any machine, or 
 | `S3_URL_STYLE` | `virtual` for Railway and AWS (bucket in the hostname). Leave unset for SeaweedFS and MinIO. |
 | `HOST_SECRET` | The host password: signs in on the landing screen and at `/admin/`. Unset means no host and no admin. |
 | `PORT` | Default 8787. |
+| `MAX_PLAYERS`, `MAX_PER_IP` | The most people in the mall at once (default 20), and connections per IP address (default 5). |
+| `CHAT_KEEP_DAYS` | Days of chat history to keep (default 30). |
 | `ROOM_CAPACITY`, `REPORT_WEBHOOK`, `BLOCKLIST_FILE`, `METRICS` | Optional, see `.env.example`. |
 
 **web**

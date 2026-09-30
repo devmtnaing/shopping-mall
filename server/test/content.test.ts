@@ -21,7 +21,14 @@ describe.runIf(TEST_DB)('content database', () => {
     expect(await migrate(db.sql)).toEqual([]); // freshSchema already migrated
     const tables =
       await db.sql`select table_name from information_schema.tables where table_schema = current_schema() order by 1`;
-    expect(tables.map((t) => t.table_name)).toEqual(['assets', 'mall', 'migrations', 'products', 'shops']);
+    expect(tables.map((t) => t.table_name)).toEqual([
+      'assets',
+      'chat',
+      'mall',
+      'migrations',
+      'products',
+      'shops',
+    ]);
   });
 
   it('seeds an empty database once, and a second seed does nothing', async () => {

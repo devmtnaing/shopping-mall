@@ -46,6 +46,9 @@ Set these as environment variables, in a `.env` file if you use docker compose. 
 | `DATABASE_URL` | Postgres for live content. Without it, shops come from `mall.config.ts`. |
 | `S3_ENDPOINT`, `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_REGION` | Storage for uploads. Any S3-compatible service. |
 | `S3_URL_STYLE` | `virtual` for Railway and AWS; leave unset for SeaweedFS and MinIO. |
+| `MAX_PLAYERS` | The most people in the mall at once (default 20). Anyone else is told it's full, can look around on their own, and is let in when a place frees up. |
+| `MAX_PER_IP` | The most connections at once from one IP address (default 5), so one person or script can't take all the places. |
+| `CHAT_KEEP_DAYS` | How many days of chat history the database keeps (default 30). |
 | `ROOM_CAPACITY` | How many people fit in a room before newcomers go to `main-2`, `main-3` and so on (default 100). |
 | `REPORT_WEBHOOK` | A URL that also gets each player report as a POST, for example a chat webhook. |
 | `BLOCKLIST_FILE` | Words to mask in chat and refuse in names. |

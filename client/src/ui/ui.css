@@ -884,6 +884,11 @@ a.product:hover {
   background: #5bd28a;
   box-shadow: 0 0 6px #5bd28a;
 }
+/* the mall is full: amber, not "come in" green */
+.landing-full i {
+  background: #e2a23a;
+  box-shadow: 0 0 6px #e2a23a;
+}
 .landing-here {
   margin: 6px 0 0;
   font-size: 14px;

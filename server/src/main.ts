@@ -18,6 +18,9 @@ await storage?.ensureBucket();
 const server = await startServer({
   port,
   capacity: Number(process.env.ROOM_CAPACITY ?? 100),
+  maxPlayers: Number(process.env.MAX_PLAYERS ?? 20),
+  maxPerIp: Number(process.env.MAX_PER_IP ?? 5),
+  chatKeepDays: Number(process.env.CHAT_KEEP_DAYS ?? 30),
   blocklist: loadBlocklist(process.env.BLOCKLIST_FILE),
   reportWebhook: process.env.REPORT_WEBHOOK,
   hostSecret: process.env.HOST_SECRET || undefined,

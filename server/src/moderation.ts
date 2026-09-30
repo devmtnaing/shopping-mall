@@ -52,7 +52,7 @@ export type Report = {
   reporter: { id: number; name: string };
   reported: { id: number; name: string };
   reason: string;
-  recentChat: { name: string; text: string; at: number }[];
+  recentChat: { name: string; text: string; at: number; host?: boolean }[];
 };
 
 /** Log a report, and POST it to `webhook` when configured. Never throws. */

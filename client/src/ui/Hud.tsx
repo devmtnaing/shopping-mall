@@ -66,13 +66,13 @@ export function OverviewFloors() {
   );
 }
 
-/** Shown only when the connection is trouble: reconnecting, or offline (solo). */
+/** Shown only when you're not with everyone: reconnecting, offline, or the mall is full (solo). */
 export function NetNotice() {
   const s = netStatus.value;
-  if (s !== 'reconnecting' && s !== 'offline') return null;
+  if (s !== 'reconnecting' && s !== 'offline' && s !== 'full') return null;
   return (
     <div class="net-notice glass" role="status">
-      {t(s === 'offline' ? 'net.offline' : 'net.reconnecting')}
+      {t(s === 'full' ? 'net.full' : s === 'offline' ? 'net.offline' : 'net.reconnecting')}
     </div>
   );
 }

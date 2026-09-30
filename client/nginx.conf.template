@@ -1,5 +1,18 @@
 # A template: the nginx image fills in ${PORT} and ${API_UPSTREAM} from the environment at start
 # (compose: 80 and server:8787; Railway: its PORT and server.railway.internal:8787).
+
+# The visitor's IP, for the server's per-IP limits. Behind Cloudflare it's CF-Connecting-IP. Behind
+# Railway's edge alone it's the last address in X-Forwarded-For (the one the edge added; anything
+# before it came from the visitor and could be made up). Run bare (compose), it's the socket's.
+map $http_x_forwarded_for $forwarded_last {
+  "~(?:^|,)\s*([^,\s]+)\s*$" $1;
+  default $remote_addr;
+}
+map $http_cf_connecting_ip $client_ip {
+  "" $forwarded_last;
+  default $http_cf_connecting_ip;
+}
+
 server {
   listen ${PORT};
   listen [::]:${PORT};
@@ -32,6 +45,7 @@ server {
     proxy_set_header Upgrade $http_upgrade;
     proxy_set_header Connection "upgrade";
     proxy_set_header Host $host;
+    proxy_set_header X-Client-IP $client_ip;
     proxy_read_timeout 1h;
   }
   # the shop directory is rendered live by the server from the database
@@ -41,6 +55,7 @@ server {
   location ~ ^/(health|host-token|api/|files/) {
     proxy_pass $api;
     proxy_set_header X-Forwarded-For $remote_addr;
+    proxy_set_header X-Client-IP $client_ip;
   }
 
   gzip on;

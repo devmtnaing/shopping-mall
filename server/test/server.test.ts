@@ -7,8 +7,8 @@ import { sleep, TestClient, until } from './helpers';
 
 let server: Awaited<ReturnType<typeof startServer>>;
 const clients: TestClient[] = [];
-const client = (room?: string) => {
-  const c = new TestClient(server.port, room);
+const client = (room?: string, ip?: string) => {
+  const c = new TestClient(server.port, room, ip);
   clients.push(c);
   return c;
 };
@@ -141,7 +141,7 @@ describe('sessions', () => {
 describe('scaling', () => {
   it('overflows a full room into room-2', async () => {
     await server.close();
-    server = await startServer({ port: 0, capacity: 2, presenceMs: 100 });
+    server = await startServer({ port: 0, capacity: 2, maxPerIp: 100, presenceMs: 100 });
     await client().join('Aye');
     await client().join('Bo');
     const third = await client().join('Cee');
@@ -150,7 +150,7 @@ describe('scaling', () => {
 
   it('sends newcomers to the busiest room with space, not an emptier one', async () => {
     await server.close();
-    server = await startServer({ port: 0, capacity: 3, presenceMs: 100 });
+    server = await startServer({ port: 0, capacity: 3, maxPerIp: 100, presenceMs: 100 });
     // fill main, overflow two people into main-2, then free a seat in main
     const a = client();
     await a.join('Aa');
@@ -171,7 +171,7 @@ describe('scaling', () => {
 
   it('sends each player only the nearest others', async () => {
     await server.close();
-    server = await startServer({ port: 0, tickHz: 30, interest: 2, presenceMs: 100 });
+    server = await startServer({ port: 0, tickHz: 30, interest: 2, maxPerIp: 100, presenceMs: 100 });
     const me = client();
     await me.join('Me');
     me.ws.send(encodeInput(0, at(0, 0)));
@@ -314,5 +314,48 @@ describe('cleanName', () => {
     expect(cleanName('x'.repeat(21))).toBeNull();
     expect(cleanName('Bad‮name')).toBe('Badname'); // RTL override stripped
     expect(cleanName('မြတ်')).toBe('မြတ်');
+  });
+});
+
+describe('limits', () => {
+  it('turns people away once the mall is full, and lets them in when someone leaves', async () => {
+    await server.close();
+    server = await startServer({ port: 0, maxPlayers: 3, maxPerIp: 100, presenceMs: 100 });
+    const first = client();
+    await first.join('Aa');
+    await client().join('Bb');
+    await client().join('Cc');
+    const late = client();
+    await late.open();
+    late.send({ t: 'join', name: 'Dd', look: { color: '#e2b857' } });
+    expect(await late.waitFor((m) => m.t === 'error')).toMatchObject({ code: 'full' });
+    await until(() => late.closed !== null);
+    expect(late.closed?.code).toBe(4002);
+    const health = await (await fetch(`http://127.0.0.1:${server.port}/health`)).json();
+    expect(health).toMatchObject({ online: 3, max: 3 });
+    first.close(); // a deliberate goodbye frees the place straight away
+    await sleep(50);
+    expect((await client().join('Dd')).room).toBe('main');
+  });
+
+  it("limits connections from one address at once, by the visitor's address", async () => {
+    await server.close();
+    server = await startServer({ port: 0, maxPerIp: 2, presenceMs: 100 });
+    await client('main', '1.1.1.1').join('Aa');
+    await client('main', '1.1.1.1').join('Bb');
+    const third = client('main', '1.1.1.1');
+    expect(await third.waitFor((m) => m.t === 'error')).toMatchObject({ code: 'busy' });
+    await until(() => third.closed !== null);
+    expect(third.closed?.code).toBe(4001);
+    await client('main', '2.2.2.2').join('Cc'); // someone else is fine
+  });
+
+  it('shows a newcomer what was said lately', async () => {
+    const a = client();
+    await a.join('Aye');
+    a.send({ t: 'chat', text: 'hello mall' });
+    await a.waitFor((m) => m.t === 'chat');
+    const wb = await client().join('Bo');
+    expect(wb.chat?.map((c) => [c.name, c.text])).toEqual([['Aye', 'hello mall']]);
   });
 });

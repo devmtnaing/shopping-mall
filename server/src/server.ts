@@ -13,6 +13,7 @@ import {
   type ServerMessage,
 } from '@shopping-mall/shared/protocol';
 import { type RawData, type WebSocket, WebSocketServer } from 'ws';
+import { pruneChat, recentChat, saveChat } from './db/chat.ts';
 import { loadContent } from './db/content.ts';
 import type { Sql } from './db/db.ts';
 import { eventsHandler } from './events.ts';
@@ -33,6 +34,12 @@ export type ServerOptions = {
   tickHz?: number;
   /** Players per room before new arrivals go to <room>-2, <room>-3, … */
   capacity?: number;
+  /** The most people in the whole mall at once; anyone else is told it's full (MAX_PLAYERS). */
+  maxPlayers?: number;
+  /** The most connections at once from one IP address (MAX_PER_IP). */
+  maxPerIp?: number;
+  /** Days of chat history to keep in the database (CHAT_KEEP_DAYS). */
+  chatKeepDays?: number;
   /** Nearest players each client receives per snapshot. */
   interest?: number;
   joinTimeoutMs?: number;
@@ -61,6 +68,17 @@ export type ServerOptions = {
 };
 
 const ROOM_NAME = /^[a-z0-9-]{1,32}$/;
+/** Messages of history a newcomer sees. */
+const HISTORY = 20;
+
+/**
+ * The visitor's IP address. Behind the web container, nginx passes it as X-Client-IP (from
+ * Cloudflare's or Railway's header, see client/nginx.conf.template); run bare, it's the socket's.
+ */
+function clientIp(req: import('node:http').IncomingMessage): string {
+  const h = req.headers['x-client-ip'];
+  return (typeof h === 'string' && h.trim()) || req.socket.remoteAddress || '?';
+}
 const TELEPORT_WINDOW = 3000;
 const TELEPORT_COOLDOWN = 2000;
 /** Emotes reach people within this many metres. */
@@ -73,6 +91,9 @@ export async function startServer(opts: ServerOptions = {}) {
     port = 0,
     tickHz = NET_HZ,
     capacity = 100,
+    maxPlayers = 20,
+    maxPerIp = 5,
+    chatKeepDays = 30,
     interest = 40,
     joinTimeoutMs = 5000,
     graceMs = 30_000,
@@ -89,8 +110,20 @@ export async function startServer(opts: ServerOptions = {}) {
   } = opts;
   const files = filesHandler(storage);
   const usage = eventsHandler(events, eventLog);
-  /** Host sign-in attempts per IP: 5, then one a minute. */
+  /** Host sign-in attempts per IP: 5, then one a minute; and 30 a minute from everyone together. */
   const signInLimits = new Map<string, RateLimit>();
+  const signInAll = new RateLimit(30, 30 / 60);
+  /** Open connections per IP address. */
+  const perIp = new Map<string, number>();
+  /** Everyone in the mall, including people who dropped and may come back (they keep their place). */
+  const peopleIn = () => [...rooms.values()].reduce((n, r) => n + r.players.size, 0);
+  // chat history: prune what's past its time now and every day
+  const prune = () => {
+    if (db) pruneChat(db, chatKeepDays).catch((e) => console.warn('chat: prune failed:', e));
+  };
+  prune();
+  const pruneTimer = setInterval(prune, 24 * 3600 * 1000);
+  pruneTimer.unref();
   const rooms = new Map<string, Room>();
   const sessions = new Map<string, Session>();
   let nextId = 1;
@@ -135,6 +168,7 @@ export async function startServer(opts: ServerOptions = {}) {
       json(res, 200, {
         ok: true,
         online: list.reduce((n, r) => n + r.players, 0),
+        max: maxPlayers,
         rooms: list,
         host,
         hostLogin: !!hostSecret,
@@ -147,14 +181,15 @@ export async function startServer(opts: ServerOptions = {}) {
 
   function hostSignIn(req: import('node:http').IncomingMessage, res: import('node:http').ServerResponse) {
     if (!hostSecret) return json(res, 404, { error: 'Host sign-in is not set up on this server.' });
-    const ip = req.socket.remoteAddress ?? '?';
+    const ip = clientIp(req);
     let limit = signInLimits.get(ip);
     if (!limit) {
       if (signInLimits.size > 10_000) signInLimits.clear(); // don't grow forever
       limit = new RateLimit(5, 1 / 60);
       signInLimits.set(ip, limit);
     }
-    if (!limit.take()) return json(res, 429, { error: 'Too many tries. Wait a minute.' });
+    if (!limit.take() || !signInAll.take())
+      return json(res, 429, { error: 'Too many tries. Wait a minute.' });
     let body = '';
     req.on('data', (c: Buffer) => {
       body += c;
@@ -178,7 +213,27 @@ export async function startServer(opts: ServerOptions = {}) {
     if (url.pathname !== '/ws') return socket.destroy();
     const wanted = url.searchParams.get('room') ?? 'main';
     const roomName = ROOM_NAME.test(wanted) ? wanted : 'main';
-    wss.handleUpgrade(req, socket, head, (ws) => connect(ws, roomName));
+    const ip = clientIp(req);
+    wss.handleUpgrade(req, socket, head, (ws) => {
+      const open = perIp.get(ip) ?? 0;
+      if (open >= maxPerIp) {
+        const msg: ServerMessage = {
+          t: 'error',
+          code: 'busy',
+          message: 'Too many connections from here at once.',
+        };
+        ws.send(JSON.stringify(msg));
+        ws.close(4001, 'busy');
+        return;
+      }
+      perIp.set(ip, open + 1);
+      ws.on('close', () => {
+        const n = (perIp.get(ip) ?? 1) - 1;
+        if (n > 0) perIp.set(ip, n);
+        else perIp.delete(ip);
+      });
+      connect(ws, roomName);
+    });
   });
 
   /**
@@ -267,7 +322,7 @@ export async function startServer(opts: ServerOptions = {}) {
         resumed.player.socket?.terminate();
         resumed.player.socket = ws;
         session = resumed;
-        welcome(resumed, msg.resume as string);
+        void welcome(resumed, msg.resume as string);
         return;
       }
       const name = cleanName(msg.name);
@@ -276,6 +331,11 @@ export async function startServer(opts: ServerOptions = {}) {
         return;
       }
       clearTimeout(joinTimer);
+      if (peopleIn() >= maxPlayers) {
+        sendError('full', `The mall is full right now (${maxPlayers} people). Try again in a little while.`);
+        ws.close(4002, 'full');
+        return;
+      }
       if (msg.hostToken && !(hostSecret && verifyHostToken(hostSecret, msg.hostToken))) {
         sendError('bad-token', 'Your host sign-in has expired. Sign in again.');
         return;
@@ -287,17 +347,21 @@ export async function startServer(opts: ServerOptions = {}) {
       const token = randomBytes(18).toString('base64url');
       session = { player, room, timer: null };
       sessions.set(token, session);
-      welcome(session, token);
+      void welcome(session, token);
     }
 
-    function welcome(s: Session, token: string) {
+    async function welcome(s: Session, token: string) {
       const others = [...s.room.players.values()].filter((p) => p !== s.player).map((p) => p.info);
+      // what's been said lately, from the database when there is one (it outlives restarts)
+      let chat = s.room.recentChat.slice(-HISTORY);
+      if (db) chat = await recentChat(db, s.room.name, HISTORY).catch(() => chat);
       s.player.send({
         t: 'welcome',
         id: s.player.id,
         room: s.room.name,
         resume: token,
         players: others,
+        chat,
       } satisfies ServerMessage);
     }
 
@@ -306,9 +370,10 @@ export async function startServer(opts: ServerOptions = {}) {
       const s = session;
       if (!s || s.player.socket !== ws) return; // replaced by a resumed connection
       s.player.socket = null;
-      // a deliberate goodbye leaves now: 1000, or 1005 (close() called without a code).
-      // A dropped network shows up as 1006, so that waits for the player to resume.
-      if (code === 1000 || code === 1005) dropPlayer(s);
+      // a deliberate goodbye leaves now: 1000, 1001 (the tab closed or went elsewhere), or 1005
+      // (close() called without a code). A dropped network shows up as 1006, so that waits for the
+      // player to resume.
+      if (code === 1000 || code === 1001 || code === 1005) dropPlayer(s);
       else s.timer = setTimeout(() => dropPlayer(s), graceMs);
     });
   }
@@ -328,7 +393,12 @@ export async function startServer(opts: ServerOptions = {}) {
         return;
       }
       const at = Date.now();
-      room.rememberChat(player.name, text, at);
+      const host = player.host || undefined;
+      room.rememberChat({ name: player.name, text, at, host });
+      if (db)
+        saveChat(db, room.name, { name: player.name, text, at, host }).catch((e) =>
+          console.warn('chat: save failed:', e),
+        );
       room.broadcast({
         t: 'chat',
         id: player.id,
@@ -383,6 +453,7 @@ export async function startServer(opts: ServerOptions = {}) {
     port: typeof address === 'object' && address ? address.port : port,
     rooms,
     async close() {
+      clearInterval(pruneTimer);
       clearInterval(ticker);
       clearInterval(presence);
       for (const s of sessions.values()) if (s.timer) clearTimeout(s.timer);

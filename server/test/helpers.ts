@@ -9,8 +9,11 @@ export class TestClient {
   readonly snapshots: Map<number, Pose>[] = [];
   closed: { code: number } | null = null;
 
-  constructor(port: number, room = 'main') {
-    this.ws = new WebSocket(`ws://127.0.0.1:${port}/ws?room=${room}`);
+  /** `ip`: pretend to come from this address, the way nginx passes it on (X-Client-IP). */
+  constructor(port: number, room = 'main', ip?: string) {
+    this.ws = new WebSocket(`ws://127.0.0.1:${port}/ws?room=${room}`, {
+      headers: ip ? { 'X-Client-IP': ip } : {},
+    });
     this.ws.binaryType = 'arraybuffer';
     this.ws.on('message', (data, isBinary) => {
       if (isBinary) {

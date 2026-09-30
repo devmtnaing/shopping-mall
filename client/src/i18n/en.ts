@@ -97,6 +97,11 @@ export const en = {
   'net.online': '{n} online',
   'net.reconnecting': 'Reconnecting…',
   'net.offline': 'Offline · exploring on your own',
+  'chat.earlier': 'Earlier in the mall:',
+  'net.full': "The mall is full · exploring on your own until there's space",
+  'net.fullToast':
+    "The mall is full right now, so you're exploring on your own. You'll join everyone as soon as there's space.",
+  'landing.full': 'The mall is full right now (it has room for {n}). You can still look around on your own.',
   'landing.here': '{n} people are in the mall right now',
   'landing.hereOne': '1 person is in the mall right now',
   'landing.empty': 'Nobody is here yet. Be the first!',

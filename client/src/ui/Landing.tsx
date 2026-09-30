@@ -91,16 +91,23 @@ export function Landing() {
             ? t('landing.enterAs', { name: profile.value.name })
             : t('landing.enter')}
       </button>
-      {here !== null && (
-        <p class="landing-here">
+      {status.value?.max != null && here !== null && here >= status.value.max ? (
+        <p class="landing-here landing-full" role="status">
           <i aria-hidden="true" />
-          {here === 0
-            ? t('landing.empty')
-            : here === 1
-              ? t('landing.hereOne')
-              : t('landing.here', { n: String(here) })}
-          {status.value?.host && <strong class="host-here"> ★ {t('host.here')}</strong>}
+          {t('landing.full', { n: String(status.value.max) })}
         </p>
+      ) : (
+        here !== null && (
+          <p class="landing-here">
+            <i aria-hidden="true" />
+            {here === 0
+              ? t('landing.empty')
+              : here === 1
+                ? t('landing.hereOne')
+                : t('landing.here', { n: String(here) })}
+            {status.value?.host && <strong class="host-here"> ★ {t('host.here')}</strong>}
+          </p>
+        )
       )}
       {status.value?.hostLogin && <HostSignIn />}
     </form>

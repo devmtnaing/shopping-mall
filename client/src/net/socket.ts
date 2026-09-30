@@ -9,7 +9,8 @@ import {
   type ServerMessage,
 } from '@shopping-mall/shared/protocol';
 
-export type NetStatus = 'off' | 'connecting' | 'online' | 'reconnecting' | 'offline';
+/** `full`: the server turned us away (the mall is full); we explore alone and ask again now and then. */
+export type NetStatus = 'off' | 'connecting' | 'online' | 'reconnecting' | 'offline' | 'full';
 
 /** Retry delay for the nth failed attempt: 0.5, 1, 2, 4, 8, 8… seconds, ±20 % jitter. */
 export function backoff(attempt: number, random = Math.random): number {
@@ -19,6 +20,8 @@ export function backoff(attempt: number, random = Math.random): number {
 
 /** After this many failed attempts in a row we call it "offline" (and keep retrying slowly). */
 const OFFLINE_AFTER = 5; // 0.5 + 1 + 2 + 4 s ≈ 7.5 s of trying before we say "offline"
+/** Turned away because the mall is full: ask again this often (ms). */
+const FULL_RETRY = 20_000;
 
 export type NetEvents = {
   status: (s: NetStatus) => void;
@@ -37,6 +40,8 @@ export class NetClient {
   private resume = '';
   private attempt = 0;
   private retry: ReturnType<typeof setTimeout> | null = null;
+  /** The server said no (full, or too many connections from here) before letting us in. */
+  private refused = false;
   private join: { name: string; look: Look; hostToken?: string } | null = null;
   private seq = 0;
   private readonly inputBuf = new ArrayBuffer(INPUT_BYTES);
@@ -81,9 +86,11 @@ export class NetClient {
 
   private open() {
     if (!this.url || !this.join) return;
-    this.setStatus(
-      this.attempt === 0 ? 'connecting' : this.attempt >= OFFLINE_AFTER ? 'offline' : 'reconnecting',
-    );
+    // still 'full' while asking again, so the notice doesn't flicker
+    if (this.status !== 'full')
+      this.setStatus(
+        this.attempt === 0 ? 'connecting' : this.attempt >= OFFLINE_AFTER ? 'offline' : 'reconnecting',
+      );
     const ws = new WebSocket(this.url);
     ws.binaryType = 'arraybuffer';
     this.ws = ws;
@@ -101,6 +108,12 @@ export class NetClient {
     ws.onclose = () => {
       if (this.ws !== ws) return; // we closed it on purpose
       this.ws = null;
+      if (this.refused) {
+        this.refused = false;
+        this.setStatus('full');
+        this.retry = setTimeout(() => this.open(), FULL_RETRY);
+        return;
+      }
       this.attempt++;
       this.setStatus(this.attempt >= OFFLINE_AFTER ? 'offline' : 'reconnecting');
       this.retry = setTimeout(() => this.open(), backoff(this.attempt - 1));
@@ -114,6 +127,7 @@ export class NetClient {
     } catch {
       return;
     }
+    if (msg.t === 'error' && (msg.code === 'full' || msg.code === 'busy')) this.refused = true;
     if (msg.t === 'welcome') {
       this.selfId = msg.id;
       this.room = msg.room;
@@ -157,7 +171,7 @@ export function httpUrl(path: string): string | null {
   return url.toString();
 }
 
-export type Health = { online: number; host: boolean; hostLogin: boolean };
+export type Health = { online: number; max: number | null; host: boolean; hostLogin: boolean };
 
 /** Who's in the mall right now (for the landing screen), or null if there's no server to ask. */
 export async function health(): Promise<Health | null> {
@@ -165,7 +179,12 @@ export async function health(): Promise<Health | null> {
   if (!url) return null;
   try {
     const body = (await (await fetch(url, { signal: AbortSignal.timeout(3000) })).json()) as Partial<Health>;
-    return { online: body.online ?? 0, host: !!body.host, hostLogin: !!body.hostLogin };
+    return {
+      online: body.online ?? 0,
+      max: body.max ?? null,
+      host: !!body.host,
+      hostLogin: !!body.hostLogin,
+    };
   } catch {
     return null;
   }

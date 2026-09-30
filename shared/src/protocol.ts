@@ -138,7 +138,15 @@ export type ClientMessage =
   | { t: 'throw'; o: [number, number, number]; v: [number, number, number] };
 
 export type ServerMessage =
-  | { t: 'welcome'; id: number; room: string; resume: string; players: PlayerInfo[] }
+  /** `chat`: the room's last few messages, oldest first, so a newcomer sees what's being said. */
+  | {
+      t: 'welcome';
+      id: number;
+      room: string;
+      resume: string;
+      players: PlayerInfo[];
+      chat?: ChatHistoryLine[];
+    }
   | { t: 'presence'; joined: PlayerInfo[]; left: number[] }
   | { t: 'chat'; id: number; name: string; text: string; at: number; host?: boolean }
   | { t: 'emote'; id: number; e: string }
@@ -148,7 +156,15 @@ export type ServerMessage =
   | { t: 'announce'; text: string }
   /** Shops or mall details changed: refetch /api/content if your version is older. */
   | { t: 'content'; version: number }
-  | { t: 'error'; code: 'bad-name' | 'rate' | 'full' | 'bad-token' | 'bad-message'; message: string };
+  /** `full`: the mall has as many people as it takes. `busy`: too many connections from one place. */
+  | {
+      t: 'error';
+      code: 'bad-name' | 'rate' | 'full' | 'busy' | 'bad-token' | 'bad-message';
+      message: string;
+    };
+
+/** A chat message from the history. */
+export type ChatHistoryLine = { name: string; text: string; at: number; host?: boolean };
 
 /** Emotes anyone can send (keeps the wire and the UI in agreement). */
 export const EMOTES = ['👋', '😂', '❤️', '🔥', '👍', '😮', '💃', '🤗'] as const;

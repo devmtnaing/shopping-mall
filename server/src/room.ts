@@ -1,5 +1,6 @@
 // One shared space: its players, the snapshot broadcast (nearest players only), and batched presence.
 import {
+  type ChatHistoryLine,
   encodeSnapshot,
   type PlayerInfo,
   type ServerMessage,
@@ -15,8 +16,8 @@ export class Room {
   readonly interest: number;
   readonly players = new Map<number, Player>();
   tick = 0;
-  /** Recent chat, kept so reports can include context. */
-  readonly recentChat: { name: string; text: string; at: number }[] = [];
+  /** Recent chat: what newcomers see when there's no database, and the context sent with reports. */
+  readonly recentChat: ChatHistoryLine[] = [];
   private joined = new Map<number, PlayerInfo>();
   private left = new Set<number>();
 
@@ -53,8 +54,8 @@ export class Room {
     }
   }
 
-  rememberChat(name: string, text: string, at: number) {
-    this.recentChat.push({ name, text, at });
+  rememberChat(line: ChatHistoryLine) {
+    this.recentChat.push(line);
     if (this.recentChat.length > 50) this.recentChat.shift();
   }
 

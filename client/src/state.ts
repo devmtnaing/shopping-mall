@@ -58,7 +58,7 @@ export type DialogId = 'help' | 'directory' | 'character';
 export const dialog = signal<DialogId | null>(null);
 
 /** Multiplayer connection state (see net/socket.ts) and how many people are in your room. */
-export type NetState = 'off' | 'connecting' | 'online' | 'reconnecting' | 'offline';
+export type NetState = 'off' | 'connecting' | 'online' | 'reconnecting' | 'offline' | 'full';
 export const netStatus = signal<NetState>('off');
 export const roomCount = signal(0);
 

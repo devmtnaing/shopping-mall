@@ -54,6 +54,7 @@ export function createMultiplayer(opts: {
   const { scene, player, travel, floorAt, onSelfEmote, seated, onHugFrom, onThrow } = opts;
   const room = new URLSearchParams(location.search).get('room') ?? 'main';
   const remotes = new Remotes();
+  let historyShown = false;
   const crowd = new Crowd();
   crowd.seats = opts.seats ?? [];
   scene.add(crowd.group);
@@ -61,6 +62,8 @@ export function createMultiplayer(opts: {
 
   const net = new NetClient(serverUrl(room), {
     status: (s) => {
+      // turned away: say so once, clearly (the notice at the top then stays while it's full)
+      if (s === 'full' && netStatus.value !== 'full') toast(t('net.fullToast'), 6000);
       netStatus.value = s;
     },
     message: (m) => {
@@ -99,6 +102,12 @@ export function createMultiplayer(opts: {
       if (m.t === 'content') return onContentVersion(m.version);
       if (m.t === 'welcome') {
         remotes.welcome(m.id, m.players);
+        // what's been said lately, once per visit (not again after a reconnect)
+        if (!historyShown && m.chat?.length) {
+          historyShown = true;
+          addChat({ kind: 'sys', text: t('chat.earlier') });
+          for (const c of m.chat) addChat({ kind: 'msg', name: c.name, text: c.text, host: c.host });
+        }
         void loadContent(); // catch up on anything that changed while we were away
       } else if (m.t === 'presence') {
         const leaving = m.left.map((id) => remotes.players.get(id)?.info.name ?? '');
