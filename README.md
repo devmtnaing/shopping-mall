@@ -8,6 +8,8 @@ Walk around with friends, go into shops, browse their products and chat. It load
 
 [![Gameplay: picking a character, walking the mall with other visitors, dancing, visiting a shop, the overview map, throwing apples and sitting on a bench](docs/media/gameplay.webp)](https://web-production-cc219.up.railway.app)
 
+<sub>▶ [Watch it as a video (MP4, 720p)](docs/media/gameplay.mp4)</sub>
+
 ---
 
 ## What it is
