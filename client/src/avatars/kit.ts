@@ -82,7 +82,7 @@ export class Avatar {
     this.sitForward = body.back + BACK_GAP;
     this.mixer = new AnimationMixer(object);
     for (const c of clips) this.actions.set(c.name, this.mixer.clipAction(c));
-    for (const name of ['jump', 'emote-yes', 'emote-no', 'interact-right', 'hug']) {
+    for (const name of ['jump', 'emote-yes', 'emote-no', 'interact-right', 'hug', 'throw']) {
       const a = this.actions.get(name);
       if (a) {
         a.setLoop(LoopOnce, 1);
@@ -123,13 +123,14 @@ export class Avatar {
     this.gesture(CLIP_FOR_EMOTE[e] ?? 'emote-yes');
   }
 
-  /** Play a clip once over standing still (throwing an apple uses the reach). */
-  gesture(clip: string) {
+  /** Play a clip once over standing still (picking an apple uses the reach), from `from` seconds in. */
+  gesture(clip: string, from = 0) {
     const a = this.actions.get(clip);
     if (!a || this.state !== ANIM.idle) return; // gestures only when standing still
     this.playing?.stop();
     this.playing = a;
     a.reset().play();
+    a.time = from;
     if (this.current) a.crossFadeFrom(this.current, FADE, false);
   }
 
@@ -153,6 +154,14 @@ export class Avatar {
     item.scale.setScalar(HELD_SCALE / s); // the bone lives inside the character's scale
     item.position.copy(this.hand.at);
     this.hand.bone.add(item);
+  }
+
+  /** Where the right hand is in the world, or null before the character has loaded its hand. */
+  handPosition(out: Vector3): Vector3 | null {
+    this.hand ??= findHand(this.object);
+    if (!this.hand) return null;
+    this.object.updateMatrixWorld(true);
+    return this.hand.bone.localToWorld(out.copy(this.hand.at));
   }
 
   update(dt: number) {

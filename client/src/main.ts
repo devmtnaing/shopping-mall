@@ -1,4 +1,5 @@
 import { effect } from '@preact/signals';
+import { THROW_RELEASE } from '@shopping-mall/shared/avatars';
 import { APPLE, EMOTES } from '@shopping-mall/shared/protocol';
 import { Color, DirectionalLight, Fog, HemisphereLight, Ray, Scene, Vector3 } from 'three';
 import { track } from './analytics';
@@ -163,23 +164,30 @@ function apple() {
     picking = PICK_AT;
     return;
   }
-  if (!holding) return;
+  if (!holding || throwing > 0) return;
+  // face where the camera looks and wind up; the apple leaves the hand at the release (release())
+  throwYaw = orbit.yaw;
+  player.facing = throwYaw;
+  avatar?.gesture('throw');
+  throwing = THROW_RELEASE;
+}
+/** Seconds until the apple leaves the hand, while throwing, and which way it goes. */
+let throwing = 0;
+let throwYaw = 0;
+const hand = new Vector3();
+function release() {
   holding = false;
+  const dx = -Math.sin(throwYaw);
+  const dz = -Math.cos(throwYaw);
+  // from the hand (up and forward at the release), or about there before the character has loaded
+  const at = avatar?.handPosition(hand);
+  const o: [number, number, number] = at
+    ? [at.x, Math.max(at.y, player.pos.y + 0.8), at.z]
+    : [player.pos.x + dx * 0.35, player.pos.y + 1.25, player.pos.z + dz * 0.35];
   avatar?.hold(null);
-  // throw straight ahead of the camera, turning to face that way
-  const yaw = orbit.yaw;
-  const dx = -Math.sin(yaw);
-  const dz = -Math.cos(yaw);
-  player.facing = yaw;
-  const o: [number, number, number] = [
-    player.pos.x + dx * 0.35,
-    player.pos.y + 1.25,
-    player.pos.z + dz * 0.35,
-  ];
   const v: [number, number, number] = [dx * APPLE.speed, APPLE.lift, dz * APPLE.speed];
   apples.throw(o, v);
   multi.throwApple(o, v);
-  avatar?.gesture('interact-right');
 }
 
 // benches: sit with E, stand up by moving
@@ -426,7 +434,11 @@ startLoop({
         avatar?.hold(handApple());
       }
     }
-    const pick = atStand() ? 'pick' : holding ? 'throw' : null;
+    if (throwing > 0) {
+      throwing -= dt;
+      if (throwing <= 0) release();
+    }
+    const pick = atStand() ? 'pick' : holding && throwing <= 0 ? 'throw' : null;
     if (pick !== (applePrompt.value?.mode ?? null)) applePrompt.value = pick ? { mode: pick } : null;
     const visit = input.keys.consume('KeyE'); // always consume, so a stray press can't fire later
     const seat = seated ? 'stand' : !near && nearestSpot(spots, player.pos) ? 'sit' : null;

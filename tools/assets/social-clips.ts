@@ -7,6 +7,7 @@
 // arm-right +45); raising an arm turns it towards 0 and past; a rotation about Y swings an arm
 // forward (negative for the left arm, positive for the right); a negative X lifts a leg forward.
 import type { Document, Node } from '@gltf-transform/core';
+import { THROW_RELEASE } from '@shopping-mall/shared/avatars';
 
 const FPS = 30;
 const D = Math.PI / 180;
@@ -29,9 +30,73 @@ const smooth = (a: number, b: number, t: number) => {
 };
 
 type Pose = Record<string, [number, number, number]>; // bone → euler degrees
+type Vec3 = [number, number, number];
+
+/** A bone's angles through a clip: eased from key to key. `keys` are [time, angles], in time order. */
+function keyed(t: number, keys: [number, Vec3][]): Vec3 {
+  const first = keys[0] as [number, Vec3];
+  if (t <= first[0]) return first[1];
+  for (let i = 1; i < keys.length; i++) {
+    const [t1, b] = keys[i] as [number, Vec3];
+    const [t0, a] = keys[i - 1] as [number, Vec3];
+    if (t <= t1) {
+      const e = smooth(t0, t1, t);
+      return [a[0] + (b[0] - a[0]) * e, a[1] + (b[1] - a[1]) * e, a[2] + (b[2] - a[2]) * e];
+    }
+  }
+  return (keys[keys.length - 1] as [number, Vec3])[1];
+}
+
 type Clip = { name: string; duration: number; pose: (t: number) => Pose; lift?: (t: number) => number };
 
+const R = THROW_RELEASE;
+
 const CLIPS: Clip[] = [
+  {
+    // overhand: wind up (arm up and back, a twist and lean back), whip through to the release,
+    // follow through with a step onto the front foot, and settle back to rest
+    name: 'throw',
+    duration: 1,
+    pose: (t) => ({
+      'arm-right': keyed(t, [
+        [0, [0, 0, 45]],
+        [R - 0.14, [0, -45, -70]],
+        [R, [0, 60, -15]],
+        [R + 0.15, [0, 75, 25]],
+        [1, [0, 0, 45]],
+      ]),
+      'arm-left': keyed(t, [
+        [0, [0, 0, -45]],
+        [R - 0.14, [0, -40, -25]],
+        [R + 0.1, [0, 10, -50]],
+        [1, [0, 0, -45]],
+      ]),
+      torso: keyed(t, [
+        [0, [0, 0, 0]],
+        [R - 0.14, [-8, -20, 0]],
+        [R + 0.05, [10, 18, 0]],
+        [R + 0.2, [12, 22, 0]],
+        [1, [0, 0, 0]],
+      ]),
+      head: keyed(t, [
+        [0, [0, 0, 0]],
+        [R - 0.14, [4, 15, 0]],
+        [R + 0.1, [-4, -10, 0]],
+        [1, [0, 0, 0]],
+      ]),
+      'leg-left': keyed(t, [
+        [0, [0, 0, 0]],
+        [R - 0.14, [-12, 0, 0]],
+        [R + 0.1, [-22, 0, 0]],
+        [1, [0, 0, 0]],
+      ]),
+      'leg-right': keyed(t, [
+        [0, [0, 0, 0]],
+        [R + 0.1, [10, 0, 0]],
+        [1, [0, 0, 0]],
+      ]),
+    }),
+  },
   {
     // on a bench, legs out in front (they're one bone each: no knees to bend), hands forward on the
     // lap. The root stays put: characters differ in size, so the client lifts each onto the seat.

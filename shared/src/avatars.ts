@@ -24,7 +24,7 @@ export const DEFAULT_AVATAR: AvatarId = 'female-a';
 
 export const isAvatar = (id: unknown): id is AvatarId => AVATARS.includes(id as AvatarId);
 
-/** Animation clips shipped in avatars.glb (Kenney's names; sit, dance and hug are keyframed in tools/assets/social-clips.ts). */
+/** Animation clips shipped in avatars.glb (Kenney's names; sit, dance, hug and throw are keyframed in tools/assets/social-clips.ts). */
 export const CLIPS = [
   'idle',
   'walk',
@@ -37,5 +37,9 @@ export const CLIPS = [
   'interact-right',
   'dance',
   'hug',
+  'throw',
 ] as const;
 export type ClipName = (typeof CLIPS)[number];
+
+/** When the apple leaves the hand in the `throw` clip (s): the client launches it then. */
+export const THROW_RELEASE = 0.4;

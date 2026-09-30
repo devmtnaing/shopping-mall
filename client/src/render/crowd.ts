@@ -115,9 +115,9 @@ export class Crowd {
     this.avatars.get(id)?.emote(e);
   }
 
-  /** Play a clip once on someone's avatar (a throw). */
-  gesture(id: number, clip: string) {
-    this.avatars.get(id)?.gesture(clip);
+  /** Play a clip once on someone's avatar (a throw), from `from` seconds in. */
+  gesture(id: number, clip: string, from = 0) {
+    this.avatars.get(id)?.gesture(clip, from);
   }
 
   update(remotes: Remotes, camera: Camera, time: number) {

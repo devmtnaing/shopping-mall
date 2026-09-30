@@ -2,6 +2,7 @@
 // and the room state the UI shows. Without a server this all quietly does nothing.
 
 import { effect } from '@preact/signals';
+import { THROW_RELEASE } from '@shopping-mall/shared/avatars';
 import { animSpeed, FLAG_GROUNDED, packAnim } from '@shopping-mall/shared/protocol';
 import type { Camera, Scene } from 'three';
 import { Vector3 } from 'three';
@@ -76,7 +77,8 @@ export function createMultiplayer(opts: {
       if (m.t === 'look') return remotes.look(m.id, m.look);
       if (m.t === 'throw') {
         if (m.id === net.selfId || muted.value.has(m.id)) return; // yours is already in the air
-        crowd.gesture(m.id, 'interact-right');
+        // their apple is already on its way: swing their arm through from the moment it left the hand
+        crowd.gesture(m.id, 'throw', THROW_RELEASE);
         return onThrow?.(m.o, m.v);
       }
       if (m.t === 'error' && m.code === 'rate') return toast(t('chat.slowDown'));
