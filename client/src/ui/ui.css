@@ -1223,3 +1223,37 @@ a.product:hover {
     min-height: 44px;
   }
 }
+
+/* ---- overview floor switch ---- */
+.overview-floors {
+  position: fixed;
+  margin: 0;
+  min-width: 0;
+  top: calc(76px + env(safe-area-inset-top));
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  animation: fade-down 0.3s ease-out;
+}
+#ui .overview-floors button {
+  padding: 7px 14px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  font-weight: 600;
+  white-space: nowrap;
+}
+#ui .overview-floors button[aria-pressed="true"] {
+  background: var(--accent);
+  color: #1b1a18;
+}
+@media (max-width: 560px) {
+  /* under the zone pill, which drops below the top bar on phones */
+  .overview-floors {
+    top: calc(118px + env(safe-area-inset-top));
+  }
+}

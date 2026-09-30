@@ -31,6 +31,7 @@ export const en = {
   'dir.shops': 'Shops',
   'where.ground': 'Ground floor',
   'where.upper': 'Upper floor',
+  'overview.floors': 'Floor to show',
   'where.left': 'left',
   'where.right': 'right',
   'where.flagship': 'Far end · ground floor',

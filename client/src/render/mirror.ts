@@ -87,8 +87,10 @@ export function installFloorMirror(renderer: WebGLRenderer, scene: Scene) {
   // follow the canvas (and dynamic resolution) at half size
   let last = '';
   return {
-    update() {
+    /** Every frame; `show` false hides it (and skips its render) for the frame. */
+    update(show = true) {
       if (!mirror) return;
+      mirror.visible = show;
       const [w, h] = size();
       const key = `${w}x${h}`;
       if (key !== last) {

@@ -99,6 +99,8 @@ export const emoteBar = signal(false);
 
 /** Top-down overview camera on/off. */
 export const overview = signal(false);
+/** The floor the minimap and the overview show; null = the one you're on. */
+export const viewFloor = signal<number | null>(null);
 
 /** Full-screen fade used when teleporting (true = faded to black). */
 export const faded = signal(false);

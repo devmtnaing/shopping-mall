@@ -1,11 +1,11 @@
 // Always-on overlay: brand pill (top left), zone label (top centre), share / sound / language /
-// fullscreen (top right).
+// fullscreen (top right), and the floor switch while in the overview.
 
 import { soundOn, toggleSound } from '../audio';
 import { content } from '../content';
 import { locales, nextLocale, setLocale, t, zoneName } from '../i18n';
 import { linkUrl } from '../links';
-import { netStatus, pose, roomCount, zone } from '../state';
+import { mallMeta, netStatus, overview, pose, roomCount, viewFloor, zone } from '../state';
 import { IconExpand, IconGlobe, IconMuted, IconShare, IconSound } from './icons';
 import { share } from './share';
 
@@ -42,6 +42,27 @@ export function ZoneLabel() {
       <div class="eyebrow">{t('hud.youAreIn')}</div>
       <div class="zone-name">{z.area ? zoneName(z.area, z.name) : z.name}</div>
     </div>
+  );
+}
+
+/** In the overview: which floor to look at (it opens on yours). */
+export function OverviewFloors() {
+  const floors = mallMeta.value?.floors ?? [];
+  if (!overview.value || floors.length < 2) return null;
+  const shown = viewFloor.value ?? pose.value.floor;
+  return (
+    <fieldset class="overview-floors glass" aria-label={t('overview.floors')}>
+      {floors.map((f, i) => (
+        <button
+          type="button"
+          key={f.id}
+          aria-pressed={i === shown}
+          onClick={() => (viewFloor.value = i === pose.value.floor ? null : i)}
+        >
+          {t(f.id === 'upper' ? 'where.upper' : 'where.ground')}
+        </button>
+      ))}
+    </fieldset>
   );
 }
 

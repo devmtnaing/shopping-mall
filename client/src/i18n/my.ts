@@ -32,6 +32,7 @@ export const my: Partial<Record<Key, string>> = {
   'dir.shops': 'ဆိုင်များ',
   'where.ground': 'မြေညီထပ်',
   'where.upper': 'အပေါ်ထပ်',
+  'overview.floors': 'ပြမယ့် အထပ်',
   'where.left': 'ဘယ်ဘက်',
   'where.right': 'ညာဘက်',
   'where.flagship': 'အဆုံး · မြေညီထပ်',

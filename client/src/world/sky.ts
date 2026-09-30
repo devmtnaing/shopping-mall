@@ -8,14 +8,19 @@ const time = { value: 0 };
 
 const sky = new ShaderMaterial({
   uniforms: { time },
+  clipping: true, // the overview cuts the roof away
   vertexShader: /* glsl */ `
+    #include <clipping_planes_pars_vertex>
     varying vec3 vWorld;
     void main() {
       vec4 w = modelMatrix * vec4(position, 1.0);
       vWorld = w.xyz;
-      gl_Position = projectionMatrix * viewMatrix * w;
+      vec4 mvPosition = viewMatrix * w;
+      gl_Position = projectionMatrix * mvPosition;
+      #include <clipping_planes_vertex>
     }`,
   fragmentShader: /* glsl */ `
+    #include <clipping_planes_pars_fragment>
     uniform float time;
     varying vec3 vWorld;
     float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
@@ -30,6 +35,7 @@ const sky = new ShaderMaterial({
       return v;
     }
     void main() {
+      #include <clipping_planes_fragment>
       vec2 p = vWorld.xz * 0.07 + vec2(time * 0.012, time * 0.004);
       float c = smoothstep(0.45, 0.8, fbm(p));
       // brighter towards the long edges, where the sky meets the frame

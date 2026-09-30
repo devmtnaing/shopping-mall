@@ -44,6 +44,7 @@ import {
   seatPrompt,
   toast,
   uiHasFocus,
+  viewFloor,
   zone,
 } from './state';
 import { mountUI } from './ui/App';
@@ -234,6 +235,10 @@ installCommands({
 });
 let poseAt = 0;
 
+// the overview opens on your floor (its floor switch, or the minimap's, shows the other)
+effect(() => {
+  if (overview.value) viewFloor.value = null;
+});
 // overview: one global clipping plane, parked far away when unused (so shaders never recompile)
 const over = new Overview();
 renderer.clippingPlanes = [over.clip];
@@ -421,7 +426,7 @@ startLoop({
     shoppers?.update(dt, camera.position);
     apples.update(dt);
     sky.update(dt);
-    mirror.update();
+    mirror.update(over.t === 0); // from above it would only mirror the sky
     water?.update(dt);
 
     const tap = input.takeTap();
@@ -454,7 +459,8 @@ startLoop({
       activeAt = now;
     orbit.update(dt, body.position, player.facing, moving, look, zoom);
     over.active = overview.value;
-    const floorY = mall.meta.floors[mall.nav.floorAt(player.pos.y + 0.1)]?.y ?? 0;
+    const shown = (over.active ? viewFloor.value : null) ?? mall.nav.floorAt(player.pos.y + 0.1);
+    const floorY = mall.meta.floors[shown]?.y ?? 0;
     over.update(dt, reduceMotion.matches, orbit, bounds, floorY, camera.fov, camera.aspect);
     intro.update(dt, reduceMotion.matches, over);
     const view = intro.done ? over : intro;

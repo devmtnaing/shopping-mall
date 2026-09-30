@@ -11,7 +11,7 @@ import { Chat } from './Chat';
 import { Dock } from './Dock';
 import { EmoteBar } from './EmoteBar';
 import { Fade } from './Fade';
-import { BrandPill, NetNotice, TopRight, ZoneLabel } from './Hud';
+import { BrandPill, NetNotice, OverviewFloors, TopRight, ZoneLabel } from './Hud';
 import { Landing } from './Landing';
 import { Minimap } from './Minimap';
 import { SeatPrompt } from './SeatPrompt';
@@ -76,6 +76,7 @@ function App() {
     <>
       <BrandPill />
       <ZoneLabel />
+      <OverviewFloors />
       <NetNotice />
       <Announcement />
       <TopRight playing />

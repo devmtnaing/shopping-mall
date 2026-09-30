@@ -32,16 +32,22 @@ const surface = new ShaderMaterial({
   uniforms: { time },
   transparent: true,
   depthWrite: false,
+  clipping: true, // the overview cuts away what's above the floor
   vertexShader: /* glsl */ `
     varying vec2 vPos;
+    #include <clipping_planes_pars_vertex>
     void main() {
       vPos = position.xy; // the ring lies in its own xy plane
-      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+      gl_Position = projectionMatrix * mvPosition;
+      #include <clipping_planes_vertex>
     }`,
   fragmentShader: /* glsl */ `
+    #include <clipping_planes_pars_fragment>
     uniform float time;
     varying vec2 vPos;
     void main() {
+      #include <clipping_planes_fragment>
       float r = length(vPos);
       float a = atan(vPos.y, vPos.x);
       // rings spreading out from where the water falls, plus a slow cross-hatch of small waves
@@ -59,19 +65,25 @@ const falling = new ShaderMaterial({
   uniforms: { time },
   transparent: true,
   depthWrite: false,
+  clipping: true, // the overview cuts away what's above the floor
   side: DoubleSide,
   blending: AdditiveBlending,
   vertexShader: /* glsl */ `
     varying vec2 vUv;
+    #include <clipping_planes_pars_vertex>
     void main() {
       vUv = uv;
-      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+      gl_Position = projectionMatrix * mvPosition;
+      #include <clipping_planes_vertex>
     }`,
   fragmentShader: /* glsl */ `
     uniform float time;
     varying vec2 vUv;
+    #include <clipping_planes_pars_fragment>
     float hash(float n) { return fract(sin(n) * 43758.5453); }
     void main() {
+      #include <clipping_planes_fragment>
       // streaks round the curtain, each falling at its own speed, fading in at the lip and out at the splash
       float col = floor(vUv.x * 90.0);
       float speed = 1.4 + hash(col) * 0.8;
