@@ -21,5 +21,6 @@ FROM nginx:1.27-alpine
 COPY client/nginx.conf.template /etc/nginx/templates/default.conf.template
 COPY --from=build /app/client/dist /usr/share/nginx/html
 # where the multiplayer server is, and the port to serve on (Railway sets PORT)
-ENV PORT=80 API_UPSTREAM=server:8787 NGINX_ENTRYPOINT_LOCAL_RESOLVERS=1
+# CLIENT_IP_FROM: where the visitor's IP comes from, railway (X-Real-IP) or cloudflare (see nginx.conf.template)
+ENV PORT=80 API_UPSTREAM=server:8787 NGINX_ENTRYPOINT_LOCAL_RESOLVERS=1 CLIENT_IP_FROM=railway
 EXPOSE 80

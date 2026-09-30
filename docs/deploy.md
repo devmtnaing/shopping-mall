@@ -31,6 +31,7 @@ You can run the whole mall two ways: with **docker compose** on any machine, or 
 |---|---|
 | `PORT` | Port nginx listens on (default 80). |
 | `API_UPSTREAM` | `host:port` of the server (default `server:8787`). It's looked up per request, so the web can start before the server. |
+| `CLIENT_IP_FROM` | Where the visitor's IP address comes from, for the per-visitor limits: `railway` (the default, Railway's `X-Real-IP`) or `cloudflare` (`CF-Connecting-IP`). Set it to `cloudflare` when Cloudflare's proxy (the orange cloud) is in front of the mall, and only then. |
 
 **backup**: `DATABASE_URL`, the same `S3_*` as the server, `KEEP` (dumps to keep, default 30), and the build argument `PG_MAJOR`, which must be at least the database's major version.
 

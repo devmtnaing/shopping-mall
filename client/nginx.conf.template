@@ -1,16 +1,22 @@
 # A template: the nginx image fills in ${PORT} and ${API_UPSTREAM} from the environment at start
 # (compose: 80 and server:8787; Railway: its PORT and server.railway.internal:8787).
 
-# The visitor's IP, for the server's per-IP limits. Behind Cloudflare it's CF-Connecting-IP. Behind
-# Railway's edge alone it's the last address in X-Forwarded-For (the one the edge added; anything
-# before it came from the visitor and could be made up). Run bare (compose), it's the socket's.
-map $http_x_forwarded_for $forwarded_last {
-  "~(?:^|,)\s*([^,\s]+)\s*$" $1;
-  default $remote_addr;
+# The visitor's IP, for the server's per-IP limits. Railway's edge sets X-Real-IP to it (and
+# overwrites whatever the visitor sent). With Cloudflare's proxy in front, that's a Cloudflare
+# address shared by many visitors, so set CLIENT_IP_FROM=cloudflare on this service and it uses
+# CF-Connecting-IP instead. (Only then: without Cloudflare in front, anyone could fake that header.)
+# Run bare (docker compose), neither header is there and it's the socket's address.
+map $http_x_real_ip $edge_ip {
+  "" $remote_addr;
+  default $http_x_real_ip;
 }
-map $http_cf_connecting_ip $client_ip {
-  "" $forwarded_last;
+map $http_cf_connecting_ip $cloudflare_ip {
+  "" $edge_ip;
   default $http_cf_connecting_ip;
+}
+map "${CLIENT_IP_FROM}" $client_ip {
+  cloudflare $cloudflare_ip;
+  default $edge_ip;
 }
 
 server {
