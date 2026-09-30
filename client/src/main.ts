@@ -399,7 +399,18 @@ if (debugMode) {
 if (debugMode || perfMode) {
   // handle for Playwright tests and console poking; never present without ?debug or ?perf
   Object.assign(window, {
-    mallDebug: { scene, camera, renderer, mall, player, input, follower, avatar: () => avatar, multi },
+    mallDebug: {
+      scene,
+      camera,
+      renderer,
+      mall,
+      player,
+      input,
+      follower,
+      avatar: () => avatar,
+      multi,
+      shoppers: () => shoppers,
+    },
   });
 }
 

@@ -1,7 +1,9 @@
 // Ambient life (T-213): a few shoppers who wander the mall on their own, in every visitor's view
 // (they're local, not multiplayer). They walk the navgrid from shop window to shop window, stop to
-// look, and sit on free benches for a while. Kinematic (no physics); animated only when nearby.
-// How many are shown, and how far away they animate, follow the quality tier.
+// look, and sit on free benches for a while. They stand and ride the escalators, like people do.
+// Kinematic (no physics). Nearby ones animate every frame and far ones every third (so they never
+// slide along without moving their legs); how many are shown, and where "far" starts, follow the
+// quality tier.
 import { AVATARS } from '@shopping-mall/shared/avatars';
 import type { MallMeta } from '@shopping-mall/shared/meta';
 import { ANIM } from '@shopping-mall/shared/protocol';
@@ -12,6 +14,10 @@ import { TIERS, tier } from '../quality';
 
 const SPEED = 1.3; // m/s: an unhurried stroll
 const TURN = 6; // how quickly they turn to face where they're going (1/s)
+/** Riding an escalator: its speed along the floor (1.2 m/s up a 30° slope). */
+const RIDE = 1.2 * Math.cos(Math.PI / 6);
+/** Far away, animate every this many frames. */
+const FAR_EVERY = 3;
 
 type Spot = { x: number; y: number; z: number; yaw: number; seat?: string };
 type Shopper = {
@@ -24,6 +30,10 @@ type Shopper = {
   y: number;
   z: number;
   yaw: number;
+  /** On an escalator leg: standing still and carried, not walking. */
+  riding: boolean;
+  /** Animation time not yet applied (far ones catch up every FAR_EVERY frames). */
+  lag: number;
 };
 
 export class Shoppers {
@@ -57,13 +67,25 @@ export class Shoppers {
       const start = this.pick(this.windows);
       const avatar = kit.create(AVATARS[Math.floor(this.random() * AVATARS.length)]);
       this.group.add(avatar.object);
-      const s: Shopper = { avatar, path: [], next: 0, wait: this.random() * 4, spot: start, ...start };
+      const s: Shopper = {
+        avatar,
+        path: [],
+        next: 0,
+        wait: this.random() * 4,
+        spot: start,
+        ...start,
+        riding: false,
+        lag: 0,
+      };
       this.list.push(s);
     }
   }
 
+  private frame = 0;
+
   update(dt: number, camera: Vector3) {
     const { shoppers: visible, animateWithin } = TIERS[tier.value];
+    this.frame++;
     for (let i = 0; i < this.list.length; i++) {
       const s = this.list[i] as Shopper;
       s.avatar.object.visible = i < visible; // lower tiers show fewer (they keep strolling unseen)
@@ -74,7 +96,13 @@ export class Shoppers {
       const o = s.avatar.object;
       o.position.set(s.x, s.y, s.z);
       o.rotation.y = s.yaw;
-      if (o.visible && o.position.distanceToSquared(camera) < animateWithin ** 2) s.avatar.update(dt);
+      if (!o.visible) continue;
+      s.lag += dt;
+      const near = o.position.distanceToSquared(camera) < animateWithin ** 2;
+      if (near || (this.frame + i) % FAR_EVERY === 0) {
+        s.avatar.update(s.lag);
+        s.lag = 0;
+      }
     }
   }
 
@@ -102,10 +130,16 @@ export class Shoppers {
   private walk(s: Shopper, dt: number) {
     const p = s.path[s.next];
     if (!p) return this.arrive(s);
+    // a leg between floors is an escalator: stand and be carried
+    const riding = Math.abs(p.y - s.y) > 1;
+    if (riding !== s.riding) {
+      s.riding = riding;
+      s.avatar.setState(riding ? ANIM.idle : ANIM.walk, SPEED);
+    }
     const dx = p.x - s.x;
     const dz = p.z - s.z;
     const d = Math.hypot(dx, dz);
-    const step = SPEED * dt;
+    const step = (riding ? RIDE : SPEED) * dt;
     if (d <= step) {
       s.x = p.x;
       s.z = p.z;
@@ -127,6 +161,7 @@ export class Shoppers {
     s.z = spot.z;
     s.yaw = spot.yaw;
     s.path = [];
+    s.riding = false;
     if (spot.seat) {
       s.avatar.setState(ANIM.sit, 0);
       s.wait = 10 + this.random() * 15;
