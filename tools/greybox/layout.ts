@@ -25,6 +25,11 @@ const BRIDGE = { z0: -33, z1: -41 };
 const DOOR_W = 7;
 const DOOR_H = 4.2;
 const RAIL_H = 1.1;
+/**
+ * Invisible walls over the parapets and along the escalators reach this high above the floor under
+ * them: past a jump (≈1.06 m) plus a step up (0.35 m), so nobody lands on top and falls off.
+ */
+const GUARD_H = 1.6;
 const ENTRANCE = 5; // half-width of the glass entrance
 const FLAG_DOOR = 7; // half-width of the flagship's doorway
 /** Escalator A (west, up to the bridge's south edge) and B (east, down from its north edge): centre x, width. */
@@ -173,20 +178,25 @@ function upperFloor(g: Geo) {
 
   const y0 = UP;
   const y1 = UP + RAIL_H;
+  /** A parapet, with an invisible wall on top so it can't be jumped onto. */
+  const rail = (min: [number, number, number], max: [number, number, number]) => {
+    g.box('rail', min, max);
+    g.box(null, [min[0], y1, min[2]], [max[0], UP + GUARD_H, max[2]]);
+  };
   const r = 0.2; // a solid stone parapet, not a glass balustrade, standing on the slab's edge
   for (const s of [-1, 1]) {
     const x0 = s < 0 ? -VOID.x - r : VOID.x;
-    g.box('rail', [x0, y0, VOID.z1], [x0 + r, y1, BRIDGE.z1]);
-    g.box('rail', [x0, y0, BRIDGE.z0], [x0 + r, y1, VOID.z0]);
+    rail([x0, y0, VOID.z1], [x0 + r, y1, BRIDGE.z1]);
+    rail([x0, y0, BRIDGE.z0], [x0 + r, y1, VOID.z0]);
   }
-  g.box('rail', [-VOID.x - r, y0, VOID.z0], [VOID.x + r, y1, VOID.z0 + r]);
-  g.box('rail', [-VOID.x - r, y0, VOID.z1 - r], [VOID.x + r, y1, VOID.z1]);
+  rail([-VOID.x - r, y0, VOID.z0], [VOID.x + r, y1, VOID.z0 + r]);
+  rail([-VOID.x - r, y0, VOID.z1 - r], [VOID.x + r, y1, VOID.z1]);
   // bridge edges, with gaps where the escalators arrive
   const gap = ESC.w / 2 + 0.1;
-  g.box('rail', [-VOID.x, y0, BRIDGE.z0 - r], [ESC.a - gap, y1, BRIDGE.z0]);
-  g.box('rail', [ESC.a + gap, y0, BRIDGE.z0 - r], [VOID.x, y1, BRIDGE.z0]);
-  g.box('rail', [-VOID.x, y0, BRIDGE.z1], [ESC.b - gap, y1, BRIDGE.z1 + r]);
-  g.box('rail', [ESC.b + gap, y0, BRIDGE.z1], [VOID.x, y1, BRIDGE.z1 + r]);
+  rail([-VOID.x, y0, BRIDGE.z0 - r], [ESC.a - gap, y1, BRIDGE.z0]);
+  rail([ESC.a + gap, y0, BRIDGE.z0 - r], [VOID.x, y1, BRIDGE.z0]);
+  rail([-VOID.x, y0, BRIDGE.z1], [ESC.b - gap, y1, BRIDGE.z1 + r]);
+  rail([ESC.b + gap, y0, BRIDGE.z1], [VOID.x, y1, BRIDGE.z1 + r]);
 }
 
 /** A horizontal slab covering the whole mall except the atrium opening. */
@@ -264,12 +274,25 @@ function escalator(
   ]);
   for (const s of [-1, 1]) {
     const [a, b] = s < 0 ? [xc - hw - deck, xc - hw] : [xc + hw, xc + hw + deck];
+    const G = GUARD_H;
+    // in three pieces, so the wall is GUARD_H above the steps all the way, the top of the climb included
     piece(null, a, b, [
       [0, 0],
+      [F, 0],
+      [F, G],
+      [0, G],
+    ]);
+    piece(null, a, b, [
+      [F, 0],
+      [top, 0],
+      [top, UP + G],
+      [F, G],
+    ]);
+    piece(null, a, b, [
+      [top, 0],
       [end, 0],
-      [end, UP + 1],
-      [F, 1],
-      [0, 1],
+      [end, UP + G],
+      [top, UP + G],
     ]);
   }
   // the truss under the incline

@@ -115,6 +115,31 @@ describe('PlayerController on the greybox', () => {
     expect(airborne).toBeLessThan(10);
   });
 
+  it('stays on the escalator near the top: no stepping or jumping over its side', () => {
+    for (const x of [-1, 1]) {
+      p.place(-3, 0, -18);
+      sim(p, 4.2, { y: 1 }); // most of the way up escalator A
+      expect(p.pos.y).toBeGreaterThan(6);
+      expect(p.pos.y).toBeLessThan(7.9);
+      for (let i = 0; i < 6; i++) {
+        p.step(STEP, { ...idle, x, jump: true }); // turn to the side and jump at the balustrade
+        sim(p, 0.8, { x });
+      }
+      expect(Math.abs(p.pos.x + 3)).toBeLessThan(0.7); // still between the balustrades
+      expect(p.pos.y).toBeGreaterThan(4);
+    }
+  });
+
+  it("can't jump onto a parapet round the atrium", () => {
+    p.place(8, 8, -20);
+    for (let i = 0; i < 6; i++) {
+      p.step(STEP, { ...idle, x: -1, jump: true }); // west, at the parapet on the atrium's edge (x 6…6.2)
+      sim(p, 0.8, { x: -1, run: true });
+    }
+    expect(p.pos.x).toBeGreaterThan(6.2);
+    expect(p.pos.y).toBeCloseTo(8, 1);
+  });
+
   it('jumps about a metre and lands where it started', () => {
     p.place(0, 0, -20);
     sim(p, 0.2);
