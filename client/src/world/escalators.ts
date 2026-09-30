@@ -55,6 +55,8 @@ const TREAD = new MeshStandardMaterial({ color: '#3b3c3f', metalness: 0.6, rough
 const EDGE = new MeshStandardMaterial({ color: '#e2b43a', roughness: 0.6 });
 /** How far a step reaches below its tread, so the risers on the incline close up. */
 const RISER = 0.26;
+/** The comb plates at each end (m, tools/greybox/layout.ts): steps slip under them. */
+const PLATE = 0.5;
 
 export type EscalatorSteps = { group: Group; update(dt: number): void };
 
@@ -110,10 +112,13 @@ export function escalatorSteps(escalators: readonly Escalator[]): EscalatorSteps
       q.setFromAxisAngle(up, r.yaw);
       const shift = (t * r.speed) % step;
       for (let i = 0; i < r.count; i++) {
-        const a = Math.min(i * step + shift, r.end);
+        const a = i * step + shift;
         const climb = Math.min(1, Math.max(0, (a - F) / r.run));
         at.copy(r.start).addScaledVector(r.dir, a);
         at.y += climb * r.rise + 0.015;
+        // under a comb plate (or past the end): slide down out of sight, as real steps fold away
+        const under = Math.max(PLATE + step / 2 - a, a - (r.end - PLATE - step / 2), 0);
+        at.y -= Math.min(under * 1.5, 1);
         m.compose(at, q, one);
         treads.setMatrixAt(k, m);
         edges.setMatrixAt(k, m);

@@ -104,17 +104,20 @@ describe('escalatorSteps', () => {
     });
   };
 
-  it('lays the steps flat at both landings and climbing in between, all within the escalator', () => {
+  it('lays the steps flat on the landings and climbing between, slipping under the comb plates at the ends', () => {
     const at = heights(escalatorSteps([e]));
     expect(at.length).toBeGreaterThan(10);
+    // along the escalator from its bottom end (1.2 m of landing before the climb, 0.5 m comb plates)
+    const surface = (a: number) => Math.min(1, Math.max(0, (a - 1.2) / 4)) * 3 + 0.015;
+    const end = 4 + 2 * 1.2;
     for (const p of at) {
-      expect(p.y).toBeGreaterThanOrEqual(0);
-      expect(p.y).toBeLessThanOrEqual(3.05);
-      expect(p.z).toBeLessThanOrEqual(1.2 + 1e-6); // the bottom landing
-      expect(p.z).toBeGreaterThanOrEqual(-4 - 1.2 - 1e-6); // the top landing
+      const a = 1.2 - p.z;
+      if (a < 0.5 || a > end - 0.5)
+        expect(p.y).toBeLessThan(surface(a) - 0.01); // under a comb plate
+      else if (a > 0.7 && a < end - 0.7) expect(p.y).toBeCloseTo(surface(a), 4); // out on the steps
     }
-    expect(at.some((p) => p.y < 0.05)).toBe(true);
     expect(at.some((p) => p.y > 2.95)).toBe(true);
+    expect(at.some((p) => Math.abs(p.y - 0.015) < 1e-4)).toBe(true);
   });
 
   it('moves them down on a down escalator (from the top, to the bottom)', () => {

@@ -263,6 +263,69 @@ function escalator(
       [top, UP + hi],
     ]);
   };
+  /**
+   * One side's glass and handrail: along the climb, flat over each landing, and round at both ends,
+   * the handrail following the curve down to the deck. `lo`–`hi` is the glass above the steps.
+   */
+  const balustrade = (x: number) => {
+    const [lo, hi, rail] = [0.12, 0.95, 0.07];
+    const r = (hi - lo) / 2; // the end's radius
+    const mid = (lo + hi) / 2;
+    const n = 8; // segments round each end
+    const glass = (x0: number, x1: number) => [x - 0.012, x + 0.012, x0, x1] as const;
+    const band = [x - 0.045, x + 0.045] as const;
+    // the climb, as before
+    piece('glass', glass(0, 0)[0], glass(0, 0)[1], [
+      [F, lo],
+      [top, UP + lo],
+      [top, UP + hi],
+      [F, hi],
+    ]);
+    piece('rubber', band[0], band[1], [
+      [F, hi],
+      [top, UP + hi],
+      [top, UP + hi + rail],
+      [F, hi + rail],
+    ]);
+    // each landing: flat glass and rail from the climb to the end's centre, then a half-disc of
+    // glass with the rail round its edge. `c` is where the round starts, `dir` which way it bulges.
+    for (const [from, c, dir, y] of [
+      [F, r + 0.1, -1, 0],
+      [top, end - r - 0.1, 1, UP],
+    ] as const) {
+      const [a0, a1] = dir < 0 ? [c, from] : [from, c];
+      piece('glass', glass(0, 0)[0], glass(0, 0)[1], [
+        [a0, y + lo],
+        [a1, y + lo],
+        [a1, y + hi],
+        [a0, y + hi],
+      ]);
+      piece('rubber', band[0], band[1], [
+        [a0, y + hi],
+        [a1, y + hi],
+        [a1, y + hi + rail],
+        [a0, y + hi + rail],
+      ]);
+      const arc = Array.from({ length: n + 1 }, (_, i) => {
+        const t = Math.PI / 2 + (dir < 0 ? (i * Math.PI) / n : (-i * Math.PI) / n); // top, round the end, to the bottom
+        return [Math.cos(t), Math.sin(t)] as const;
+      });
+      // the half-disc of glass (convex: listed counter-clockwise)
+      const disc: [number, number][] = arc.map(([cx, sy]) => [c + cx * r, y + mid + sy * r]);
+      piece('glass', glass(0, 0)[0], glass(0, 0)[1], dir < 0 ? disc : disc.reverse());
+      // the rail round it, a short straight piece per segment
+      for (let i = 0; i < n; i++) {
+        const [p, q] = [arc[i] as readonly [number, number], arc[i + 1] as readonly [number, number]];
+        const seg: [number, number][] = [
+          [c + p[0] * r, y + mid + p[1] * r],
+          [c + q[0] * r, y + mid + q[1] * r],
+          [c + q[0] * (r + rail), y + mid + q[1] * (r + rail)],
+          [c + p[0] * (r + rail), y + mid + p[1] * (r + rail)],
+        ];
+        piece('rubber', band[0], band[1], dir < 0 ? seg.reverse() : seg);
+      }
+    }
+  };
   const hw = W / 2; // steps
   const deck = 0.25; // the skirt's width either side, which the balustrade stands on
   const under = 0.26 / slope; // where the truss (0.26 m under the steps) comes out of the floor
@@ -312,10 +375,10 @@ function escalator(
       [F, 0.12],
     ]);
     alongSteps('panel', a, b, 0, 0.12);
-    // glass balustrade on the skirt, and the handrail along its top
+    // glass balustrade on the skirt, and the handrail along its top, both rounding off at each end
+    // (a newel) the way a real escalator's do
     const x = xc + s * (hw + deck / 2);
-    alongSteps('glass', x - 0.012, x + 0.012, 0.12, 0.95);
-    alongSteps('rubber', x - 0.045, x + 0.045, 0.95, 1.02);
+    balustrade(x);
   }
   // comb plates where the steps go into the floor at each end
   piece('escalator', xc - hw, xc + hw, [
