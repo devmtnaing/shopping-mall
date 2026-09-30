@@ -1,13 +1,14 @@
-// Apples (T-507): pick one at a fruit stand, throw it where you're looking. A throw is an origin and
-// a velocity; every client flies it the same way (gravity, a few bounces off the mall's collision
-// mesh, then it rests and fades), so only the throw goes over the wire. All apples are one
-// InstancedMesh: two draw calls however many are in the air.
+// Apples (T-507): pick one at a fruit stand (it shows in your hand), throw it where you're looking,
+// one at a time. A throw is an origin and a velocity; every client flies it the same way (gravity, a
+// few bounces off the mall's collision mesh, then it rests and fades), so only the throw goes over
+// the wire. All flying apples are one InstancedMesh: two draw calls however many are in the air.
 import {
   ConeGeometry,
   DynamicDrawUsage,
   Group,
   InstancedMesh,
   Matrix4,
+  Mesh,
   MeshStandardMaterial,
   Quaternion,
   Ray,
@@ -27,6 +28,36 @@ const FADE = 0.6;
 const BOUNCE = 0.42;
 const REST = 0.7;
 
+/** How close to a fruit stand's middle you must be to pick an apple (m): about touching it (it's 1.2 m square). */
+export const STAND_REACH = 1.3;
+
+// one apple's model, shared by the flying ones and the one in your hand
+const SKIN = new SphereGeometry(RADIUS, 12, 8).scale(1, 0.9, 1);
+const LEAF = new ConeGeometry(0.025, 0.05, 4).translate(0.012, RADIUS * 0.95, 0).rotateZ(-0.5);
+const RED = new MeshStandardMaterial({ color: '#c8242b', roughness: 0.45 });
+const GREEN = new MeshStandardMaterial({ color: '#4e8a2e', roughness: 0.8 });
+
+/** An apple to hold (Avatar.hold). */
+export function handApple(): Group {
+  const g = new Group();
+  g.add(new Mesh(SKIN, RED), new Mesh(LEAF, GREEN));
+  return g;
+}
+
+/** The fruit stand within reach of `pos` (same floor), or null. */
+export function standWithin(
+  stands: readonly (readonly number[])[],
+  pos: { x: number; y: number; z: number },
+  reach = STAND_REACH,
+): readonly number[] | null {
+  return (
+    stands.find(
+      (s) =>
+        Math.abs((s[1] ?? 0) - pos.y) < 1 && Math.hypot((s[0] ?? 0) - pos.x, (s[2] ?? 0) - pos.z) < reach,
+    ) ?? null
+  );
+}
+
 type Apple = { pos: Vector3; vel: Vector3; age: number; resting: boolean; spin: number; axis: Vector3 };
 
 // scratch: nothing allocates per frame
@@ -43,13 +74,8 @@ export class Apples {
   private readonly leaf: InstancedMesh;
 
   constructor(private readonly collider: MeshBVH) {
-    const skin = new SphereGeometry(RADIUS, 12, 8);
-    skin.scale(1, 0.9, 1);
-    this.body = new InstancedMesh(skin, new MeshStandardMaterial({ color: '#c8242b', roughness: 0.45 }), MAX);
-    const leaf = new ConeGeometry(0.025, 0.05, 4);
-    leaf.translate(0.012, RADIUS * 0.95, 0);
-    leaf.rotateZ(-0.5);
-    this.leaf = new InstancedMesh(leaf, new MeshStandardMaterial({ color: '#4e8a2e', roughness: 0.8 }), MAX);
+    this.body = new InstancedMesh(SKIN, RED, MAX);
+    this.leaf = new InstancedMesh(LEAF, GREEN, MAX);
     for (const mesh of [this.body, this.leaf]) {
       mesh.instanceMatrix.setUsage(DynamicDrawUsage);
       mesh.count = 0;

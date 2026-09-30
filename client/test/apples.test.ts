@@ -1,7 +1,7 @@
 import { STEP } from '@shopping-mall/shared/constants';
 import { APPLE } from '@shopping-mall/shared/protocol';
 import { describe, expect, it } from 'vitest';
-import { Apples } from '../src/world/apples';
+import { Apples, STAND_REACH, standWithin } from '../src/world/apples';
 import { collider } from './greybox';
 
 /** Fly apples for `seconds`, and return the first one's position (via the apple's matrix). */
@@ -39,5 +39,15 @@ describe('apples', () => {
     apples.throw([0, 1.25, -6], [0, APPLE.lift, -APPLE.speed]);
     fly(apples, 9);
     expect(apples.count).toBe(0);
+  });
+});
+
+describe('fruit stands', () => {
+  const stands = [[2.5, 0, -37]];
+  it('are within reach only when you are right beside one, on its floor', () => {
+    expect(standWithin(stands, { x: 2.5 - 1.0, y: 0, z: -37 })).toEqual(stands[0]); // touching it
+    expect(standWithin(stands, { x: 2.5 - 1.5, y: 0, z: -37 })).toBeNull(); // a step away
+    expect(standWithin(stands, { x: 2.5 - 1.0, y: 8, z: -37 })).toBeNull(); // upstairs
+    expect(STAND_REACH).toBeLessThan(1.5);
   });
 });

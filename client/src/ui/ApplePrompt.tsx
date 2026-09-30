@@ -1,4 +1,4 @@
-// "Pick an apple [F]" at a fruit stand, "Throw an apple (2) [F]" while you hold some.
+// "Pick an apple [F]" at a fruit stand, "Throw the apple [F]" while you hold one.
 import { commands } from '../commands';
 import { t } from '../i18n';
 import { applePrompt, nearbyShop, seatPrompt } from '../state';
@@ -12,7 +12,7 @@ export function ApplePrompt() {
     <div class="prompt glass" key={p.mode}>
       <button type="button" class="prompt-btn" onClick={() => commands.apple()}>
         <span aria-hidden="true">🍎</span>{' '}
-        {p.mode === 'pick' ? t('prompt.pickApple') : t('prompt.throwApple', { n: String(p.held) })}
+        {p.mode === 'pick' ? t('prompt.pickApple') : t('prompt.throwApple')}
         {finePointer && <kbd>F</kbd>}
       </button>
     </div>

@@ -47,7 +47,7 @@ import {
   zone,
 } from './state';
 import { mountUI } from './ui/App';
-import { Apples } from './world/apples';
+import { Apples, handApple, standWithin } from './world/apples';
 import { escalatorCarry, escalatorSteps } from './world/escalators';
 import { type FountainWater, fountainWater } from './world/fountain';
 import { loadMall } from './world/mall';
@@ -143,24 +143,29 @@ const follower = new PathFollower();
 const finder = new PathFinder(mall.nav);
 const walkTo = new WalkTo(camera, mall.collider, mall.meta, finder, follower);
 scene.add(walkTo.marker);
-// apples (T-507): pick up to three at a fruit stand (F), throw them where you're looking (F)
+// apples (T-507): one at a time. At a fruit stand, F picks one (you reach for it and it shows in your
+// hand); with one in hand, F throws it where you're looking.
 const apples = new Apples(mall.collider);
 scene.add(apples.group);
 const stands = (mall.meta.props ?? []).filter((p) => p.kind === 'fruit').map((p) => p.pos);
-const HOLD = 3;
-let held = 0;
-const atStand = () =>
-  held < HOLD &&
-  stands.some(
-    (s) => Math.abs(s[1] - player.pos.y) < 1 && Math.hypot(s[0] - player.pos.x, s[2] - player.pos.z) < 2.2,
-  );
+let holding = false;
+/** The apple appears in the hand part-way through the reach. */
+const PICK_AT = 0.3;
+let picking = 0;
+const atStand = () => (holding || picking > 0 ? null : standWithin(stands, player.pos));
 function apple() {
-  if (atStand()) {
-    held++;
+  if (picking > 0) return;
+  const stand = atStand();
+  if (stand) {
+    // face the stand and reach for it
+    player.facing = Math.atan2(-((stand[0] ?? 0) - player.pos.x), -((stand[2] ?? 0) - player.pos.z));
+    avatar?.gesture('interact-right');
+    picking = PICK_AT;
     return;
   }
-  if (held === 0) return;
-  held--;
+  if (!holding) return;
+  holding = false;
+  avatar?.hold(null);
   // throw straight ahead of the camera, turning to face that way
   const yaw = orbit.yaw;
   const dx = -Math.sin(yaw);
@@ -223,6 +228,7 @@ import('./avatars/kit')
       if (avatar?.id === id) return;
       avatar?.dispose();
       avatar = kit.create(id);
+      if (holding) avatar.hold(handApple());
       body.add(avatar.object);
       setPlaceholder(false);
     });
@@ -404,9 +410,15 @@ startLoop({
       if (input.keys.consume(`Digit${i + 1}`) && !uiHasFocus.value) multi.emote(EMOTES[i] as string);
     }
     if (input.keys.consume('KeyF') && !uiHasFocus.value) apple();
-    const pick = atStand() ? 'pick' : held > 0 ? 'throw' : null;
-    if (pick !== (applePrompt.value?.mode ?? null) || (pick && held !== applePrompt.value?.held))
-      applePrompt.value = pick ? { mode: pick, held } : null;
+    if (picking > 0) {
+      picking -= dt;
+      if (picking <= 0) {
+        holding = true;
+        avatar?.hold(handApple());
+      }
+    }
+    const pick = atStand() ? 'pick' : holding ? 'throw' : null;
+    if (pick !== (applePrompt.value?.mode ?? null)) applePrompt.value = pick ? { mode: pick } : null;
     const visit = input.keys.consume('KeyE'); // always consume, so a stray press can't fire later
     const seat = seated ? 'stand' : !near && nearestSpot(spots, player.pos) ? 'sit' : null;
     if (seat !== seatPrompt.value) seatPrompt.value = seat;
