@@ -48,7 +48,7 @@ import {
 } from './state';
 import { mountUI } from './ui/App';
 import { Apples } from './world/apples';
-import { escalatorCarry } from './world/escalators';
+import { escalatorCarry, escalatorSteps } from './world/escalators';
 import { type FountainWater, fountainWater } from './world/fountain';
 import { loadMall } from './world/mall';
 import { Shoppers } from './world/shoppers';
@@ -84,6 +84,8 @@ scene.add(sun);
 await loadContent();
 const mall = await loadMall(art ?? undefined);
 scene.add(mall.visual);
+const steps = escalatorSteps(mall.meta.escalators);
+scene.add(steps.group);
 const sky = installSky(mall.visual); // drifting clouds in the skylight
 // High only: the floor mirrors the mall. Loaded after the start (three's Reflector isn't small).
 let mirror: { update(show: boolean): void } | null = null;
@@ -433,6 +435,7 @@ startLoop({
     sky.update(dt);
     mirror?.update(over.t === 0); // from above it would only mirror the sky
     water?.update(dt);
+    steps.update(dt);
 
     const tap = input.takeTap();
     if (tap && phase.value === 'playing' && !walkTo.tap(tap.x, tap.y, player, canvas, over.clipY))

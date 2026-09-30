@@ -1,6 +1,8 @@
 // The greybox mall: geometry + gameplay meta from one description. Dimensions: docs/greybox.md.
 // Coordinates: metres, Y up, the mall runs along −Z from the entrance (z = 0).
 // Side s = −1 is west (left as you walk in), s = +1 is east.
+
+import { ESCALATOR } from '@shopping-mall/shared/constants';
 import type { MallMeta } from '@shopping-mall/shared/meta';
 import { Geo } from './geometry.ts';
 import { PROPS } from './props.ts';
@@ -26,7 +28,7 @@ const RAIL_H = 1.1;
 const ENTRANCE = 5; // half-width of the glass entrance
 const FLAG_DOOR = 7; // half-width of the flagship's doorway
 /** Escalator A (west, up to the bridge's south edge) and B (east, up to its north edge): centre x, width. */
-const ESC = { a: -3, b: 3, w: 1.2 };
+const ESC = { a: -3, b: 3, w: ESCALATOR.width + 0.5 }; // w: overall, balustrades included
 /** Escalators rise at 30°, like real ones: this much run for the climb to the upper floor. */
 const ESC_RUN = UP / Math.tan(Math.PI / 6);
 
@@ -195,43 +197,109 @@ function roofOrSlab(g: Geo, mat: string, y0: number, y1: number, collide: boolea
   g.box(mat, [VOID.x, y0, VOID.z1], [X_OUT, y1, VOID.z0], collide);
 }
 
-/** Escalator: a solid wedge whose top is the walking surface, with side panels. Rises from zBottom to zTop. */
+/**
+ * Escalator from zBottom (ground) to zTop (the bridge), built like a real one: a flat landing at
+ * each end, a steel truss under the incline, stainless skirts either side of the steps, glass
+ * balustrades and black handrails. The steps themselves move, so the client draws them
+ * (client/src/world/escalators.ts); here the walking surface is an invisible ramp under them, and
+ * invisible walls along the balustrades keep you on it.
+ */
 function escalator(g: Geo, meta: MallMeta, id: string, xc: number, zBottom: number, zTop: number) {
-  const w = 1.2;
-  const x0 = xc - w / 2;
-  const x1 = xc + w / 2;
-  const north = zTop < zBottom; // rises toward −z
-  const zl = Math.min(zBottom, zTop);
-  const zr = Math.max(zBottom, zTop);
-  // polygons in (z, y), counter-clockwise with z to the right
-  const wedge: [number, number][] = north
-    ? [
-        [zl, 0],
-        [zr, 0],
-        [zl, UP],
-      ]
-    : [
-        [zl, 0],
-        [zr, 0],
-        [zr, UP],
-      ];
-  const panel: [number, number][] = north
-    ? [
-        [zl, 0],
-        [zr, 0],
-        [zr, 1],
-        [zl, UP + 1],
-      ]
-    : [
-        [zl, 0],
-        [zr, 0],
-        [zr, UP + 1],
-        [zl, 1],
-      ];
-  g.xprism('escalator', x0, x1, wedge);
-  g.xprism('panel', x0 - 0.1, x0, panel);
-  g.xprism('panel', x1, x1 + 0.1, panel);
-  meta.escalators.push({ id, from: [xc, 0, zBottom], to: [xc, UP, zTop], width: w, speed: 1.2 });
+  const { width: W, landing: F } = ESCALATOR;
+  const run = Math.abs(zTop - zBottom);
+  const top = F + run; // where the incline ends, along the escalator from its bottom end
+  const end = top + F;
+  const slope = UP / run;
+  const toTop = zTop < zBottom ? -1 : 1;
+  const z0 = zBottom - toTop * F; // the bottom end
+  /** A prism across x0…x1 from an outline in (along, y), along = 0 at the bottom end. */
+  const piece = (
+    mat: string | null,
+    x0: number,
+    x1: number,
+    outline: [number, number][],
+    collide = false,
+  ) => {
+    const zy = outline.map(([a, y]) => [z0 + toTop * a, y] as [number, number]);
+    if (toTop < 0) zy.reverse(); // mirrored in z, so the winding flips
+    g.xprism(mat, x0, x1, zy, mat === null || collide);
+  };
+  /** Pieces that follow the steps: flat, climbing, flat, from `lo` to `hi` above the steps. */
+  const alongSteps = (mat: string, x0: number, x1: number, lo: number, hi: number) => {
+    piece(mat, x0, x1, [
+      [0, lo],
+      [F, lo],
+      [F, hi],
+      [0, hi],
+    ]);
+    piece(mat, x0, x1, [
+      [F, lo],
+      [top, UP + lo],
+      [top, UP + hi],
+      [F, hi],
+    ]);
+    piece(mat, x0, x1, [
+      [top, UP + lo],
+      [end, UP + lo],
+      [end, UP + hi],
+      [top, UP + hi],
+    ]);
+  };
+  const hw = W / 2; // steps
+  const deck = 0.25; // the skirt's width either side, which the balustrade stands on
+  const under = 0.26 / slope; // where the truss (0.26 m under the steps) comes out of the floor
+  // the walking surface, and walls along both balustrades
+  piece(null, xc - hw, xc + hw, [
+    [F, 0],
+    [top, 0],
+    [top, UP],
+  ]);
+  for (const s of [-1, 1]) {
+    const [a, b] = s < 0 ? [xc - hw - deck, xc - hw] : [xc + hw, xc + hw + deck];
+    piece(null, a, b, [
+      [0, 0],
+      [end, 0],
+      [end, UP + 1],
+      [F, 1],
+      [0, 1],
+    ]);
+  }
+  // the truss under the incline
+  piece('panel', xc - hw - deck, xc + hw + deck, [
+    [F + under, 0],
+    [top, 0],
+    [top, UP - 0.26],
+  ]);
+  for (const s of [-1, 1]) {
+    const [a, b] = s < 0 ? [xc - hw - deck, xc - hw] : [xc + hw, xc + hw + deck];
+    // the skirt: from the truss up to just above the steps
+    piece('panel', a, b, [
+      [F, 0],
+      [F + under, 0],
+      [top, UP - 0.26],
+      [top, UP + 0.12],
+      [F, 0.12],
+    ]);
+    alongSteps('panel', a, b, 0, 0.12);
+    // glass balustrade on the skirt, and the handrail along its top
+    const x = xc + s * (hw + deck / 2);
+    alongSteps('glass', x - 0.012, x + 0.012, 0.12, 0.95);
+    alongSteps('rubber', x - 0.045, x + 0.045, 0.95, 1.02);
+  }
+  // comb plates where the steps go into the floor at each end
+  piece('escalator', xc - hw, xc + hw, [
+    [0, 0],
+    [0.5, 0],
+    [0.5, 0.03],
+    [0, 0.03],
+  ]);
+  piece('escalator', xc - hw, xc + hw, [
+    [end - 0.5, UP],
+    [end, UP],
+    [end, UP + 0.03],
+    [end - 0.5, UP + 0.03],
+  ]);
+  meta.escalators.push({ id, from: [xc, 0, zBottom], to: [xc, UP, zTop], width: W, speed: 1.2 });
 }
 
 /** Benches (seats), recycling stations, lamps, plants, lanterns, café tables, sofas, planters, fruit stands and a fountain. */

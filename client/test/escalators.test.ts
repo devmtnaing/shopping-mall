@@ -1,9 +1,9 @@
 import { STEP } from '@shopping-mall/shared/constants';
 import type { Escalator } from '@shopping-mall/shared/meta';
-import { Vector3 } from 'three';
+import { type InstancedMesh, Matrix4, Vector3 } from 'three';
 import { describe, expect, it } from 'vitest';
 import { PlayerController } from '../src/player/controller';
-import { escalatorCarry } from '../src/world/escalators';
+import { escalatorCarry, escalatorSteps } from '../src/world/escalators';
 import { collider, greybox } from './greybox';
 
 const { meta } = greybox;
@@ -79,5 +79,41 @@ describe('riding the greybox escalators', () => {
       maxJump = Math.max(maxJump, Math.abs(p.pos.y - y));
     }
     expect(maxJump).toBeLessThan(0.05);
+  });
+});
+
+describe('escalatorSteps', () => {
+  const e: Escalator = { id: 't', from: [0, 0, 0], to: [0, 3, -4], width: 1.4, speed: 1 };
+  const heights = (steps: ReturnType<typeof escalatorSteps>) => {
+    const treads = steps.group.children[0] as InstancedMesh;
+    const m = new Matrix4();
+    const p = new Vector3();
+    return Array.from({ length: treads.count }, (_, i) => {
+      treads.getMatrixAt(i, m);
+      return p.setFromMatrixPosition(m).clone();
+    });
+  };
+
+  it('lays the steps flat at both landings and climbing in between, all within the escalator', () => {
+    const at = heights(escalatorSteps([e]));
+    expect(at.length).toBeGreaterThan(10);
+    for (const p of at) {
+      expect(p.y).toBeGreaterThanOrEqual(0);
+      expect(p.y).toBeLessThanOrEqual(3.05);
+      expect(p.z).toBeLessThanOrEqual(1.2 + 1e-6); // the bottom landing
+      expect(p.z).toBeGreaterThanOrEqual(-4 - 1.2 - 1e-6); // the top landing
+    }
+    expect(at.some((p) => p.y < 0.05)).toBe(true);
+    expect(at.some((p) => p.y > 2.95)).toBe(true);
+  });
+
+  it('moves them up', () => {
+    const steps = escalatorSteps([e]);
+    const before = heights(steps);
+    steps.update(0.1);
+    const after = heights(steps);
+    // a step on the incline (the middle one) has risen
+    const i = Math.floor(before.length / 2);
+    expect((after[i] as Vector3).y).toBeGreaterThan((before[i] as Vector3).y);
   });
 });

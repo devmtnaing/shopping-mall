@@ -57,7 +57,7 @@ export class Geo {
    * Prism: a convex polygon in the (z, y) plane, extruded along x from x0 to x1.
    * Points go counter-clockwise with z to the right and y up. Used for escalator wedges and side panels.
    */
-  xprism(mat: string, x0: number, x1: number, zy: [number, number][], collide = true) {
+  xprism(mat: string | null, x0: number, x1: number, zy: [number, number][], collide = true) {
     const n = zy.length;
     const at = (x: number, i: number): V3 => {
       const [pz, py] = zy[i % n] as [number, number];

@@ -61,3 +61,10 @@ export const AUDIO_LOOPS = {
   fountain: { seconds: 6, stereo: false },
 } as const;
 export const LOOP_OVERLAP = 0.5;
+
+/**
+ * Escalators: the steps' width, the flat landing at each end (where the steps come out of the floor
+ * and flatten before they climb, and flatten again at the top), and each step's depth. The mall's
+ * geometry (tools/greybox/layout.ts) and the moving steps (client/src/world/escalators.ts) share them.
+ */
+export const ESCALATOR = { width: 1.4, landing: 1.2, step: 0.4 };

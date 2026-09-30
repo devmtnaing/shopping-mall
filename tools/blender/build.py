@@ -40,7 +40,7 @@ SLOT_Z0, SLOT_LEN, SLOTS = -6.0, 10.0, 6
 X_CON, DOOR_W, DOOR_H, RAIL_H, ENTRANCE = 10.0, 7.0, 4.2, 1.1, 5.0
 VOID_X, VOID_Z0, VOID_Z1 = 6.0, -10.0, SLOT_Z0 - SLOTS * SLOT_LEN
 BRIDGE_Z0, BRIDGE_Z1 = -33.0, -41.0
-ESC_A, ESC_B, ESC_W = -3.0, 3.0, 1.2
+ESC_A, ESC_B, ESC_W = -3.0, 3.0, 1.9  # overall width, balustrades included
 Z_FLAG = -68.0
 
 
@@ -127,7 +127,8 @@ LOOK = {
     'trim': ('#b8955e', 0.35, 1.0, 0),
     'dark': ('#3a3732', 0.6, 0.0, 0),
     'rail': ('#e6dfd2', 0.7, 0.0, 0),  # parapets round the atrium: solid stone
-    'panel': ('#8f8b85', 0.35, 0.0, 0),  # escalator side panels
+    'panel': ('#b3b6b9', 0.35, 0.0, 0),  # escalator truss and skirts: stainless
+    'rubber': ('#1d1d1f', 0.6, 0.0, 0),  # escalator handrails
     'escalator': ('#5f5c57', 0.45, 0.4, 0),
     'planter': ('#e9e2d6', 0.8, 0.0, 0),
     'glass': ('#bcd4dc', 0.05, 0.0, 0),

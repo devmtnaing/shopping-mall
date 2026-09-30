@@ -44,8 +44,8 @@ The Blender mall (Phase 2) replaces these files with the same names and formats.
 | Upper floor | y = 8. Same units, prefixed `u-` | walls 7 m high, roof at 15 m |
 | Atrium opening | upper floor, x ∈ [−6, 6], z ∈ [−66, −10] | solid parapets 1.1 m high; 4 m galleries either side |
 | Sky bridge | upper floor, x ∈ [−6, 6], z ∈ [−41, −33] | |
-| Escalator A | x = −3, rises from z ≈ −19.1 (ground) to −33 (bridge) | 1.2 m wide, 30°, 1.2 m/s |
-| Escalator B | x = 3, rises from z ≈ −54.9 (ground) to −41 (bridge) | 1.2 m wide, 30°, 1.2 m/s |
+| Escalator A | x = −3, rises from z ≈ −19.1 (ground) to −33 (bridge), with 1.2 m flat landings either end | 1.4 m steps (1.9 m overall), 30°, 1.2 m/s |
+| Escalator B | x = 3, rises from z ≈ −54.9 (ground) to −41 (bridge), landings the same | 1.4 m steps (1.9 m overall), 30°, 1.2 m/s |
 | Flagship | z ∈ [−80, −68], stage 0.6 m high (x ±8, from z −77) reached by 0.2 m steps | doorway 14 × 4.8 m |
 | Benches | ground x = ±8.6 at z −16, −26, −46, −56; upper x = ±6.9 at z −16, −56 (sofas at −26, −46) | 0.45 m high (you can't step onto them; jump) |
 | Spawn | (0, 0, −6), facing into the mall | |
@@ -61,4 +61,5 @@ The client shows the name of the highest-priority zone containing the player. Sh
 - **Step-up:** flagship steps (0.2 m) must be walkable. Benches (0.45 m) must block.
 - **Slopes:** escalator surfaces (~30–32°) must be walkable even when they aren't moving.
 - **Ceilings:** walking under the sky bridge and jumping under the upper slab.
-- **Tight spots:** 1.8 m between the planters at x ±6.5 and escalator A's side panels.
+- **Tight spots:** 1.55 m between the planters at x ±6.5 and escalator A's balustrade.
+- **Escalators:** the walking surface is an invisible 30° ramp level with the middle of the moving steps (drawn by the client, `client/src/world/escalators.ts`); invisible walls along the balustrades keep you on it.

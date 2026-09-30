@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { Overview } from '../src/player/overview';
 
 const from = { position: new Vector3(0, 2, 5), target: new Vector3(0, 1.5, 0) };
-const bounds = { minX: -16, maxX: 16, minZ: -64, maxZ: 0 };
+const bounds = { minX: -22, maxX: 22, minZ: -80, maxZ: 0 };
 const run = (o: Overview, seconds: number) => {
   for (let t = 0; t < seconds; t += 1 / 60) o.update(1 / 60, false, from, bounds, 0, 60, 16 / 9);
 };
@@ -41,8 +41,8 @@ describe('Overview', () => {
   it('jumps straight there with reduced motion', () => {
     const o = new Overview();
     o.active = true;
-    o.update(1 / 60, true, from, bounds, 7.6, 60, 1);
+    o.update(1 / 60, true, from, bounds, 8, 60, 1);
     expect(o.t).toBe(1);
-    expect(o.clipY).toBeCloseTo(7.6 + 3.4);
+    expect(o.clipY).toBeCloseTo(8 + 3.4);
   });
 });
