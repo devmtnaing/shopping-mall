@@ -36,7 +36,7 @@ export type ServerOptions = {
   capacity?: number;
   /** The most people in the whole mall at once; anyone else is told it's full (MAX_PLAYERS). */
   maxPlayers?: number;
-  /** The most connections at once from one IP address (MAX_PER_IP). */
+  /** The most connections at once from one IP address (MAX_PER_IP); 0 for no limit. */
   maxPerIp?: number;
   /** Days of chat history to keep in the database (CHAT_KEEP_DAYS). */
   chatKeepDays?: number;
@@ -115,6 +115,22 @@ export async function startServer(opts: ServerOptions = {}) {
   const signInAll = new RateLimit(30, 30 / 60);
   /** Open connections per IP address. */
   const perIp = new Map<string, number>();
+  /**
+   * Someone was turned away for too many connections from one address. Usually that's one person
+   * or a script, but if it keeps happening the server may be seeing a proxy's address for everyone:
+   * say so in the log, at most every 10 minutes (without the address).
+   */
+  let warnedAt = 0;
+  const warnBusy = () => {
+    const now = Date.now();
+    if (now - warnedAt < 600_000) return;
+    warnedAt = now;
+    console.warn(
+      `limits: turned a connection away, ${maxPerIp} already open from one address. If ordinary visitors ` +
+        "are being turned away, the server is probably seeing your proxy or CDN's address: set " +
+        'CLIENT_IP_FROM on the web service (docs/deploy.md, "Behind a proxy or CDN"), or MAX_PER_IP=0.',
+    );
+  };
   /** Everyone in the mall, including people who dropped and may come back (they keep their place). */
   const peopleIn = () => [...rooms.values()].reduce((n, r) => n + r.players.size, 0);
   // chat history: prune what's past its time now and every day
@@ -216,7 +232,8 @@ export async function startServer(opts: ServerOptions = {}) {
     const ip = clientIp(req);
     wss.handleUpgrade(req, socket, head, (ws) => {
       const open = perIp.get(ip) ?? 0;
-      if (open >= maxPerIp) {
+      if (maxPerIp > 0 && open >= maxPerIp) {
+        warnBusy();
         const msg: ServerMessage = {
           t: 'error',
           code: 'busy',

@@ -31,7 +31,7 @@ You can run the whole mall two ways: with **docker compose** on any machine, or 
 |---|---|
 | `PORT` | Port nginx listens on (default 80). |
 | `API_UPSTREAM` | `host:port` of the server (default `server:8787`). It's looked up per request, so the web can start before the server. |
-| `CLIENT_IP_FROM` | Where the visitor's IP address comes from, for the per-visitor limits: `railway` (the default, Railway's `X-Real-IP`) or `cloudflare` (`CF-Connecting-IP`). Set it to `cloudflare` when Cloudflare's proxy (the orange cloud) is in front of the mall, and only then. |
+| `CLIENT_IP_FROM` | Where each visitor's IP address comes from, for the per-visitor limits. See [Behind a proxy or CDN](#behind-a-proxy-or-cdn). |
 
 **backup**: `DATABASE_URL`, the same `S3_*` as the server, `KEEP` (dumps to keep, default 30), and the build argument `PG_MAJOR`, which must be at least the database's major version.
 
@@ -56,6 +56,21 @@ The production project `shopping-mall` (<https://web-production-cc219.up.railway
 **One click:** [![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/shopping-mall). The [template](https://railway.com/deploy/shopping-mall) creates all five pieces with the variables above, and only asks you for `HOST_SECRET`.
 
 To set it up by hand, create a project with the Postgres template and a bucket named `uploads`, add three empty services with the names above, set the variables from the table, connect the repo and give `web` a domain. Or edit `.railway/railway.ts` and run `railway config apply`.
+
+## Behind a proxy or CDN
+
+The server limits how many connections one visitor can have (`MAX_PER_IP`, 5 by default), and how often they can try the host password. For that it needs each visitor's own IP address. When something sits in front of the mall (a CDN, a load balancer, another reverse proxy), the web container sees that thing's address instead, for every visitor, unless you tell it which header carries the real one. Set `CLIENT_IP_FROM` on the **web** container:
+
+| What's in front of the mall | `CLIENT_IP_FROM` |
+|---|---|
+| Nothing: visitors connect straight to your server (a VPS or droplet running docker compose) | `direct` (the default) |
+| Railway, without a CDN | `x-real-ip` (picked automatically on Railway) |
+| Cloudflare's proxy (the orange cloud) | `cloudflare` |
+| A load balancer or proxy that adds `X-Forwarded-For`: DigitalOcean's load balancer and App Platform, AWS, Caddy, Traefik, most CDNs | `x-forwarded-for` |
+
+Only choose a header when a proxy really sets it, because otherwise visitors could send it themselves and pretend to be someone else. With `x-forwarded-for`, the last address in the header is used: the one added by the proxy directly in front of the mall. If there are two proxies in a row (a CDN and then a load balancer), use the CDN's own header if it has one, or switch the per-visitor limit off with `MAX_PER_IP=0` on the server.
+
+The web container prints which one it's using when it starts (`client-ip: visitors' addresses come from: …`). If this is set up wrong, the server's log says `limits: turned a connection away…` and visitors start seeing "too many connections from here", even though the mall isn't full.
 
 ## Backups and restoring
 

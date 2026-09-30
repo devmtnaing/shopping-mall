@@ -1,0 +1,13 @@
+#!/bin/sh
+# Sourced by the nginx image's entrypoint before it fills in the templates: choose where the
+# visitor's IP comes from (see nginx.conf.template), unless CLIENT_IP_FROM is already set.
+# On Railway it's X-Real-IP, which Railway's edge sets; anywhere else the connection's own address.
+if [ -z "$CLIENT_IP_FROM" ]; then
+  if [ -n "$RAILWAY_PROJECT_ID" ]; then CLIENT_IP_FROM=x-real-ip; else CLIENT_IP_FROM=direct; fi
+fi
+case "$CLIENT_IP_FROM" in
+  direct | x-real-ip | cloudflare | x-forwarded-for) ;;
+  *) echo "client-ip: unknown CLIENT_IP_FROM \"$CLIENT_IP_FROM\", using direct" >&2; CLIENT_IP_FROM=direct ;;
+esac
+export CLIENT_IP_FROM
+echo "client-ip: visitors' addresses come from: $CLIENT_IP_FROM"

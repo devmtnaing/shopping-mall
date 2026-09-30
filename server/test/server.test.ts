@@ -350,6 +350,13 @@ describe('limits', () => {
     await client('main', '2.2.2.2').join('Cc'); // someone else is fine
   });
 
+  it("has no per-address limit with maxPerIp 0 (for proxies that hide visitors' addresses)", async () => {
+    await server.close();
+    server = await startServer({ port: 0, maxPerIp: 0, presenceMs: 100 });
+    for (const name of ['Aa', 'Bb', 'Cc', 'Dd', 'Ee', 'Ff', 'Gg']) await client('main', '1.1.1.1').join(name);
+    expect(server.rooms.get('main')?.players.size).toBe(7);
+  });
+
   it('shows a newcomer what was said lately', async () => {
     const a = client();
     await a.join('Aye');
