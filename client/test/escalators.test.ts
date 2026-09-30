@@ -112,8 +112,10 @@ describe('escalatorSteps', () => {
     const end = 4 + 2 * 1.2;
     for (const p of at) {
       const a = 1.2 - p.z;
-      if (a < 0.5 || a > end - 0.5)
-        expect(p.y).toBeLessThan(surface(a) - 0.01); // under a comb plate
+      // under a comb plate: just below it and never deeper (the top landing is a bridge, 0.3 m
+      // thick, with people underneath)
+      if (a < 0.5 || a > end - 0.5) expect(surface(a) - p.y).toBeGreaterThan(0.01);
+      if (a < 0.5 || a > end - 0.5) expect(surface(a) - p.y).toBeLessThan(0.035);
       else if (a > 0.7 && a < end - 0.7) expect(p.y).toBeCloseTo(surface(a), 4); // out on the steps
     }
     expect(at.some((p) => p.y > 2.95)).toBe(true);

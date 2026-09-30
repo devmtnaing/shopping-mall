@@ -105,6 +105,7 @@ export function escalatorSteps(escalators: readonly Escalator[]): EscalatorSteps
   const up = new Vector3(0, 1, 0);
   const at = new Vector3();
   const one = new Vector3(1, 1, 1);
+  const gone = new Vector3(0, 0, 0);
   const update = (dt: number) => {
     t += dt;
     let k = 0;
@@ -116,10 +117,11 @@ export function escalatorSteps(escalators: readonly Escalator[]): EscalatorSteps
         const climb = Math.min(1, Math.max(0, (a - F) / r.run));
         at.copy(r.start).addScaledVector(r.dir, a);
         at.y += climb * r.rise + 0.015;
-        // under a comb plate (or past the end): slide down out of sight, as real steps fold away
+        // under a comb plate (or past the end): dip just below it, then vanish. They mustn't sink
+        // further: at the top the landing is the bridge, only 0.3 m thick, with people under it.
         const under = Math.max(PLATE + step / 2 - a, a - (r.end - PLATE - step / 2), 0);
-        at.y -= Math.min(under * 1.5, 1);
-        m.compose(at, q, one);
+        at.y -= Math.min(under, 0.03);
+        m.compose(at, q, under > step / 2 ? gone : one);
         treads.setMatrixAt(k, m);
         edges.setMatrixAt(k, m);
         k++;
