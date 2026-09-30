@@ -1,5 +1,6 @@
 import { effect } from '@preact/signals';
 import { THROW_RELEASE } from '@shopping-mall/shared/avatars';
+import { PLAYER } from '@shopping-mall/shared/constants';
 import { APPLE, EMOTES } from '@shopping-mall/shared/protocol';
 import { Color, DirectionalLight, Fog, HemisphereLight, Ray, Scene, Vector3 } from 'three';
 import { track } from './analytics';
@@ -144,8 +145,9 @@ const follower = new PathFollower();
 const finder = new PathFinder(mall.nav);
 const walkTo = new WalkTo(camera, mall.collider, mall.meta, finder, follower);
 scene.add(walkTo.marker);
-// apples (T-507): one at a time. At a fruit stand, F picks one (you reach for it and it shows in your
-// hand); with one in hand, F throws it where you're looking.
+// apples (T-507): one at a time. At a fruit stand, F picks one (you turn to it, reach, and it shows in
+// your hand, then turn back); with one in hand, F throws it straight ahead. You stand still for the
+// reach and the wind-up, so the animation always plays.
 const apples = new Apples(mall.collider);
 scene.add(apples.group);
 const stands = (mall.meta.props ?? []).filter((p) => p.kind === 'fruit').map((p) => p.pos);
@@ -153,22 +155,26 @@ let holding = false;
 /** The apple appears in the hand part-way through the reach. */
 const PICK_AT = 0.3;
 let picking = 0;
+/** The way you faced before turning to the stand, to turn back to once you have the apple. */
+let facedBefore = 0;
+/** A turn in progress (to the stand and back): eased like a walking turn, not snapped. */
+let turnTo: number | null = null;
 const atStand = () => (holding || picking > 0 ? null : standWithin(stands, player.pos));
 function apple() {
-  if (picking > 0) return;
+  if (picking > 0 || throwing > 0) return;
   const stand = atStand();
   if (stand) {
-    // face the stand and reach for it
-    player.facing = Math.atan2(-((stand[0] ?? 0) - player.pos.x), -((stand[2] ?? 0) - player.pos.z));
-    avatar?.gesture('interact-right');
+    facedBefore = player.facing;
+    turnTo = Math.atan2(-((stand[0] ?? 0) - player.pos.x), -((stand[2] ?? 0) - player.pos.z));
+    avatar?.gesture('interact-right', 0, true);
     picking = PICK_AT;
     return;
   }
-  if (!holding || throwing > 0) return;
-  // face where the camera looks and wind up; the apple leaves the hand at the release (release())
-  throwYaw = orbit.yaw;
-  player.facing = throwYaw;
-  avatar?.gesture('throw');
+  if (!holding) return;
+  // straight ahead, the way you face; the apple leaves the hand at the release (release())
+  turnTo = null;
+  throwYaw = player.facing;
+  avatar?.gesture('throw', 0, true);
   throwing = THROW_RELEASE;
 }
 /** Seconds until the apple leaves the hand, while throwing, and which way it goes. */
@@ -400,8 +406,8 @@ if (debugMode || perfMode) {
 startLoop({
   idle: () => performance.now() - activeAt > IDLE_AFTER && !multi.anyoneMoving(),
   step: (dt) => {
-    // while a dialog is open the keyboard belongs to the UI
-    const manual = uiHasFocus.value ? still : input.move();
+    // while a dialog is open the keyboard belongs to the UI; picking or winding up holds you still
+    const manual = uiHasFocus.value || picking > 0 || throwing > 0 ? still : input.move();
     const jump = !uiHasFocus.value && input.jump();
     // any manual movement or a jump cancels tap-to-walk
     if (manual.x !== 0 || manual.y !== 0 || jump) {
@@ -414,6 +420,13 @@ startLoop({
     if (!seated) {
       escalatorCarry(mall.meta.escalators, player.pos, player.carry);
       player.step(dt, { x: move.x, y: move.y, run: input.run, jump, yaw: orbit.yaw });
+    }
+    // a turn in progress (to a fruit stand and back), eased like a walking turn
+    if (turnTo !== null) {
+      const d = Math.atan2(Math.sin(turnTo - player.facing), Math.cos(turnTo - player.facing));
+      if (move.x !== 0 || move.y !== 0 || Math.abs(d) < 0.01)
+        turnTo = null; // walking off: the controller steers
+      else player.facing += d * (1 - Math.exp(-PLAYER.turnRate * dt));
     }
     const near = storefronts.nearby(player.pos)?.id ?? null;
     if (near !== nearbyShop.value) nearbyShop.value = near;
@@ -432,6 +445,7 @@ startLoop({
       if (picking <= 0) {
         holding = true;
         avatar?.hold(handApple());
+        turnTo = facedBefore; // and turn back the way you were facing
       }
     }
     if (throwing > 0) {

@@ -106,8 +106,12 @@ export class Avatar {
     if (state !== this.state) {
       const next = this.actions.get(CLIP_FOR_STATE[state] ?? 'idle');
       if (next && next !== this.current) {
-        next.reset().play();
-        if (this.current) next.crossFadeFrom(this.current, FADE, false);
+        // coming to a stop during a gesture: idle waits until the gesture ends (endGesture fades to
+        // it), rather than blending in and halving the gesture
+        if (!(this.playing && state === ANIM.idle)) {
+          next.reset().play();
+          if (this.current) next.crossFadeFrom(this.current, FADE, false);
+        }
         this.current = next;
       }
       this.state = state;
@@ -123,10 +127,13 @@ export class Avatar {
     this.gesture(CLIP_FOR_EMOTE[e] ?? 'emote-yes');
   }
 
-  /** Play a clip once over standing still (picking an apple uses the reach), from `from` seconds in. */
-  gesture(clip: string, from = 0) {
+  /**
+   * Play a clip once, from `from` seconds in. Emotes only play standing still; `always` plays it
+   * anyway (picking and throwing an apple, which hold you still for the moment themselves).
+   */
+  gesture(clip: string, from = 0, always = false) {
     const a = this.actions.get(clip);
-    if (!a || this.state !== ANIM.idle) return; // gestures only when standing still
+    if (!a || (!always && this.state !== ANIM.idle)) return;
     this.playing?.stop();
     this.playing = a;
     a.reset().play();
