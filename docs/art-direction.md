@@ -61,7 +61,7 @@ Clips kept: `idle walk sprint jump fall sit emote-yes emote-no interact-right` (
 A character that brings its own rig and clips needs its own clip set in the avatar kit instead.
 
 ### World
-- Units are metres. The concourse is 12 m wide and floors are 7.6 m apart (matching the reference's scale, which feels right).
+- Units are metres. The concourse is 20 m wide, with a 12 m atrium, and floors are 8 m apart: roomy, like the reference mall, so a crowd doesn't feel cramped.
 - Modular kit: storefront (3 widths), column, railing, bench, planter, light fixture, escalator. Repeated kit pieces export as instances.
 - Lightmap UV on `uv1`, texel density 32 px/m (concourse) and 16 px/m (upper floor).
 - Empties named `slot.<id>`, `seat.<id>`, `spawn.<id>`, `zone.<name>` (with scale = AABB), `esc.<id>.start|end`. `tools/export-meta.py` writes `mall.meta.json`.

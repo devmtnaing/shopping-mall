@@ -35,8 +35,13 @@ LIGHT_SCALE = 2.0
 EXPOSURE = float(opt.get('exposure', 0.14))
 
 # mall dimensions (tools/greybox/layout.ts)
-X_OUT, Z_END, ROOF, UP, T = 16.0, -64.0, 13.6, 7.6, 0.3
-SLOT_Z0, SLOT_LEN, SLOTS = -4.0, 8.0, 6
+X_OUT, Z_END, ROOF, UP, T = 22.0, -80.0, 15.0, 8.0, 0.3
+SLOT_Z0, SLOT_LEN, SLOTS = -6.0, 10.0, 6
+X_CON, DOOR_W, DOOR_H, RAIL_H, ENTRANCE = 10.0, 7.0, 4.2, 1.1, 5.0
+VOID_X, VOID_Z0, VOID_Z1 = 6.0, -10.0, SLOT_Z0 - SLOTS * SLOT_LEN
+BRIDGE_Z0, BRIDGE_Z1 = -33.0, -41.0
+ESC_A, ESC_B, ESC_W = -3.0, 3.0, 1.2
+Z_FLAG = -68.0
 
 
 def log(*a):
@@ -83,7 +88,7 @@ def cull(objs):
             skin = (
                 (abs(c.x) >= X_OUT + T - 0.01 and abs(n.x) > 0.9 and c.x * n.x > 0)
                 or (c.z <= Z_END - T + 0.01 and n.z < -0.9)
-                or (c.z >= T - 0.01 and n.z > 0.9 and abs(c.x) >= 4)
+                or (c.z >= T - 0.01 and n.z > 0.9 and abs(c.x) >= ENTRANCE)
                 or (c.y <= -T + 0.01 and n.y < -0.9)
                 or (c.y >= ROOF + T - 0.01 and n.y > 0.9)
             )
@@ -308,20 +313,19 @@ def area_light(name, pos, size, energy, color=(1, 0.95, 0.88), shape='RECTANGLE'
 
 panels = []
 CEIL = UP - T
-# concourse ceiling panels over the ground floor, between the atrium and the shop fronts
-for z in [-6 - 8 * i for i in range(6)]:
-    for x in (-4.5, 4.5):
-        panels.append(box('lightpanel', 'lightpanel', (x - 0.6, CEIL - 0.04, z - 1.6), (x + 0.6, CEIL - 0.01, z + 1.6)))
-# upper gallery panels under the roof
-for z in [-6 - 8 * i for i in range(6)]:
-    for x in (-4.5, 4.5):
-        panels.append(box('lightpanel', 'lightpanel', (x - 0.6, ROOF - 0.04, z - 1.6), (x + 0.6, ROOF - 0.01, z + 1.6)))
+PANEL_X = (VOID_X + X_CON) / 2  # over the walkway between the atrium and the shop fronts
+PANEL_W, PANEL_L = 1.6, 4.0
+panel_z = [SLOT_Z0 - SLOT_LEN * (i + 0.5) for i in range(SLOTS)]
+# concourse ceiling panels over the ground floor, and the upper gallery's under the roof
+for y in (CEIL, ROOF):
+    for z in panel_z:
+        for x in (-PANEL_X, PANEL_X):
+            lo = (x - PANEL_W / 2, y - 0.04, z - PANEL_L / 2)
+            hi = (x + PANEL_W / 2, y - 0.01, z + PANEL_L / 2)
+            panels.append(box('lightpanel', 'lightpanel', lo, hi))
 
 # ---- architectural detail (issue #2) ----------------------------------------------------------
-X_CON, DOOR_W, DOOR_H, RAIL_H = 6.0, 6.0, 4.0, 1.1
 PILLAR = (SLOT_LEN - DOOR_W) / 2
-VOID_X, VOID_Z0, VOID_Z1 = 3.0, -8.0, SLOT_Z0 - SLOTS * SLOT_LEN
-BRIDGE_Z0, BRIDGE_Z1 = -25.0, -32.0
 details = []
 
 
@@ -354,13 +358,14 @@ rail_segments = []
 for s in (-1, 1):
     x0 = -VOID_X if s < 0 else VOID_X - 0.08
     rail_segments += [(x0, x0 + 0.08, VOID_Z1, BRIDGE_Z1), (x0, x0 + 0.08, BRIDGE_Z0, VOID_Z0)]
+GAP = ESC_W / 2 + 0.1  # where the escalators arrive on the bridge (tools/greybox/layout.ts)
 rail_segments += [
     (-VOID_X, VOID_X, VOID_Z0, VOID_Z0 + 0.08),
     (-VOID_X, VOID_X, VOID_Z1 - 0.08, VOID_Z1),
-    (-VOID_X, -2.6, BRIDGE_Z0 - 0.08, BRIDGE_Z0),
-    (-1.4, VOID_X, BRIDGE_Z0 - 0.08, BRIDGE_Z0),
-    (-VOID_X, 1.4, BRIDGE_Z1, BRIDGE_Z1 + 0.08),
-    (2.6, VOID_X, BRIDGE_Z1, BRIDGE_Z1 + 0.08),
+    (-VOID_X, ESC_A - GAP, BRIDGE_Z0 - 0.08, BRIDGE_Z0),
+    (ESC_A + GAP, VOID_X, BRIDGE_Z0 - 0.08, BRIDGE_Z0),
+    (-VOID_X, ESC_B - GAP, BRIDGE_Z1, BRIDGE_Z1 + 0.08),
+    (ESC_B + GAP, VOID_X, BRIDGE_Z1, BRIDGE_Z1 + 0.08),
 ]
 for xa, xb, za, zb in rail_segments:
     details.append(box('handrail', 'handrail', (xa - HR, UP + RAIL_H, za - HR), (xb + HR, UP + RAIL_H + 0.06, zb + HR)))
@@ -375,20 +380,27 @@ lights = []
 # each panel also gets an area light just below it (the emission alone is noisy to bake)
 for p in panels:
     x, y, z = p.location
-    lights.append(area_light('panel', (x, y - 0.05, z), 1.2, 90, size_y=3.2))
+    lights.append(area_light('panel', (x, y - 0.05, z), PANEL_W, 150, size_y=PANEL_L))
 # shops: a warm light in each unit
+SHOP_X = (X_CON + T + X_OUT) / 2
 for s in (-1, 1):
     for upper in (False, True):
         y = (ROOF if upper else CEIL) - 0.3
         for i in range(SLOTS):
             zc = SLOT_Z0 - i * SLOT_LEN - SLOT_LEN / 2
-            lights.append(area_light('shop', (s * 11, y, zc), 5, 220, color=(1, 0.88, 0.72), size_y=6))
+            lights.append(area_light('shop', (s * SHOP_X, y, zc), 7, 400, color=(1, 0.88, 0.72), size_y=8))
 # flagship store and the entrance lobby
-lights.append(area_light('flagship', (0, CEIL - 0.3, -59), 10, 600, color=(1, 0.9, 0.78), size_y=8))
-lights.append(area_light('lobby', (0, CEIL - 0.3, -2), 6, 240, size_y=3))
+flag_z = (Z_FLAG + Z_END) / 2
+lights.append(area_light('flagship', (0, CEIL - 0.3, flag_z), 16, 1100, color=(1, 0.9, 0.78), size_y=9))
+lights.append(area_light('lobby', (0, CEIL - 0.3, -3), 10, 400, size_y=4))
 
-# daylight through the skylight: a big soft light just under it, cool and bright
-lights.append(area_light('skylight', (0, ROOF - 0.05, -30), 5.5, 3000, color=(0.92, 0.96, 1.0), size_y=43))
+# daylight through the skylight: a big soft light just under it, cool and bright (its power goes
+# with its area)
+sky_w, sky_l = 2 * VOID_X - 1, VOID_Z0 - VOID_Z1 - 1
+lights.append(
+    area_light('skylight', (0, ROOF - 0.05, (VOID_Z0 + VOID_Z1) / 2), sky_w, 3000 * sky_w * sky_l / (5.5 * 43),
+               color=(0.92, 0.96, 1.0), size_y=sky_l)
+)
 
 # area lights emit along local −Z; in this Y-up world, point them down (−Y)
 for l in lights:

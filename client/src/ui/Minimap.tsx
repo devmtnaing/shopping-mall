@@ -8,7 +8,7 @@ import { content } from '../content';
 import { t } from '../i18n';
 import { others, pose, viewFloor } from '../state';
 
-const PX = 2.6; // pixels per metre
+const PX = 2; // pixels per metre
 
 function floorOf(meta: MallMeta, slot: Slot) {
   return meta.floors.findIndex((f) => f.id === slot.floor);

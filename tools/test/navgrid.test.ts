@@ -23,30 +23,30 @@ describe('navgrid.bin', () => {
   });
 
   it('marks the open concourse walkable and walls, pillars and escalators blocked', () => {
-    expect(at(GROUND, 0, -5.5)).toBe(true); // spawn
-    expect(at(GROUND, 6.15, -8)).toBe(true); // shop doorway
-    expect(at(GROUND, 6.15, -4.5)).toBe(false); // storefront pillar
-    expect(at(GROUND, -15.9, -20)).toBe(false); // against the outer wall
-    expect(at(GROUND, -2, -18)).toBe(false); // on escalator A (a link, not cells)
+    expect(at(GROUND, 0, -6)).toBe(true); // spawn
+    expect(at(GROUND, 10.15, -11)).toBe(true); // shop doorway
+    expect(at(GROUND, 10.15, -6.5)).toBe(false); // storefront pillar
+    expect(at(GROUND, -21.9, -24)).toBe(false); // against the outer wall
+    expect(at(GROUND, -3, -26)).toBe(false); // on escalator A (a link, not cells)
   });
 
   it('records planter and bench tops at their height, so A* can refuse to walk up them', () => {
-    const planter = nav.index(-3, -4.5);
-    const bench = nav.index(4.6, -20);
+    const planter = nav.index(-4.5, -5);
+    const bench = nav.index(8.6, -26);
     expect(nav.height(GROUND, planter)).toBeCloseTo(0.6, 2);
     expect(nav.height(GROUND, bench)).toBeCloseTo(0.45, 2);
   });
 
   it('knows the stage is 0.6 m up', () => {
-    const i = nav.index(0, -63);
+    const i = nav.index(0, -79);
     expect(nav.walkable(GROUND, i)).toBe(true);
     expect(nav.height(GROUND, i)).toBeCloseTo(0.6, 2);
   });
 
   it('only has upper-floor cells where there is an upper floor', () => {
-    expect(at(UPPER, 4.5, -12)).toBe(true); // gallery
-    expect(at(UPPER, 0, -28.5)).toBe(true); // sky bridge
-    expect(at(UPPER, 0, -20)).toBe(false); // over the atrium opening
+    expect(at(UPPER, 8.5, -14)).toBe(true); // gallery
+    expect(at(UPPER, 0, -37)).toBe(true); // sky bridge
+    expect(at(UPPER, 0, -24)).toBe(false); // over the atrium opening
   });
 
   it('links the ground floor to the upper floor through both escalators', () => {

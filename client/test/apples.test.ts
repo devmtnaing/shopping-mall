@@ -28,10 +28,10 @@ describe('apples', () => {
 
   it('bounce off a wall instead of passing through it', () => {
     const apples = new Apples(collider);
-    // inside unit w0, thrown hard at the outer west wall (x = −16)
-    apples.throw([-12, 1.25, -8], [-APPLE.maxSpeed, 1, 0]);
+    // inside unit w0, thrown hard at the outer west wall (x = −22)
+    apples.throw([-15, 1.25, -11], [-APPLE.maxSpeed, 1, 0]);
     fly(apples, 3);
-    expect(first(apples)?.pos.x).toBeGreaterThan(-16);
+    expect(first(apples)?.pos.x).toBeGreaterThan(-22);
   });
 
   it('disappear after a while', () => {

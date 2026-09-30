@@ -31,68 +31,68 @@ describe('PlayerController on the greybox', () => {
   });
 
   it('is stopped by the planter (0.6 m, too tall to step)', () => {
-    // planter spans x -4…-2, z -5.5…-3.5; walk west into its east side
-    p.place(0, 0, -4.5);
+    // planter spans x -5.5…-3.5, z -6…-4; walk west into its east side
+    p.place(0, 0, -5);
     sim(p, 3, { x: -1 });
-    expect(p.pos.x).toBeGreaterThan(-2 + PLAYER.radius - 0.05);
-    expect(p.pos.x).toBeLessThan(-1.5);
+    expect(p.pos.x).toBeGreaterThan(-3.5 + PLAYER.radius - 0.05);
+    expect(p.pos.x).toBeLessThan(-3);
     expect(p.pos.y).toBeLessThan(0.05);
   });
 
   it('is stopped by an obstacle box (shop furniture), and stays out of it', () => {
-    // a shelf inside unit w0: x -12…-10, z -9…-7
-    p.obstacles = [new Box3(new Vector3(-12, 0, -9), new Vector3(-10, 1.8, -7))];
-    p.place(-8, 0, -8);
+    // a shelf inside unit w0: x -16…-14, z -12…-10
+    p.obstacles = [new Box3(new Vector3(-16, 0, -12), new Vector3(-14, 1.8, -10))];
+    p.place(-11, 0, -11);
     sim(p, 3, { x: -1, run: true });
-    expect(p.pos.x).toBeCloseTo(-10 + PLAYER.radius, 2);
-    p.place(-11, 0, -8.8); // spawned inside it: pushed out through the nearest side
+    expect(p.pos.x).toBeCloseTo(-14 + PLAYER.radius, 2);
+    p.place(-15, 0, -11.8); // spawned inside it: pushed out through the nearest side
     sim(p, 0.1);
-    expect(p.pos.z).toBeLessThanOrEqual(-9 - PLAYER.radius + 1e-6);
+    expect(p.pos.z).toBeLessThanOrEqual(-12 - PLAYER.radius + 1e-6);
   });
 
   it('never tunnels through a wall, even running into it for a long time', () => {
-    p.place(-10, 0, -7.9); // inside unit w0, facing the outer west wall at x = −16
+    p.place(-14, 0, -10.9); // inside unit w0, facing the outer west wall at x = −22
     sim(p, 6, { x: -1, run: true });
-    expect(p.pos.x).toBeGreaterThan(-16 + PLAYER.radius - 0.02);
-    expect(p.pos.x).toBeLessThan(-15);
+    expect(p.pos.x).toBeGreaterThan(-22 + PLAYER.radius - 0.02);
+    expect(p.pos.x).toBeLessThan(-21);
   });
 
   it('walks up the 0.2 m flagship steps onto the stage', () => {
-    p.place(0, 0, -58);
+    p.place(0, 0, -74);
     sim(p, 3, { y: 1 });
     expect(p.pos.y).toBeCloseTo(0.6, 1);
-    expect(p.pos.z).toBeLessThan(-61);
+    expect(p.pos.z).toBeLessThan(-77);
   });
 
   it('is blocked by a 0.45 m bench', () => {
-    p.place(3, 0, -8);
+    p.place(7, 0, -16); // the bench at x 8.6 spans x 8.25…8.95
     sim(p, 2, { x: 1 });
     // the body capsule starts at step height, so it meets the bench's top edge a little past its side
-    expect(p.pos.x).toBeLessThan(4.35 - 0.2);
+    expect(p.pos.x).toBeLessThan(8.35 - 0.2);
     expect(p.pos.y).toBeCloseTo(0, 6);
   });
 
   it('is blocked by the side of the 0.6 m stage, and can jump onto it', () => {
-    p.place(7.5, 0, -62.5);
-    sim(p, 1.5, { x: -1 }); // walk west into the stage side at x = 6
-    expect(p.pos.x).toBeGreaterThan(6);
+    p.place(9.5, 0, -78.5);
+    sim(p, 1.5, { x: -1 }); // walk west into the stage side at x = 8
+    expect(p.pos.x).toBeGreaterThan(8);
     expect(p.pos.y).toBeCloseTo(0, 6);
     p.step(STEP, { ...idle, x: -1, jump: true });
     sim(p, 1, { x: -1 });
     expect(p.pos.y).toBeCloseTo(0.6, 3);
-    expect(p.pos.x).toBeLessThan(6);
+    expect(p.pos.x).toBeLessThan(8);
   });
 
   it('walks up escalator A (a 30° slope) to the sky bridge', () => {
-    p.place(-2, 0, -11);
+    p.place(-3, 0, -18);
     const { maxY } = sim(p, 8, { y: 1 });
-    expect(maxY).toBeGreaterThan(7.5);
-    expect(p.pos.y).toBeCloseTo(7.6, 1);
-    expect(p.pos.z).toBeLessThan(-25);
+    expect(maxY).toBeGreaterThan(7.9);
+    expect(p.pos.y).toBeCloseTo(8, 1);
+    expect(p.pos.z).toBeLessThan(-33);
   });
 
   it('does not slide down the escalator when standing still', () => {
-    p.place(-2, 0, -11);
+    p.place(-3, 0, -18);
     sim(p, 2.2, { y: 1 }); // part-way up
     sim(p, 0.5); // come to a stop
     const z = p.pos.z;
@@ -104,7 +104,7 @@ describe('PlayerController on the greybox', () => {
   });
 
   it('walks back down the escalator without leaving the ground', () => {
-    p.place(-2, 7.6, -28);
+    p.place(-3, 8, -36);
     sim(p, 0.2);
     let airborne = 0;
     for (let t = 0; t < 7; t += STEP) {
@@ -127,9 +127,9 @@ describe('PlayerController on the greybox', () => {
   });
 
   it('recovers when spawned inside geometry', () => {
-    p.place(-3, 0.1, -4.5); // inside the planter
+    p.place(-4.5, 0.1, -5); // inside the planter
     sim(p, 1);
-    const inside = p.pos.x > -4 && p.pos.x < -2 && p.pos.z < -3.5 && p.pos.z > -5.5 && p.pos.y < 0.55;
+    const inside = p.pos.x > -5.5 && p.pos.x < -3.5 && p.pos.z < -4 && p.pos.z > -6 && p.pos.y < 0.55;
     expect(inside).toBe(false);
   });
 

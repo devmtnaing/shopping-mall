@@ -61,7 +61,7 @@ await wait(4000);
 await page.keyboard.press('KeyM');
 await wait(2500);
 type Debug = { mallDebug?: { player: { place: (...a: number[]) => void } } };
-await page.evaluate(() => (window as unknown as Debug).mallDebug?.player.place(0.4, 0.05, -26.5, Math.PI)); // by a fruit stand
+await page.evaluate(() => (window as unknown as Debug).mallDebug?.player.place(0.7, 0.05, -35.5, Math.PI)); // by a fruit stand
 await wait(1500);
 for (let i = 0; i < 2; i++) {
   await page.keyboard.press('KeyF'); // pick an apple
@@ -73,7 +73,7 @@ await page.keyboard.press('KeyF'); // throw
 await wait(1200);
 await page.keyboard.press('KeyF');
 await wait(2500);
-await page.evaluate(() => (window as unknown as Debug).mallDebug?.player.place(3.6, 0.05, -20, Math.PI / 2)); // next to a bench
+await page.evaluate(() => (window as unknown as Debug).mallDebug?.player.place(7.6, 0.05, -26, Math.PI / 2)); // next to a bench
 await wait(800);
 await page.keyboard.press('KeyE'); // sit
 await wait(4000);

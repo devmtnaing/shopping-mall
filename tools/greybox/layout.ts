@@ -6,23 +6,29 @@ import { Geo } from './geometry.ts';
 import { PROPS } from './props.ts';
 
 const PI = Math.PI;
-const X_CON = 6; // concourse half-width
-const X_OUT = 16; // outer wall (inner face)
+const X_CON = 10; // concourse half-width
+const X_OUT = 22; // outer wall (inner face)
 const T = 0.3; // wall and slab thickness
 const SLOTS = 6; // shops per side per floor
-const SLOT_LEN = 8;
-const SLOT_Z0 = -4; // south edge of slot 0
-const Z_SHOPS_END = SLOT_Z0 - SLOTS * SLOT_LEN; // −52
-const Z_FLAG = -54; // flagship storefront
-const Z_END = -64; // north wall
-const UP = 7.6; // upper floor level
+const SLOT_LEN = 10;
+const SLOT_Z0 = -6; // south edge of slot 0
+const Z_SHOPS_END = SLOT_Z0 - SLOTS * SLOT_LEN; // −66
+const Z_FLAG = -68; // flagship storefront
+const Z_END = -80; // north wall
+const UP = 8; // upper floor level
 const CEIL = UP - T; // underside of the upper slab
-const ROOF = 13.6;
-const VOID = { x: 3, z0: -8, z1: Z_SHOPS_END }; // atrium opening in the upper floor
-const BRIDGE = { z0: -25, z1: -32 };
-const DOOR_W = 6;
-const DOOR_H = 4;
+const ROOF = 15;
+const VOID = { x: 6, z0: -10, z1: Z_SHOPS_END }; // atrium opening in the upper floor
+const BRIDGE = { z0: -33, z1: -41 };
+const DOOR_W = 7;
+const DOOR_H = 4.2;
 const RAIL_H = 1.1;
+const ENTRANCE = 5; // half-width of the glass entrance
+const FLAG_DOOR = 7; // half-width of the flagship's doorway
+/** Escalator A (west, up to the bridge's south edge) and B (east, up to its north edge): centre x, width. */
+const ESC = { a: -3, b: 3, w: 1.2 };
+/** Escalators rise at 30°, like real ones: this much run for the climb to the upper floor. */
+const ESC_RUN = UP / Math.tan(Math.PI / 6);
 
 export function buildGreybox() {
   const g = new Geo();
@@ -32,7 +38,7 @@ export function buildGreybox() {
       { id: 'ground', y: 0 },
       { id: 'upper', y: UP },
     ],
-    spawns: [{ id: 'entrance', pos: [0, 0, -5.5], yaw: 0 }],
+    spawns: [{ id: 'entrance', pos: [0, 0, -6], yaw: 0 }],
     slots: [],
     seats: [],
     zones: [],
@@ -43,8 +49,8 @@ export function buildGreybox() {
   for (const s of [-1, 1] as const) for (const upper of [false, true]) shopRow(g, meta, s, upper);
   flagship(g, meta);
   upperFloor(g);
-  escalator(g, meta, 'a', -2, -12, BRIDGE.z0);
-  escalator(g, meta, 'b', 2, -45, BRIDGE.z1);
+  escalator(g, meta, 'a', ESC.a, BRIDGE.z0 + ESC_RUN, BRIDGE.z0);
+  escalator(g, meta, 'b', ESC.b, BRIDGE.z1 - ESC_RUN, BRIDGE.z1);
   props(g, meta);
   zones(meta);
   return { geo: g, meta };
@@ -54,11 +60,12 @@ export function buildGreybox() {
 function shell(g: Geo) {
   g.box('floor', [-X_OUT, -T, Z_END], [X_OUT, 0, T]);
   // south wall with the entrance (glass doors are solid: you spawn inside)
-  g.box('wall', [-X_OUT, 0, 0], [-4, ROOF, T]);
-  g.box('wall', [4, 0, 0], [X_OUT, ROOF, T]);
-  g.box('wall', [-4, DOOR_H, 0], [4, ROOF, T]);
-  g.box('glass', [-4, 0, 0.05], [4, DOOR_H, 0.15]);
-  g.box('trim', [-4.1, DOOR_H, -0.02], [4.1, DOOR_H + 0.15, 0.05], false);
+  const E = ENTRANCE;
+  g.box('wall', [-X_OUT, 0, 0], [-E, ROOF, T]);
+  g.box('wall', [E, 0, 0], [X_OUT, ROOF, T]);
+  g.box('wall', [-E, DOOR_H, 0], [E, ROOF, T]);
+  g.box('glass', [-E, 0, 0.05], [E, DOOR_H, 0.15]);
+  g.box('trim', [-E - 0.1, DOOR_H, -0.02], [E + 0.1, DOOR_H + 0.15, 0.05], false);
   g.box('wall', [-X_OUT, 0, Z_END - T], [X_OUT, ROOF, Z_END]);
   g.box('wall', [-X_OUT - T, 0, Z_END - T], [-X_OUT, ROOF, T]);
   g.box('wall', [X_OUT, 0, Z_END - T], [X_OUT + T, ROOF, T]);
@@ -136,19 +143,23 @@ function shopRow(g: Geo, meta: MallMeta, s: -1 | 1, upper: boolean) {
 function flagship(g: Geo, meta: MallMeta) {
   const z0 = Z_FLAG;
   const z1 = Z_FLAG + T;
-  g.box('wall', [-X_OUT, 0, z0], [-5, CEIL, z1]);
-  g.box('wall', [5, 0, z0], [X_OUT, CEIL, z1]);
-  g.box('wall', [-5, 4.5, z0], [5, CEIL, z1]);
-  g.box('trim', [-5, 4.38, z1], [5, 4.5, z1 + 0.04], false);
+  const D = FLAG_DOOR;
+  const H = 4.8; // doorway height
+  g.box('wall', [-X_OUT, 0, z0], [-D, CEIL, z1]);
+  g.box('wall', [D, 0, z0], [X_OUT, CEIL, z1]);
+  g.box('wall', [-D, H, z0], [D, CEIL, z1]);
+  g.box('trim', [-D, H - 0.12, z1], [D, H, z1 + 0.04], false);
   g.box('shopfloor', [-X_OUT, 0, Z_END], [X_OUT, 0.01, z0], false);
-  g.box('dark', [-6, 0, Z_END], [6, 0.6, -61]);
-  g.box('dark', [-6, 0, -61], [6, 0.4, -60.6]);
-  g.box('dark', [-6, 0, -60.6], [6, 0.2, -60.2]);
+  // the stage at the back, reached by two steps
+  const s = Z_END + 3; // front of the stage
+  g.box('dark', [-8, 0, Z_END], [8, 0.6, s]);
+  g.box('dark', [-8, 0, s], [8, 0.4, s + 0.4]);
+  g.box('dark', [-8, 0, s + 0.4], [8, 0.2, s + 0.8]);
   meta.slots.push({
     id: 'flagship',
     floor: 'ground',
     door: { pos: [0, 0, z0 + T / 2], yaw: 0 },
-    sign: { pos: [0, 5.9, z1 + 0.02], size: [8, 1.8], yaw: PI },
+    sign: { pos: [0, H + 1.4, z1 + 0.02], size: [10, 2], yaw: PI },
     interior: { min: [-X_OUT, 0, Z_END], max: [X_OUT, CEIL, z0] },
   });
 }
@@ -169,10 +180,11 @@ function upperFloor(g: Geo) {
   g.box('rail', [-VOID.x, y0, VOID.z0], [VOID.x, y1, VOID.z0 + r]);
   g.box('rail', [-VOID.x, y0, VOID.z1 - r], [VOID.x, y1, VOID.z1]);
   // bridge edges, with gaps where the escalators arrive
-  g.box('rail', [-VOID.x, y0, BRIDGE.z0 - r], [-2.6, y1, BRIDGE.z0]);
-  g.box('rail', [-1.4, y0, BRIDGE.z0 - r], [VOID.x, y1, BRIDGE.z0]);
-  g.box('rail', [-VOID.x, y0, BRIDGE.z1], [1.4, y1, BRIDGE.z1 + r]);
-  g.box('rail', [2.6, y0, BRIDGE.z1], [VOID.x, y1, BRIDGE.z1 + r]);
+  const gap = ESC.w / 2 + 0.1;
+  g.box('rail', [-VOID.x, y0, BRIDGE.z0 - r], [ESC.a - gap, y1, BRIDGE.z0]);
+  g.box('rail', [ESC.a + gap, y0, BRIDGE.z0 - r], [VOID.x, y1, BRIDGE.z0]);
+  g.box('rail', [-VOID.x, y0, BRIDGE.z1], [ESC.b - gap, y1, BRIDGE.z1 + r]);
+  g.box('rail', [ESC.b + gap, y0, BRIDGE.z1], [VOID.x, y1, BRIDGE.z1 + r]);
 }
 
 /** A horizontal slab covering the whole mall except the atrium opening. */
@@ -237,75 +249,102 @@ function props(g: Geo, meta: MallMeta) {
     g.box(null, [x - hx, y, z - hz], [x + hx, y + h, z + hz]);
   };
 
-  const bench = (x: number, y: number, z: number) => {
-    const faceIn = x > 0 ? PI / 2 : -PI / 2; // sit facing the middle of the mall
-    place('bench', x, y, z, faceIn);
-    meta.seats.push({ id: `bench-${meta.seats.length}`, kind: 'bench', pos: [x, y + 0.45, z], yaw: faceIn });
+  /** A bench facing `yaw`; it's a seat too. */
+  const bench = (x: number, y: number, z: number, yaw: number) => {
+    place('bench', x, y, z, yaw);
+    meta.seats.push({ id: `bench-${meta.seats.length}`, kind: 'bench', pos: [x, y + 0.45, z], yaw });
   };
-  for (const z of [-8, -20, -36, -48]) for (const x of [-4.6, 4.6]) bench(x, 0, z);
-  // recycling stations beside some of the benches, facing the concourse (#4, batch 2)
-  for (const z of [-8, -36])
-    for (const x of [-4.9, 4.9]) place('recycling', x, 0, z + 1.9, x > 0 ? PI / 2 : -PI / 2);
-  for (const z of [-16, -40]) for (const x of [-4.5, 4.5]) bench(x, UP, z);
+  const inward = (x: number) => (x > 0 ? PI / 2 : -PI / 2); // facing the middle of the mall
+  // Benches along the shop fronts on the ground floor, in front of the pillars between units (units
+  // meet every SLOT_LEN from SLOT_Z0), with recycling stations beside some (#4, batch 2)
+  const edge = X_CON - 1.4;
+  for (const z of [-16, -26, -46, -56]) for (const x of [-edge, edge]) bench(x, 0, z, inward(x));
+  for (const z of [-16, -46])
+    for (const x of [-edge - 0.3, edge + 0.3]) place('recycling', x, 0, z + 1.9, inward(x));
+  // upstairs, benches and sofas along the balustrade, looking out over the atrium
+  const rail = VOID.x + 0.9;
+  for (const z of [-16, -56]) for (const x of [-rail, rail]) bench(x, UP, z, inward(x));
+  for (const z of [-26, -46]) for (const x of [-rail, rail]) place('sofa', x, UP, z, inward(x));
 
-  // floor lamps between the benches, plants either side of the entrance and upstairs
-  for (const z of [-14, -28, -42]) for (const x of [-5.3, 5.3]) place('lamp', x, 0, z);
+  // floor lamps in front of the pillars in the middle of each row, plants upstairs
+  for (const z of [-36, -66]) for (const x of [-X_CON + 0.7, X_CON - 0.7]) place('lamp', x, 0, z);
+  for (const z of [-14, -60]) for (const x of [-X_CON + 1.2, X_CON - 1.2]) place('plant', x, UP, z);
   // the lobby (#4, batch 1): palms either side of the doors, an information kiosk and a welcome sign
-  for (const x of [-4.6, 4.6]) place('palm', x, 0, -1.4);
-  place('kiosk', 3, 0, -10.5, PI); // facing the entrance
-  place('welcome', -2.4, 0, -10, PI);
-  for (const z of [-10, -44]) for (const x of [-4.8, 4.8]) place('plant', x, UP, z);
+  for (const x of [-ENTRANCE - 1.3, ENTRANCE + 1.3]) place('palm', x, 0, -1.4);
+  place('kiosk', 4.5, 0, -13, PI); // facing the entrance
+  place('welcome', -4.5, 0, -12.5, PI);
 
-  // café tables in the fountain court
-  for (const [x, z] of [
-    [-4, -49],
-    [4, -49],
-    [-4.2, -52],
-    [4.2, -52],
-  ] as const) {
-    place('table', x, 0, z);
-    place('chair', x - 0.8, 0, z, -PI / 2);
-    place('chair', x + 0.8, 0, z, PI / 2);
-  }
-  // sofas along the upper gallery, facing the atrium
-  for (const z of [-21, -36]) for (const x of [-4.8, 4.8]) place('sofa', x, UP, z, x > 0 ? PI / 2 : -PI / 2);
+  const fountain = { x: 0, z: -62 };
+  place('fountain', fountain.x, 0, fountain.z);
+  // café tables either side of the fountain
+  for (const x of [-6, 6])
+    for (const z of [fountain.z + 3, fountain.z - 2]) {
+      place('table', x, 0, z);
+      place('chair', x - 0.8, 0, z, -PI / 2);
+      place('chair', x + 0.8, 0, z, PI / 2);
+    }
 
   const planter = (x: number, z: number) => {
     g.box('planter', [x - 1, 0, z - 1], [x + 1, 0.6, z + 1]);
     place('tree', x, 0.6, z);
   };
-  planter(-3, -4.5); // off the centre line, so the view from the spawn is clear
+  planter(-4.5, -5); // off the centre line, so the view from the spawn is clear
+  for (const [x, z] of [
+    [-6.5, -21],
+    [6.5, -21],
+    [6.5, -50],
+  ] as const)
+    planter(x, z);
   // a round seating island with a tree in the middle, seats either side (#4, batch 2)
-  place('island', -2, 0, -38);
-  place('tree', -2, 0.45, -38);
+  const island = { x: -6.5, z: -50 };
+  place('island', island.x, 0, island.z);
+  place('tree', island.x, 0.45, island.z);
   for (const dx of [-1.05, 1.05]) {
     const yaw = dx > 0 ? -PI / 2 : PI / 2; // facing out
-    meta.seats.push({ id: `bench-${meta.seats.length}`, kind: 'bench', pos: [-2 + dx, 0.45, -38], yaw });
+    meta.seats.push({
+      id: `bench-${meta.seats.length}`,
+      kind: 'bench',
+      pos: [island.x + dx, 0.45, island.z],
+      yaw,
+    });
   }
   // Myanmar festival lanterns hung in the atrium, clear of the bridge (#4, batch 2)
   for (const [x, z] of [
-    [-1.2, -14],
-    [1.2, -20],
-    [-1.2, -38],
-    [1.2, -44],
+    [-3, -16],
+    [3, -24],
+    [-3, -50],
+    [3, -58],
   ] as const)
-    place('lanterns', x, 10.3, z);
+    place('lanterns', x, UP + 3, z);
 
-  place('fountain', 0, 0, -49);
-  // fruit stands under the bridge, clear of both escalators: pick an apple (F) and throw it (T-507)
-  for (const x of [-2.2, 2.2]) place('fruit', x, 0, -28, x > 0 ? PI / 2 : -PI / 2);
+  // fruit stands under the bridge, between the escalators: pick an apple (F) and throw it (T-507)
+  const under = (BRIDGE.z0 + BRIDGE.z1) / 2;
+  for (const x of [-2.5, 2.5]) place('fruit', x, 0, under, inward(x));
 }
 
 function zones(meta: MallMeta) {
   const zs = meta.zones;
-  zs.push({ id: 'entrance', name: 'Entrance', priority: 1, min: [-X_CON, 0, -8], max: [X_CON, CEIL, T] });
-  zs.push({ id: 'main-hall', name: 'Main hall', priority: 1, min: [-X_CON, 0, -46], max: [X_CON, CEIL, -8] });
+  const court = SLOT_Z0 - 5 * SLOT_LEN; // the fountain court: past the last pair of units' south edge
+  zs.push({
+    id: 'entrance',
+    name: 'Entrance',
+    priority: 1,
+    min: [-X_CON, 0, VOID.z0],
+    max: [X_CON, CEIL, T],
+  });
+  zs.push({
+    id: 'main-hall',
+    name: 'Main hall',
+    priority: 1,
+    min: [-X_CON, 0, court],
+    max: [X_CON, CEIL, VOID.z0],
+  });
   zs.push({
     id: 'fountain-court',
     name: 'Fountain court',
     priority: 1,
     min: [-X_CON, 0, Z_FLAG],
-    max: [X_CON, CEIL, -46],
+    max: [X_CON, CEIL, court],
   });
   zs.push({
     id: 'upper-gallery',

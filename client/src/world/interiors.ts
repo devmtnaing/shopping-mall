@@ -21,9 +21,11 @@ export type Layout = 'cafe' | 'books' | 'fashion' | 'home' | 'games' | 'store';
 
 const PI = Math.PI;
 /** Units wider than this are furnished as big stores (bays and a showcase); deeper ones not at all. */
-const MAX_UNIT = 12;
+const MAX_UNIT = 14;
 /** A standard unit's width: a big store's bays are this wide. */
-const BAY = 8;
+const BAY = 10;
+/** The dividers between units stand this far into a unit's width. */
+const DIVIDER = 0.15;
 
 /** A category (free text, set by the host) to a layout, by keyword. Unknown categories get a store. */
 const KEYWORDS: [Layout, RegExp][] = [
@@ -34,25 +36,35 @@ const KEYWORDS: [Layout, RegExp][] = [
   ['games', /game|toy|arcade|play|hobby/i],
 ];
 
-/** The side walls' faces, from the unit's centre line. */
-const WALL = 3.85;
+/**
+ * A layout for a unit `D` deep whose side walls' faces are `W` either side of its centre line.
+ * Rows repeat every so often from the door and stop short of the counter at the back.
+ */
+type LayoutFn = (D: number, W: number) => Item[];
+
 /** A piece `depth` deep against each side wall at `d`, facing the aisle. */
-const walls = (kind: string, d: number, depth: number): Item[] => {
-  const x = WALL - depth / 2 - 0.05;
+const walls = (W: number, kind: string, d: number, depth: number): Item[] => {
+  const x = W - depth / 2 - 0.05;
   return [
     { kind, x: -x, d, yaw: -PI / 2 },
     { kind, x, d, yaw: PI / 2 },
   ];
 };
+/** Distances from the door, every `step` from `first`, that leave room for the back of the unit. */
+const rows = (D: number, first: number, step: number, clear = 2.6) => {
+  const out: number[] = [];
+  for (let d = first; d <= D - clear; d += step) out.push(d);
+  return out;
+};
 /** The till at the back, facing the door. */
 const counter = (back: number): Item => ({ kind: 'register', x: 1.8, d: back - 1.3, yaw: PI });
 const sofa = (back: number): Item => ({ kind: 'sofa', x: -1.6, d: back - 1.4, yaw: PI });
 
-const LAYOUTS: Record<Layout, (depth: number) => Item[]> = {
-  cafe: (D) => [
+const LAYOUTS: Record<Layout, LayoutFn> = {
+  cafe: (D, W) => [
     { kind: 'coffee-bar', x: 1.2, d: D - 1.1, yaw: PI },
-    ...[-2.3, 2.3].flatMap((x) =>
-      [3, 5.6].flatMap((d) => [
+    ...[-(W - 1.55), W - 1.55].flatMap((x) =>
+      rows(D, 3, 2.6, 3).flatMap((d) => [
         { kind: 'table', x, d, yaw: 0 },
         { kind: 'chair', x: x - 0.8, d, yaw: -PI / 2 },
         { kind: 'chair', x: x + 0.8, d, yaw: PI / 2 },
@@ -60,30 +72,27 @@ const LAYOUTS: Record<Layout, (depth: number) => Item[]> = {
     ),
   ],
   // bookcases down both walls and one on the back wall
-  books: (D) => [
-    ...[2.2, 3.9, 5.6].flatMap((d) => walls('bookshelf', d, 0.6)),
+  books: (D, W) => [
+    ...rows(D, 2.2, 1.7).flatMap((d) => walls(W, 'bookshelf', d, 0.6)),
     { kind: 'bookshelf', x: -2, d: D - 0.4, yaw: PI },
     counter(D),
   ],
-  fashion: (D) => [
-    ...walls('sneakers', 2.6, 0.3),
-    ...walls('sneakers', 5, 0.3),
-    ...walls('shelf-bags', 7.2, 1.5),
+  fashion: (D, W) => [
+    ...rows(D - 2.2, 2.6, 2.4).flatMap((d) => walls(W, 'sneakers', d, 0.3)),
+    ...walls(W, 'shelf-bags', D - 2.8, 1.5),
     counter(D),
   ],
-  home: (D) => [
-    ...walls('plant-stand', 2.2, 0.75),
-    ...walls('plant-stand', 4.2, 0.75),
-    ...walls('plant', 6.2, 0.6),
+  home: (D, W) => [
+    ...rows(D - 2, 2.2, 2).flatMap((d) => walls(W, 'plant-stand', d, 0.75)),
+    ...walls(W, 'plant', D - 3.8, 0.6),
     sofa(D),
     counter(D),
   ],
   // a row of arcade cabinets down each wall
-  games: (D) => [...[2, 3, 4, 5, 6].flatMap((d) => walls('arcade', d, 0.9)), sofa(D), counter(D)],
-  store: (D) => [
-    ...walls('shelf', 3, 1.5),
-    ...walls('shelf-bags', 5.2, 1.5),
-    { kind: 'cart', x: -2.4, d: 1.2, yaw: PI / 4 },
+  games: (D, W) => [...rows(D, 2, 1, 3.4).flatMap((d) => walls(W, 'arcade', d, 0.9)), sofa(D), counter(D)],
+  store: (D, W) => [
+    ...rows(D, 3, 2.2).flatMap((d, i) => walls(W, i % 2 ? 'shelf-bags' : 'shelf', d, 1.5)),
+    { kind: 'cart', x: -(W - 1.45), d: 1.2, yaw: PI / 4 },
     counter(D),
   ],
 };
@@ -145,7 +154,7 @@ export function furnish(
       u.width > MAX_UNIT
         ? [
             ...[-1, 1].flatMap((side) =>
-              LAYOUTS[layout](u.depth).map((it) => {
+              LAYOUTS[layout](u.depth, BAY / 2 - DIVIDER).map((it) => {
                 // a bay's inner row turns round to face the open middle, not its own bay
                 const inner = Math.abs(Math.abs(it.yaw) - PI / 2) < 0.01 && Math.sign(it.x) === -side;
                 return {
@@ -157,10 +166,10 @@ export function furnish(
             ),
             ...SHOWCASE[layout](u.depth),
           ]
-        : LAYOUTS[layout](u.depth);
+        : LAYOUTS[layout](u.depth, u.width / 2 - DIVIDER);
     for (const it of items) {
       const pos = u.door.clone().addScaledVector(u.f, it.d).addScaledVector(u.r, it.x);
-      pos.y = floorAt(pos.x, pos.z, u.door.y);
+      pos.y = Math.max(u.door.y, floorAt(pos.x, pos.z, u.door.y)); // never below the unit's floor (ray noise)
       const yaw = u.yaw + it.yaw;
       placements.push({ kind: it.kind, pos: [pos.x, pos.y, pos.z], yaw });
       const fp = footprints[it.kind];

@@ -12,7 +12,7 @@ import { collider, greybox } from './greybox';
 const bytes = readFileSync(resolve(import.meta.dirname, '../public/assets/mall/navgrid.bin'));
 const nav = decodeNavGrid(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength));
 const finder = new PathFinder(nav);
-const spawn: Waypoint = { x: 0, y: 0, z: -5.5 };
+const spawn: Waypoint = { x: 0, y: 0, z: -6 };
 
 /** Walk a path with the real controller. Returns the final position and time taken. */
 function walk(to: Waypoint, from = spawn, maxSeconds = 60) {
@@ -36,40 +36,40 @@ function walk(to: Waypoint, from = spawn, maxSeconds = 60) {
 
 describe('PathFinder', () => {
   it('finds a short, smoothed path across the concourse into a shop', () => {
-    const path = finder.find(spawn, { x: -12, y: 0, z: -32 });
+    const path = finder.find(spawn, { x: -15, y: 0, z: -40 });
     expect(path).not.toBeNull();
     expect(path?.length).toBeLessThan(6); // a few straight legs, not a cell staircase
   });
 
   it('goes upstairs through an escalator link', () => {
-    const path = finder.find(spawn, { x: 4.5, y: 7.6, z: -12 });
+    const path = finder.find(spawn, { x: 8.5, y: 8, z: -14 });
     expect(path).not.toBeNull();
     expect(path?.some((p) => p.y > 7)).toBe(true);
     expect(path?.some((p) => p.y < 1)).toBe(true);
   });
 
   it('refuses goals you cannot walk to (the top of the planter)', () => {
-    expect(finder.find(spawn, { x: -3, y: 0.6, z: -4.5 })).toBeNull();
+    expect(finder.find(spawn, { x: -4.5, y: 0.6, z: -5 })).toBeNull();
   });
 
   it('snaps goals that are just off the grid (a wall) to the nearest walkable cell', () => {
-    expect(finder.find(spawn, { x: -15.99, y: 0, z: -20 })).not.toBeNull();
+    expect(finder.find(spawn, { x: -21.99, y: 0, z: -24 })).not.toBeNull();
   });
 
   it('never snaps a goal beside a bench onto the bench top', () => {
-    // just outside shop e0's door, right next to the bench at x 4.35-4.85, z -8.9 to -7.1
-    const path = finder.find(spawn, { x: 4.95, y: 0, z: -8 });
+    // just outside shop e0's door, right next to the bench at x 8.25-8.95, z -16.95 to -15.05
+    const path = finder.find(spawn, { x: 8.95, y: 0, z: -16 });
     expect(path).not.toBeNull();
     expect(path?.[path.length - 1]?.y).toBeCloseTo(0, 2);
   });
 
   it('is fast: well under 2 ms per path (median)', () => {
     const goals: Waypoint[] = [
-      { x: -12, y: 0, z: -32 },
-      { x: 12, y: 0, z: -48 },
-      { x: 0, y: 0.6, z: -63 },
-      { x: 4.5, y: 7.6, z: -50 },
-      { x: -12, y: 7.6, z: -10 },
+      { x: -15, y: 0, z: -40 },
+      { x: 15, y: 0, z: -60 },
+      { x: 0, y: 0.6, z: -79 },
+      { x: 8.5, y: 8, z: -60 },
+      { x: -15, y: 8, z: -12 },
     ];
     for (let i = 0; i < 5; i++) for (const g of goals) finder.find(spawn, g); // warm up the JIT
     // the median of 9 rounds, so a busy machine (another build, a browser) doesn't fail it
@@ -87,23 +87,23 @@ describe('PathFinder', () => {
 
 describe('PathFollower with the real controller', () => {
   it('walks from the entrance into shop w3', () => {
-    const to = { x: -12, y: 0, z: -32 };
+    const to = { x: -15, y: 0, z: -40 };
     const { pos, t } = walk(to);
     expect(Math.hypot(pos.x - to.x, pos.z - to.z)).toBeLessThan(0.4);
     expect(t).toBeLessThan(20);
   });
 
   it('walks up the flagship steps onto the stage', () => {
-    const to = { x: 3, y: 0.6, z: -62.5 };
+    const to = { x: 3, y: 0.6, z: -78.5 };
     const { pos } = walk(to);
     expect(pos.y).toBeCloseTo(0.6, 2);
     expect(Math.hypot(pos.x - to.x, pos.z - to.z)).toBeLessThan(0.4);
   });
 
   it('walks upstairs via an escalator to the far end of the upper gallery', () => {
-    const to = { x: -4.5, y: 7.6, z: -50 };
+    const to = { x: -8, y: 8, z: -64 };
     const { pos } = walk(to);
-    expect(pos.y).toBeCloseTo(7.6, 1);
+    expect(pos.y).toBeCloseTo(8, 1);
     expect(Math.hypot(pos.x - to.x, pos.z - to.z)).toBeLessThan(0.4);
   });
 });

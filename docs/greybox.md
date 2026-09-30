@@ -21,35 +21,35 @@ The Blender mall (Phase 2) replaces these files with the same names and formats.
 ## Plan (ground floor, seen from above)
 
 ```
- z=−64 ┌──────────────────────────────── north wall ────────────────────────────┐
-       │                    FLAGSHIP  (stage with 3 steps at the back)          │
- z=−54 ├───────────┬────────────┬── doorway 10 m ──┬────────────┬───────────────┤
+ z=−80 ┌──────────────────────────────── north wall ────────────────────────────┐
+       │           FLAGSHIP  (stage with 2 steps at the back, 16 m wide)        │
+ z=−68 ├───────────┬────────────┬── doorway 14 m ──┬────────────┬───────────────┤
        │ (closed)  │            │    fountain      │            │   (closed)    │
- z=−52 ├───────────┤            │                  │            ├───────────────┤
-       │   w5      │            │  esc B ↑ (to −32)│            │      e5       │
+ z=−66 ├───────────┤            │    café tables   │            ├───────────────┤
+       │   w5      │            │  esc B ↑ (to −41)│            │      e5       │
        │   w4      │  concourse │                  │            │      e4       │
-       │   w3      │   12 m     │ (under the bridge│            │      e3       │
-       │   w2      │   wide     │   −25 … −32)     │            │      e2       │
-       │   w1      │            │  esc A ↑ (to −25)│            │      e1       │
+       │   w3      │   20 m     │ (under the bridge│            │      e3       │
+       │   w2      │   wide     │   −33 … −41)     │            │      e2       │
+       │   w1      │            │  esc A ↑ (to −33)│            │      e1       │
        │   w0      │            │                  │            │      e0       │
- z=−4  ├───────────┤            │                  │            ├───────────────┤
+ z=−6  ├───────────┤            │                  │            ├───────────────┤
        │ (closed)  │  planter   │   spawn ↑        │            │   (closed)    │
  z=0   └───────────┴────────────┴── glass doors ───┴────────────┴───────────────┘
-      x=−16      x=−6         x=−3               x=3          x=6            x=16
+      x=−22      x=−10        x=−6               x=6          x=10           x=22
 ```
 
 | Thing | Where | Size |
 |---|---|---|
-| Shop units | `w0–w5` at x ∈ [−16, −6], `e0–e5` at x ∈ [6, 16]; unit *i* spans z ∈ [−4 − 8i − 8, −4 − 8i] | 10 × 8 m, doorway 6 × 4 m |
-| Upper floor | y = 7.6. Same units, prefixed `u-` | walls 6 m high |
-| Atrium opening | upper floor, x ∈ [−3, 3], z ∈ [−52, −8] | railings 1.1 m |
-| Sky bridge | upper floor, x ∈ [−3, 3], z ∈ [−32, −25] | |
-| Escalator A | x = −2, rises from z = −12 (ground) to −25 (bridge) | 1.2 m wide, ~30°, 1.2 m/s |
-| Escalator B | x = 2, rises from z = −45 (ground) to −32 (bridge) | 1.2 m wide, ~32°, 1.2 m/s |
-| Flagship | z ∈ [−64, −54], stage 0.6 m high reached by 0.2 m steps | doorway 10 × 4.5 m |
-| Benches | ground x = ±4.6 at z −8, −20, −36, −48; upper x = ±4.5 at z −16, −40 | 0.45 m high (you can't step onto them; jump) |
-| Spawn | (0, 0, −5.5), facing into the mall | |
-| Planters | (−3, −4.5) by the entrance, (−2, −38) | 2 × 2 × 0.6 m |
+| Shop units | `w0–w5` at x ∈ [−22, −10], `e0–e5` at x ∈ [10, 22]; unit *i* spans z ∈ [−6 − 10i − 10, −6 − 10i] | 11.7 × 10 m inside, doorway 7 × 4.2 m |
+| Upper floor | y = 8. Same units, prefixed `u-` | walls 7 m high, roof at 15 m |
+| Atrium opening | upper floor, x ∈ [−6, 6], z ∈ [−66, −10] | railings 1.1 m; 4 m galleries either side |
+| Sky bridge | upper floor, x ∈ [−6, 6], z ∈ [−41, −33] | |
+| Escalator A | x = −3, rises from z ≈ −19.1 (ground) to −33 (bridge) | 1.2 m wide, 30°, 1.2 m/s |
+| Escalator B | x = 3, rises from z ≈ −54.9 (ground) to −41 (bridge) | 1.2 m wide, 30°, 1.2 m/s |
+| Flagship | z ∈ [−80, −68], stage 0.6 m high (x ±8, from z −77) reached by 0.2 m steps | doorway 14 × 4.8 m |
+| Benches | ground x = ±8.6 at z −16, −26, −46, −56; upper x = ±6.9 at z −16, −56 (sofas at −26, −46) | 0.45 m high (you can't step onto them; jump) |
+| Spawn | (0, 0, −6), facing into the mall | |
+| Planters | (−4.5, −5) by the entrance, (±6.5, −21), (6.5, −50); a seating island at (−6.5, −50) | 2 × 2 × 0.6 m |
 
 ## Zones
 
@@ -61,4 +61,4 @@ The client shows the name of the highest-priority zone containing the player. Sh
 - **Step-up:** flagship steps (0.2 m) must be walkable. Benches (0.45 m) must block.
 - **Slopes:** escalator surfaces (~30–32°) must be walkable even when they aren't moving.
 - **Ceilings:** walking under the sky bridge and jumping under the upper slab.
-- **Tight spots:** 1.8 m gap between escalator B and the fountain. 1.8 m between the entrance planter and escalator A's side.
+- **Tight spots:** 1.8 m between the planters at x ±6.5 and escalator A's side panels.

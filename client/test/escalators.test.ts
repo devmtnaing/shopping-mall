@@ -37,31 +37,31 @@ describe('escalatorCarry', () => {
 describe('riding the greybox escalators', () => {
   it('carries a player who stands still from the bottom of A to the sky bridge', () => {
     const p = new PlayerController(collider);
-    p.place(-2, 0, -12.3);
+    p.place(-3, 0, -19.4);
     ride(p, 0.3, { ...idle, y: 1 }); // step on
     ride(p, 16);
-    expect(p.pos.y).toBeCloseTo(7.6, 2);
-    expect(p.pos.z).toBeLessThan(-25);
-    expect(p.pos.z).toBeGreaterThan(-26.5); // stepped off and stopped, didn't shoot across the bridge
+    expect(p.pos.y).toBeCloseTo(8, 2);
+    expect(p.pos.z).toBeLessThan(-33);
+    expect(p.pos.z).toBeGreaterThan(-34.5); // stepped off and stopped, didn't shoot across the bridge
   });
 
   it('carries you up B too, which runs the other way (toward +z)', () => {
     const p = new PlayerController(collider);
-    p.place(2, 0, -45.3, Math.PI);
+    p.place(3, 0, -55.2, Math.PI);
     ride(p, 0.3, { ...idle, y: 1, yaw: Math.PI });
     ride(p, 16);
-    expect(p.pos.y).toBeCloseTo(7.6, 2);
-    expect(p.pos.z).toBeGreaterThan(-32);
+    expect(p.pos.y).toBeCloseTo(8, 2);
+    expect(p.pos.z).toBeGreaterThan(-41);
   });
 
   it('lets you walk up faster than it moves, and walk down against it', () => {
     const up = new PlayerController(collider);
-    up.place(-2, 0, -12.3);
+    up.place(-3, 0, -19.4);
     ride(up, 4, { ...idle, y: 1 });
-    expect(up.pos.y).toBeGreaterThan(7.5);
+    expect(up.pos.y).toBeGreaterThan(7.9);
 
     const down = new PlayerController(collider);
-    down.place(-2, 7.6, -26);
+    down.place(-3, 8, -34);
     ride(down, 0.2);
     ride(down, 12, { ...idle, y: -1 }); // walk backwards (+z) = down A, against its motion
     expect(down.pos.y).toBeLessThan(0.05);
@@ -69,7 +69,7 @@ describe('riding the greybox escalators', () => {
 
   it('moves smoothly: no step changes height by more than the carry allows', () => {
     const p = new PlayerController(collider);
-    p.place(-2, 0, -12.3);
+    p.place(-3, 0, -19.4);
     ride(p, 0.3, { ...idle, y: 1 });
     let maxJump = 0;
     for (let t = 0; t < 16; t += STEP) {

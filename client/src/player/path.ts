@@ -125,13 +125,41 @@ export class PathFinder {
     const gc = goalCell % cols;
     const gr = (goalCell - gc) / cols;
     // octile distance in metres; the tiny factor breaks ties toward the goal (far fewer expansions)
-    const h = (c: number, r: number) => {
-      const dx = Math.abs(c - gc);
-      const dz = Math.abs(r - gr);
+    const octile = (c: number, r: number, tc: number, tr: number) => {
+      const dx = Math.abs(c - tc);
+      const dz = Math.abs(r - tr);
       return (Math.max(dx, dz) + (SQRT2 - 1) * Math.min(dx, dz)) * cell * 1.001;
     };
+    // off the goal's floor, the way there is through an escalator: to its near end, along it, then
+    // from its far end to the goal (the nearest such route, so still never an overestimate)
+    const goalFloor = this.floorOf(goal);
+    const via = nav.links.flatMap((l) =>
+      l.floorA === goalFloor || l.floorB === goalFloor
+        ? [
+            {
+              floor: l.floorA === goalFloor ? l.floorB : l.floorA,
+              near: l.floorA === goalFloor ? l.cellB : l.cellA,
+              rest: l.cost + octileCell(l.floorA === goalFloor ? l.cellA : l.cellB),
+            },
+          ]
+        : [],
+    );
+    function octileCell(i: number) {
+      const c = i % cols;
+      return octile(c, (i - c) / cols, gc, gr);
+    }
+    const h = (c: number, r: number, floor: number) => {
+      if (floor === goalFloor) return octile(c, r, gc, gr);
+      let best = Number.POSITIVE_INFINITY;
+      for (const v of via) {
+        if (v.floor !== floor) continue;
+        const nc = v.near % cols;
+        best = Math.min(best, octile(c, r, nc, (v.near - nc) / cols) + v.rest);
+      }
+      return best === Number.POSITIVE_INFINITY ? octile(c, r, gc, gr) : best;
+    };
     const s0 = this.cellOf(start);
-    this.open(start, 0, h(s0 % cols, Math.floor(s0 / cols)), -1);
+    this.open(start, 0, h(s0 % cols, Math.floor(s0 / cols), this.floorOf(start)), -1);
 
     while (this.heapSize > 0) {
       const node = this.pop();
@@ -159,14 +187,14 @@ export class PathFinder {
         if (dc !== 0 && dr !== 0 && (grid[r * cols + cc] === 0 || grid[rr * cols + c] === 0)) continue;
         const next = floor * size + j;
         if (this.closed[next] === this.stamp) continue;
-        this.open(next, g0 + (DW[d] as number) * cell, h(cc, rr), node);
+        this.open(next, g0 + (DW[d] as number) * cell, h(cc, rr, floor), node);
       }
       const links = this.hasLink[node] ? this.linksAt.get(node) : undefined;
       if (links) {
         for (const l of links) {
           if (this.closed[l.to] === this.stamp) continue;
           const lc = this.cellOf(l.to);
-          this.open(l.to, g0 + l.cost, h(lc % cols, Math.floor(lc / cols)), node);
+          this.open(l.to, g0 + l.cost, h(lc % cols, Math.floor(lc / cols), this.floorOf(l.to)), node);
         }
       }
     }
