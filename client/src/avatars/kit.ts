@@ -29,8 +29,10 @@ const WALK_NOMINAL = 2.4;
 const RUN_NOMINAL = 5.6;
 /** Seat height (m): benches, the island and sofas (tools/greybox/layout.ts). */
 const SEAT = 0.46;
-/** Held things are drawn this much bigger, so they read at a distance next to the big chibi hands. */
-const HELD_SCALE = 1.6;
+/** A held apple is about this wide next to the hand holding it (the apple model is 0.14 m across). */
+const HELD_FIT = 0.9;
+const APPLE_WIDTH = 0.14;
+type Hand = { bone: Object3D; at: Vector3; width: number };
 /** Sitting, a character's back stops this far short of the backrest (m). */
 const BACK_GAP = 0.03;
 /** Each character's body, measured once: how far its back is behind its origin, and its seat's height (m). */
@@ -67,7 +69,7 @@ export class Avatar {
   private readonly sitForward: number;
   /** What's in the right hand (an apple), and where the hand is on its bone. */
   private held: Object3D | null = null;
-  private hand: { bone: Object3D; at: Vector3 } | null = null;
+  private readonly hand: Hand | null;
 
   constructor(id: AvatarId, object: Object3D, clips: AnimationClip[]) {
     this.id = id;
@@ -80,6 +82,7 @@ export class Avatar {
     }
     this.sitLift = SEAT - body.bottom; // the bottom of the body onto the seat
     this.sitForward = body.back + BACK_GAP;
+    this.hand = findHand(object); // at rest, before anything plays
     this.mixer = new AnimationMixer(object);
     for (const c of clips) this.actions.set(c.name, this.mixer.clipAction(c));
     for (const name of ['jump', 'emote-yes', 'emote-no', 'interact-right', 'hug', 'throw']) {
@@ -155,17 +158,17 @@ export class Avatar {
     this.held?.removeFromParent();
     this.held = item;
     if (!item) return;
-    this.hand ??= findHand(this.object);
     if (!this.hand) return;
     const s = this.hand.bone.getWorldScale(new Vector3()).x || 1;
-    item.scale.setScalar(HELD_SCALE / s); // the bone lives inside the character's scale
+    // sized to the hand (a small hand, a small apple), inside the character's scale
+    const size = Math.min(1.8, Math.max(0.6, (this.hand.width * HELD_FIT) / APPLE_WIDTH));
+    item.scale.setScalar(size / s);
     item.position.copy(this.hand.at);
     this.hand.bone.add(item);
   }
 
   /** Where the right hand is in the world, or null before the character has loaded its hand. */
   handPosition(out: Vector3): Vector3 | null {
-    this.hand ??= findHand(this.object);
     if (!this.hand) return null;
     this.object.updateMatrixWorld(true);
     return this.hand.bone.localToWorld(out.copy(this.hand.at));
@@ -222,11 +225,15 @@ function measureBody(root: Object3D): Body {
 }
 
 /**
- * The right hand: near the point of the right arm's mesh farthest from its shoulder, in the arm
- * bone's own space (every character's arm is a different length).
+ * The right hand, in the arm bone's own space, and how wide it is (m). At rest the arms hang down,
+ * so the hand is the lowest part of what the arm bone carries: the middle of its bottom fifth, at its
+ * front, where the fingers would close round something. (The
+ * farthest point from the shoulder can be a sleeve or a bag strap on some characters.) Measured at
+ * rest, when the character is made, so it doesn't depend on what it's doing when it first holds
+ * something.
  */
-function findHand(root: Object3D): { bone: Object3D; at: Vector3 } | null {
-  let found: { bone: Object3D; at: Vector3 } | null = null;
+function findHand(root: Object3D): Hand | null {
+  let found: Hand | null = null;
   root.updateMatrixWorld(true);
   const v = new Vector3();
   root.traverse((o) => {
@@ -238,30 +245,26 @@ function findHand(root: Object3D): { bone: Object3D; at: Vector3 } | null {
     const weight = mesh.geometry.attributes.skinWeight;
     const count = mesh.geometry.attributes.position?.count ?? 0;
     if (!bone || !idx || !weight) return;
-    /** True when the arm bone carries most of vertex k (it may sit in any of the four slots). */
     const onArm = (k: number) => {
       for (let j = 0; j < 4; j++)
         if (idx.getComponent(k, j) === i && weight.getComponent(k, j) > 0.5) return true;
       return false;
     };
-    // posed vertices in world space, then into the bone's space (the arm is rigid, so any pose will
-    // do, as long as the skinning matches the bones: refresh it, it's otherwise a frame behind)
     mesh.skeleton.update();
-    const shoulder = bone.getWorldPosition(new Vector3());
-    const hand = new Vector3();
-    let far = -1;
-    for (let k = 0; k < count; k++) {
-      if (!onArm(k)) continue;
-      mesh.getVertexPosition(k, v).applyMatrix4(mesh.matrixWorld);
-      const d = v.distanceToSquared(shoulder);
-      if (d > far) {
-        far = d;
-        hand.copy(v);
-      }
-    }
-    if (far < 0) return;
-    // the very tip hangs at the floor: hold things a little way up the hand
-    found = { bone, at: bone.worldToLocal(hand).multiplyScalar(0.85) };
+    const pts: Vector3[] = [];
+    for (let k = 0; k < count; k++)
+      if (onArm(k)) pts.push(mesh.getVertexPosition(k, v).applyMatrix4(mesh.matrixWorld).clone());
+    if (!pts.length) return;
+    const ys = pts.map((p) => p.y);
+    const [low, high] = [Math.min(...ys), Math.max(...ys)];
+    const hand = pts.filter((p) => p.y <= low + (high - low) * 0.2);
+    const mid = hand.reduce((c, p) => c.add(p), new Vector3()).divideScalar(hand.length);
+    const width = Math.max(...hand.map((p) => Math.hypot(p.x - mid.x, p.z - mid.z))) * 2;
+    // held at the front of the hand, not in the middle of it (a chunky fist would hide it): the
+    // character faces −z at rest
+    const front = hand.reduce((z, p) => Math.min(z, p.z), mid.z);
+    mid.z = front;
+    found = { bone, at: bone.worldToLocal(mid), width };
   });
   return found;
 }
