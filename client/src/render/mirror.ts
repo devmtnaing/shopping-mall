@@ -10,8 +10,8 @@ import { tier } from '../quality';
 /** How much of the reflection shows, looking straight down and along the floor. */
 const STRAIGHT = 0.05;
 const GRAZING = 0.3;
-/** The concourse's floor: x ±6 from the entrance (z 0) to the flagship (z −54), just above y 0. */
-const FLOOR = { width: 12, depth: 54, z: -27, y: 0.004 };
+/** The concourse's floor: x ±10 from the entrance (z 0) to the flagship (z −68), just above y 0. */
+const FLOOR = { width: 20, depth: 68, z: -34, y: 0.004 };
 
 const shader = {
   name: 'FloorMirror',
