@@ -92,14 +92,16 @@ def cull(objs):
                 or (c.y <= -T + 0.01 and n.y < -0.9)
                 or (c.y >= ROOF + T - 0.01 and n.y > 0.9)
             )
+            # covered: something presses against it at its middle AND near every corner. The middle
+            # alone isn't enough: the upper floor's long side strips have their middle inside a shop,
+            # under its floorboards, and culling on that deleted the walkway floor beside the atrium.
             covered = False
             if not (outside or skin):
-                origin = cb + nb * 0.002
-                for t in trees:
-                    hit = t.ray_cast(origin, nb, 0.02)
-                    if hit[0] is not None:
-                        covered = True
-                        break
+                corners = [mw @ v.co for v in f.verts]
+                samples = [cb] + [cb.lerp(q, 0.95) for q in corners]
+                covered = all(
+                    any(t.ray_cast(q + nb * 0.002, nb, 0.02)[0] is not None for t in trees) for q in samples
+                )
             if outside or skin or covered:
                 doomed.append(f)
         removed += len(doomed)
