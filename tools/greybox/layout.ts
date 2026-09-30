@@ -451,7 +451,7 @@ function props(g: Geo, meta: MallMeta) {
   /** A bench facing `yaw`: its seat is 0.46 m up, its backrest 0.17 m behind its middle. */
   const bench = (x: number, y: number, z: number, yaw: number) => {
     place('bench', x, y, z, yaw);
-    seat('bench', x, y, z, yaw, 0.17, 0.45);
+    seat('bench', x, y, z, yaw, 0.17, 0.46);
   };
   const inward = (x: number) => (x > 0 ? PI / 2 : -PI / 2); // facing the middle of the mall
   // Benches along the shop fronts on the ground floor, in front of the pillars between units (units
@@ -466,9 +466,9 @@ function props(g: Geo, meta: MallMeta) {
   for (const z of [-26, -46])
     for (const x of [-rail, rail]) {
       // the sofa model faces the other way to its yaw; its backrest is 0.28 m behind its middle, and
-      // its cushion (0.52 m) is a touch above a bench's seat, so you sink into it a little
+      // its cushion is 0.52 m up (client/src/player/seats.ts has how each kind is sat on)
       place('sofa', x, UP, z, inward(x));
-      seat('sofa', x, UP, z, inward(-x), 0.28, 0.45);
+      seat('sofa', x, UP, z, inward(-x), 0.28, 0.52);
     }
 
   // floor lamps in front of the pillars in the middle of each row, plants upstairs

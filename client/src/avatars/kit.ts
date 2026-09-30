@@ -9,10 +9,12 @@ import {
   type AnimationAction,
   type AnimationClip,
   AnimationMixer,
+  Euler,
   Group,
   LoopOnce,
   LoopRepeat,
   type Object3D,
+  Quaternion,
   type SkinnedMesh,
   Sphere,
   Vector3,
@@ -27,8 +29,10 @@ const FADE = 0.18;
 /** Ground speed (m/s) at which the walk and sprint cycles' feet don't slide at timeScale 1. */
 const WALK_NOMINAL = 2.4;
 const RUN_NOMINAL = 5.6;
-/** Seat height (m): benches, the island and sofas (tools/greybox/layout.ts). */
-const SEAT = 0.46;
+/** The seat sat on when nobody says otherwise: a bench (client/src/player/seats.ts). */
+const BENCH = { height: 0.46, flat: false };
+/** Lying flat along a deep seat, the legs point straight out: Kenney's legs lift forward about −X. */
+const FLAT_LEGS = new Quaternion().setFromEuler(new Euler(-Math.PI / 2, 0, 0));
 /** A held apple is about this wide next to the hand holding it (the apple model is 0.14 m across). */
 const HELD_FIT = 0.9;
 const APPLE_WIDTH = 0.14;
@@ -64,7 +68,10 @@ export class Avatar {
   private playing: AnimationAction | null = null;
   /** The character under `object`, and how far to raise it to sit on a bench (its size varies). */
   private readonly rig: Object3D | undefined;
-  private readonly sitLift: number;
+  /** What it's sitting on, and its body's lowest point (m), which goes on the seat. */
+  private seat = BENCH;
+  private readonly bottom: number;
+  private readonly legs: Object3D[] = [];
   /** How far forward it slides to sit: seats mark the backrest, and characters differ in depth. */
   private readonly sitForward: number;
   /** What's in the right hand (an apple), and where the hand is on its bone. */
@@ -80,7 +87,10 @@ export class Avatar {
       body = measureBody(object);
       bodyOf.set(id, body);
     }
-    this.sitLift = SEAT - body.bottom; // the bottom of the body onto the seat
+    this.bottom = body.bottom;
+    object.traverse((o) => {
+      if (o.name === 'leg-left' || o.name === 'leg-right') this.legs.push(o);
+    });
     this.sitForward = body.back + BACK_GAP;
     this.hand = findHand(object); // at rest, before anything plays
     this.mixer = new AnimationMixer(object);
@@ -174,12 +184,19 @@ export class Avatar {
     return this.hand.bone.localToWorld(out.copy(this.hand.at));
   }
 
+  /** The seat it sits on next (its height, and whether the legs lie flat). */
+  sitOn(seat: { height: number; flat: boolean }) {
+    this.seat = seat;
+  }
+
   update(dt: number) {
     this.mixer.update(dt);
     // onto the seat as the sit fades in, and back down as it fades out
     const sit = this.actions.get('sit');
     const w = sit?.isRunning() ? sit.getEffectiveWeight() : 0;
-    if (this.rig) this.rig.position.set(0, this.sitLift * w, -this.sitForward * w); // up, and forward (−z)
+    // up with the bottom of the body on the seat, and forward (−z) with the back at the backrest
+    if (this.rig) this.rig.position.set(0, (this.seat.height - this.bottom) * w, -this.sitForward * w);
+    if (w > 0 && this.seat.flat) for (const leg of this.legs) leg.quaternion.slerp(FLAT_LEGS, w);
   }
 
   dispose() {

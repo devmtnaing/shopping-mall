@@ -211,6 +211,7 @@ function toggleSeat() {
   follower.stop();
   travel.cancel();
   seated = spot;
+  avatar?.sitOn(spot.seat);
   player.place(spot.x, spot.y, spot.z, spot.yaw);
 }
 const travel = new Travel(() => content.value.shops, mall.meta, player, orbit, finder, follower);
@@ -223,6 +224,7 @@ const multi = createMultiplayer({
   floorAt: (y) => mall.nav.floorAt(y),
   onSelfEmote: (e) => avatar?.emote(e),
   seated: () => seated !== null,
+  seats: spots,
   // someone hugged you: turn to face them, if you're standing still
   onThrow: (o, v) => apples.throw(o, v),
   onHugFrom: (x, z) => {
@@ -252,6 +254,7 @@ import('./avatars/kit')
       avatar?.dispose();
       avatar = kit.create(id);
       if (holding) avatar.hold(handApple());
+      if (seated) avatar.sitOn(seated.seat);
       body.add(avatar.object);
       setPlaceholder(false);
     });

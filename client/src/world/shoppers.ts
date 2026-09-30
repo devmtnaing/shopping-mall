@@ -10,6 +10,7 @@ import { ANIM } from '@shopping-mall/shared/protocol';
 import { Group, type Vector3 } from 'three';
 import type { Avatar, AvatarKit } from '../avatars/kit';
 import type { PathFinder, Waypoint } from '../player/path';
+import { type Seat, seatOf } from '../player/seats';
 import { TIERS, tier } from '../quality';
 
 const SPEED = 1.3; // m/s: an unhurried stroll
@@ -19,7 +20,7 @@ const RIDE = 1.2 * Math.cos(Math.PI / 6);
 /** Far away, animate every this many frames. */
 const FAR_EVERY = 3;
 
-type Spot = { x: number; y: number; z: number; yaw: number; seat?: string };
+type Spot = { x: number; y: number; z: number; yaw: number; seat?: string; sits?: Seat };
 type Shopper = {
   avatar: Avatar;
   path: Waypoint[];
@@ -56,13 +57,10 @@ export class Shoppers {
       const yaw = s.door.yaw;
       return { x: x + Math.sin(yaw) * 1.6, y, z: z + Math.cos(yaw) * 1.6, yaw };
     });
-    this.seats = meta.seats.map((s) => ({
-      x: s.pos[0],
-      y: s.pos[1] - 0.45,
-      z: s.pos[2],
-      yaw: s.yaw,
-      seat: s.id,
-    }));
+    this.seats = meta.seats.map((s) => {
+      const sits = seatOf(s.kind);
+      return { x: s.pos[0], y: s.pos[1] - sits.height, z: s.pos[2], yaw: s.yaw, seat: s.id, sits };
+    });
     for (let i = 0; i < count && this.windows.length; i++) {
       const start = this.pick(this.windows);
       const avatar = kit.create(AVATARS[Math.floor(this.random() * AVATARS.length)]);
@@ -163,6 +161,7 @@ export class Shoppers {
     s.path = [];
     s.riding = false;
     if (spot.seat) {
+      if (spot.sits) s.avatar.sitOn(spot.sits);
       s.avatar.setState(ANIM.sit, 0);
       s.wait = 10 + this.random() * 15;
     } else {

@@ -11,6 +11,7 @@ import { loadContent, onContentVersion } from '../content';
 import { t } from '../i18n';
 import { animState } from '../player/anim';
 import type { PlayerController } from '../player/controller';
+import type { SeatSpot } from '../player/seats';
 import type { Travel } from '../player/travel';
 import { Bubbles } from '../render/bubbles';
 import { Crowd } from '../render/crowd';
@@ -43,6 +44,8 @@ export function createMultiplayer(opts: {
   onSelfEmote: (e: string) => void;
   /** Whether you're sitting on a bench (others see you sit). */
   seated: () => boolean;
+  /** Where people can sit, so other players sit right on each kind of seat. */
+  seats?: readonly SeatSpot[];
   /** Someone within hugging range hugged you (turn to face them). */
   onHugFrom?: (x: number, z: number) => void;
   /** Someone threw an apple (fly it here too). */
@@ -52,6 +55,7 @@ export function createMultiplayer(opts: {
   const room = new URLSearchParams(location.search).get('room') ?? 'main';
   const remotes = new Remotes();
   const crowd = new Crowd();
+  crowd.seats = opts.seats ?? [];
   scene.add(crowd.group);
   const bubbles = new Bubbles();
 
