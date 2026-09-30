@@ -1,6 +1,6 @@
 # Contributing to Shopping Mall
 
-Thanks for helping. Shopping Mall aims to stay **fast** and **easy to read**, so a few rules matter more than usual.
+Thanks for helping. Shopping Mall tries hard to stay **fast** and **easy to read**, so a few rules matter more here than usual. The [contributor guide](https://devmtnaing.github.io/shopping-mall/guide/contributing) on the docs site covers the setup in more detail, including the database and storage.
 
 ## Setup
 
@@ -10,38 +10,38 @@ pnpm dev          # http://localhost:5173  (add ?debug for the stats overlay)
 pnpm check        # typecheck, lint, test, build, size budget: what CI runs
 ```
 
-Requirements: Node 22+ and pnpm 10.
+You need Node 24 and pnpm 10.
 
 ## Where things live
 
-- `mall.config.ts`: shops, products and outfits. Operators edit only this file.
-- `client/src/`: the browser app. `shared/src/`: config schema, constants and protocol. `server/src/`: multiplayer.
-- `docs/`: the plan. Read [architecture](docs/architecture.md) before any large change and [tasks](docs/tasks.md) to find work.
+- `client/src/` is the browser app, and `server/src/` the multiplayer server and content API. `shared/src/` holds what both use: the protocol, the config and meta schemas, and the constants.
+- `mall.config.ts` has the shops and products for a static mall, and seeds the database for a live one (where you edit shops at `/admin/`).
+- `docs/` is the plan. Read the [architecture](docs/architecture.md) before a large change, and look in the [tasks](docs/tasks.md) for something to work on.
 
 ## Rules
 
-1. **Budgets are hard limits.** `pnpm size` (and later `pnpm perf`) must pass. If you need more room, raise `budgets.json` in the same PR and explain why.
-2. **Nothing allocates in the frame loop.** Reuse scratch vectors. Don't create closures, arrays or `new Vector3()` per frame.
-3. **Keep the game and UI separate.** UI code never imports `three`. Game code never touches the DOM, except for the canvas.
-4. **Small files.** If a file grows past ~300 lines, split it by responsibility.
+1. **Budgets are hard limits.** `pnpm size` and `pnpm perf` have to pass. If you really need more room, raise `budgets.json` in the same PR and explain why.
+2. **Nothing allocates in the frame loop.** Reuse scratch vectors. Don't create closures, arrays or `new Vector3()` every frame.
+3. **Keep the game and the UI apart.** UI code never imports `three`, and game code never touches the DOM apart from the canvas.
+4. **Keep files small.** When a file grows past about 300 lines, split it by what each part does.
 5. **Tune in one place.** Movement and camera numbers live in `shared/src/constants.ts`.
-6. **No user text via `innerHTML`.**
+6. **Never put user text in `innerHTML`.**
 
 ## Pull requests
 
-- One task per PR, referencing its ID from `docs/tasks.md` (e.g. `T-104`).
-- Describe how you tested it. For anything visual, attach a screenshot or clip, ideally on a phone too.
+- One task per PR, with its ID from `docs/tasks.md` (for example `T-104`).
+- Say how you tested it. For anything visual, attach a screenshot or a clip, ideally from a phone as well.
 - Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/) (`feat(client): …`, `fix(server): …`).
 
 ## Translations
 
-UI strings live in `client/src/i18n/`. `en.ts` is the source of truth; every other locale is typed against it, and a test fails if a translation is missing or drops a `{placeholder}`.
+The UI's strings are in `client/src/i18n/`. `en.ts` is the source; every other language is typed against it, and a test fails if a translation is missing or drops a `{placeholder}`.
 
-- **Improve a language:** edit its file, e.g. `my.ts`. The Burmese strings were drafted without a native speaker, so review is very welcome.
-- **Add a language:** copy `my.ts`, translate it, register it in `i18n/index.ts` (`TABLES` and `NAMES`), and add its code to `mall.locales` in `mall.config.ts`. If it needs a script font, add it to `client/src/fonts.ts`.
+- **To improve a language,** edit its file, such as `my.ts`. The Burmese strings were drafted without a native speaker, so a review would be very welcome.
+- **To add a language,** copy `my.ts`, translate it, register it in `i18n/index.ts` (`LOADERS` and `NAMES`), and add its code to `mall.locales` in `mall.config.ts`. If it needs a font for its script, add that to `client/src/fonts.ts`.
 
-Shop names, taglines and descriptions come from `mall.config.ts` and aren't translated by the UI.
+Shop names, taglines and descriptions come from the shops themselves, so the UI doesn't translate them.
 
 ## Good first issues
 
-Look for the `good first issue` label, or the tasks tagged that way in `docs/tasks.md`.
+Look for the `good first issue` label, or for tasks marked that way in `docs/tasks.md`.

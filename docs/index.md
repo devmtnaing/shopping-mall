@@ -3,7 +3,7 @@ layout: home
 hero:
   name: Shopping Mall
   text: A multiplayer 3D mall in the browser
-  tagline: Walk around with friends, visit shops, browse products and chat. Fast on a mid-range phone, open source, and run from an admin page.
+  tagline: Walk around with friends, go into shops, browse products and chat. It's quick on a mid-range phone, open source, and you run it from an admin page.
   actions:
     - theme: brand
       text: Run your own mall
@@ -16,11 +16,11 @@ hero:
       link: https://github.com/devmtnaing/shopping-mall
 features:
   - title: Real multiplayer
-    details: WebSocket rooms, 15 Hz binary snapshots and smooth interpolation. See people walk, chat, wave and sit on benches together.
+    details: WebSocket rooms, 15 binary snapshots a second and smooth interpolation. Watch people walk, chat, wave and sit together.
   - title: Fast by budget
-    details: Playable in about 2.5 s on Fast 4G after under 2.5 MB. CI fails a change that breaks a performance, size or accessibility budget.
+    details: About 2.5 s to playable on Fast 4G, with under 2.5 MB downloaded. CI turns down any change that breaks a performance, size or accessibility budget.
   - title: Edit it live
-    details: Shops, products, images and even the building change from /admin. Everyone in the mall sees it within seconds, with no redeploy.
+    details: Change shops, products, images and even the building from /admin. Everyone in the mall sees it within seconds, without a redeploy.
   - title: Yours to host
-    details: docker compose up on any machine, or Railway in a few clicks. Postgres and any S3-compatible storage. English and Burmese included.
+    details: Run docker compose up on any machine, or deploy to Railway in a few clicks. It uses Postgres and any S3-compatible storage, and speaks English and Burmese.
 ---

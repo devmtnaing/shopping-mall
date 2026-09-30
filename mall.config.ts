@@ -93,7 +93,7 @@ export default {
       tagline: 'This space is available',
       category: 'For rent',
       colors: { bg: '#efece6', accent: '#1b1b1b' },
-      description: 'Put your brand, products or class here — every visitor walks past it.',
+      description: 'Put your brand, products or class here. Every visitor walks past it.',
       links: [{ label: 'Get in touch', url: 'https://example.com/contact' }],
     },
   ],

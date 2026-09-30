@@ -1,6 +1,6 @@
 # Roadmap
 
-Each phase ends with something you can demo. A phase isn't done until its **exit criteria** pass in CI. Task IDs refer to [tasks.md](tasks.md).
+Each phase ends with something you can demo, and a phase isn't done until its **exit criteria** pass in CI. Task IDs point to [tasks.md](tasks.md).
 
 ```mermaid
 gantt
@@ -19,7 +19,7 @@ gantt
   P6 Launch v1.0             :p6, after p5, 5d
 ```
 
-The dates assume one full-time developer plus one part-time 3D artist. Phases 2 and 3 run in parallel (art and code).
+The dates assume one full-time developer and one part-time 3D artist. Phases 2 and 3 run side by side, one art and one code.
 
 ---
 
@@ -34,7 +34,7 @@ The dates assume one full-time developer plus one part-time 3D artist. Phases 2 
 
 **Exit:** `pnpm i && pnpm dev` works on a clean machine. CI is green. The size check fails when a 300 KB dependency is added.
 
-## Phase 1: Walkable greybox (weeks 2–3)
+## Phase 1: Walkable greybox (weeks 2 and 3)
 **Goal:** *feel*. Movement and camera have to be good before any art exists.
 
 1. Greybox mall in Blender (boxes only) exported with the meta empties. (T-101)
@@ -47,7 +47,7 @@ The dates assume one full-time developer plus one part-time 3D artist. Phases 2 
 
 **Exit:** you can walk the whole greybox on desktop and phone at 60 fps, ride an escalator, tap-to-walk to any point, and the camera never clips through walls. A playtest with 3 people says the movement "feels good".
 
-## Phase 2: Real world & avatars (weeks 4–6, parallel with P3)
+## Phase 2: Real world & avatars (weeks 4 to 6, alongside P3)
 **Goal:** *looks*. Swap the greybox for the real mall and real people.
 
 1. Modular kit + mall.blend + lightmap bake. (T-201, T-202)
@@ -60,7 +60,7 @@ The dates assume one full-time developer plus one part-time 3D artist. Phases 2 
 
 **Exit:** first playable frame within the ≤ 2.5 MB budget. Medium tier runs 60 fps on a Pixel 7a. Screenshots at every tier are approved in design review.
 
-## Phase 3: Shops & UI (weeks 4–6, parallel with P2)
+## Phase 3: Shops & UI (weeks 4 to 6, alongside P2)
 **Goal:** *purpose*. The mall is actually useful.
 
 1. Preact overlay shell: HUD, dock, toasts, signals bridge. (T-301)
@@ -75,7 +75,7 @@ The dates assume one full-time developer plus one part-time 3D artist. Phases 2 
 
 **Exit:** a new operator can add a shop with products by editing `mall.config.ts` alone, in under 10 minutes (timed with a volunteer). All shop content is reachable without WebGL.
 
-## Phase 4: Multiplayer (weeks 7–8)
+## Phase 4: Multiplayer (weeks 7 and 8)
 **Goal:** *together*.
 
 1. `shared/protocol.ts` binary codec with round-trip property tests. (T-401)
@@ -88,7 +88,7 @@ The dates assume one full-time developer plus one part-time 3D artist. Phases 2 
 
 **Exit:** 100 bots in one room. Clients stay within the network budget. Server CPU is ≤ 10 % of a core. Killing and restarting a client's network for 10 s resumes the session without a join/leave message.
 
-## Phase 5: Performance, accessibility, mobile polish (weeks 9–10)
+## Phase 5: Performance, accessibility, mobile polish (weeks 9 and 10)
 1. `pnpm perf` Playwright budget gate in CI. (T-501)
 2. Dynamic resolution, idle throttling, zero allocations per frame. (T-502, T-503)
 3. Keyboard/screen-reader audit, reduced motion. (T-504)
@@ -96,7 +96,7 @@ The dates assume one full-time developer plus one part-time 3D artist. Phases 2 
 5. Audio. (T-506)
 6. Social verbs: wave, dance, hug, apple. (T-507)
 
-**Exit:** all budgets pass in CI on throttled profiles. axe-core reports zero serious issues. The reference device matrix has been tested by hand.
+**Exit:** all budgets pass in CI on throttled profiles, axe-core reports no serious issues, and someone has tried every device in the [performance](performance.md) table by hand.
 
 ## Phase 6: Launch v1.0 (week 11)
 1. Docs site (the `docs/` folder rendered with VitePress) and an operator guide. (T-601)
@@ -117,12 +117,12 @@ The dates assume one full-time developer plus one part-time 3D artist. Phases 2 
 4. S3-compatible uploads with presigned URLs; asset records by content hash. (T-703)
 5. `/admin` page: shops, products, slots, assets. (T-704)
 6. Swappable art: the client loads the mall package, avatars and props through asset records. (T-706)
-7. Railway deploy with Postgres, bucket and backups; compose gains Postgres + MinIO. (T-707)
+7. Railway deploy with Postgres, a bucket and backups; compose gets Postgres and SeaweedFS. (T-707)
 
 **Exit:** the host adds a shop with a logo and products from `/admin`, and every connected visitor sees the new sign within 2 seconds, with no deploy. Replacing the mall model file swaps the building on the next visit.
 
 ## Phase 2 note
-3D art for v1 uses **free CC0 kits** (Kenney, Quaternius, Poly Pizza). Higgsfield-generated assets come later and drop in as file swaps (ADR 0006). The licence has been checked: generated models may be committed.
+3D art for v1 uses **free CC0 kits** (Kenney, Quaternius, Poly Pizza). Higgsfield-generated assets come later, as file swaps (ADR 0006). We checked the licence: generated models may be committed.
 
 ## After v1.0 (P2 backlog)
 v1.0 shipped on 2026-09-29, then v1.1.0 and v1.1.1 on 2026-09-30 (see the [changelog](https://github.com/devmtnaing/shopping-mall/blob/main/CHANGELOG.md)). Still to do from v1: a check on a real Android phone (T-505).

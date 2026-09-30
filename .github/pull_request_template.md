@@ -1,4 +1,4 @@
-## What & why
+## What and why
 
 Task: T-___
 
@@ -10,4 +10,4 @@ Task: T-___
 
 ## Budget impact
 
-Size/perf changes, if any:
+Any change to size or performance:

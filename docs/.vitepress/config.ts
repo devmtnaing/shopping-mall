@@ -48,7 +48,6 @@ export default defineConfig({
         collapsed: true,
         items: [
           { text: 'Product spec', link: '/spec' },
-          { text: 'The reference mall, taken apart', link: '/teardown' },
           { text: 'ADR 0001: three.js', link: '/adr/0001-threejs-over-custom-engine' },
           { text: 'ADR 0002: Preact UI', link: '/adr/0002-preact-ui-outside-render-loop' },
           { text: 'ADR 0003: WebSocket protocol', link: '/adr/0003-websocket-server-binary-protocol' },

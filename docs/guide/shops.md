@@ -1,32 +1,32 @@
 # Shops and products
 
-With a database (the normal setup), shops are edited in the **admin page** and every change shows up for everyone in the mall within about two seconds. No redeploy, no reload.
+With a database, which is the normal setup, you edit shops in the **admin page**, and everyone in the mall sees each change within about two seconds. Nobody has to redeploy or reload.
 
 ## Sign in
 
-Go to `/admin/` on your mall (for example <http://localhost:8080/admin/>) and enter the host password (`HOST_SECRET` on the server). The session lives only in that tab: reload it and you sign in again. That's deliberate, so a forgotten tab can't stay signed in.
+Go to `/admin/` on your mall (for example <http://localhost:8080/admin/>) and enter the host password (`HOST_SECRET` on the server). You stay signed in only in that tab, and reloading it signs you out, so a tab you forget about can't stay signed in.
 
 ## Add a shop
 
-**Shops → Add shop.** A live preview of the storefront sign updates as you type.
+**Shops → Add shop.** A preview of the storefront sign changes as you type.
 
 | Field | Notes |
 |---|---|
 | Name, tagline | On the sign and at the top of the shop's panel. Name up to 40 characters. |
 | ID | Used in links (`?s=lumen-coffee`). Lowercase letters, digits and dashes. |
-| Unit | Which storefront the shop takes. Taken units are marked. `w0`–`w5` are on the left as you walk in, `e0`–`e5` on the right, `u-` is upstairs, and `flagship` is the big store at the far end ([map](../greybox)). |
-| Category | Groups shops in the directory. |
+| Unit | Which storefront the shop takes. Taken units are marked. `w0` to `w5` are on the left as you walk in and `e0` to `e5` on the right, `u-` means upstairs, and `flagship` is the big store at the far end ([map](../greybox)). |
+| Category | Groups shops in the directory, and picks the furniture inside: a café gets tables and a coffee bar, a bookshop gets bookcases, and so on. "For rent" leaves the unit empty. |
 | Sign colour, accent | The sign background and the highlight colour used in the panel. |
 | Logo | Upload a PNG, JPEG or WebP (up to 2 MB), or paste a URL. |
 | Description, features | The panel text, and up to 8 feature lines. |
 | Links | Up to 4 buttons, for example "Visit the website" or "Order on Grab". |
-| Products | None, **list them here**, or **from a JSON feed** (below). |
+| Products | None, a **list** you type in here, or a **JSON feed** (see below). |
 
-**Reorder** shops with the arrows (that's the directory order). **Delete** asks you to confirm first.
+The arrows **reorder** shops, which sets their order in the directory. **Delete** asks before it deletes.
 
 ## Products
 
-**Listed in the admin page:** name, price, an optional "was" price (shown struck through), an optional image upload and a link. Prices are formatted in the mall's currency (**Mall** tab).
+**Listed in the admin page:** each product has a name, a price, and optionally a "was" price (shown struck through), an uploaded image and a link. Prices appear in the mall's currency, which you set on the **Mall** tab.
 
 **From a JSON feed:** point the shop at a URL that returns either an array or `{ "products": [...] }`:
 
@@ -37,11 +37,11 @@ Go to `/admin/` on your mall (for example <http://localhost:8080/admin/>) and en
 ]
 ```
 
-The browser fetches it when someone opens the shop, so the feed must allow cross-origin requests (`Access-Control-Allow-Origin: *`). A shop system or a small script can keep it up to date.
+The visitor's browser fetches it when they open the shop, so the feed has to allow cross-origin requests (`Access-Control-Allow-Origin: *`). Your shop system, or a small script, can keep it up to date.
 
 ## Files
 
-**Files** lists everything uploaded. Uploads are stored once by content, so uploading the same image twice keeps one copy, and each file is served forever-cached. A file the building uses can't be deleted until the building changes.
+**Files** lists everything you've uploaded. Each file is stored once by its content, so uploading the same image twice keeps one copy, and browsers cache files for good. You can't delete a file the building uses until you change the building.
 
 ## The mall
 

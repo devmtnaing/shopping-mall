@@ -3,28 +3,25 @@
 **Status:** Accepted · 2026-09-28
 
 ## Context
-The reference polls `api.php?a=sync` over HTTP roughly every 790 ms. As a result:
-- remote players update ~1.25 times per second and look laggy,
-- every update pays for a full HTTP request (~93 ms median),
-- timeouts abort requests, the session expires (`410`) and the client re-joins, which spams the chat with join/leave lines.
+The simplest way to share positions is HTTP polling: every client asks the server for everyone's position about once a second. That's easy to host, but other players then move about once a second and look laggy, every update pays for a whole HTTP request, and a slow request that times out drops the session, so the client joins again and the chat fills with join and leave messages.
 
 ## Decision
-- One **Node 22 / Bun** process using `ws`, with rooms held in memory. No database: presence is ephemeral.
-- **15 Hz** tick. Client → server INPUT is 12 bytes. Server → client SNAPSHOT is 11 bytes per player, filtered to the 40 nearest in the player's own and neighbouring zones.
+- One **Node 22 / Bun** process using `ws`, with rooms held in memory. No database: presence doesn't need to survive a restart.
+- A **15 Hz** tick. Client → server INPUT is 12 bytes. Server → client SNAPSHOT is 11 bytes per player, for the 40 nearest in your zone and the zones next to it.
 - Rare messages (join, chat, emotes, events) are JSON.
-- The client is authoritative for its own position. The server validates speed and bounds.
-- **Resume tokens** with a 30 s grace period. Join/leave notices are batched every 2 s.
-- The mall **still works single-player** when the server is unreachable.
+- Each client decides its own position, and the server checks speed and bounds.
+- **Resume tokens** give a 30 s grace period. Join and leave notices are batched every 2 s.
+- The mall **still works single-player** when it can't reach the server.
 
 ## Consequences
-- ✅ ~12× more frequent updates with smooth interpolation. ~6.6 KB/s down with 40 visible players.
-- ✅ Self-hosts with `docker run`. No PHP, no database.
-- ✅ The protocol lives in `shared/`, so client and server can't drift apart. It's covered by round-trip tests.
-- ⚠️ A single process caps out at a few hundred concurrent users per instance. That's enough for v1. Horizontal scale means running more rooms on more processes, with a tiny lobby service to route between them (post-v1).
-- ⚠️ Client authority allows a modified client to walk through walls. Speed and bounds checks limit the damage, and there's nothing to win by cheating.
+- 15 updates a second, interpolated, so other people move smoothly. With 40 players in view that's about 6.6 KB/s down.
+- It self-hosts with `docker run`, with no PHP and no database.
+- The protocol lives in `shared/`, so client and server can't drift apart, and round-trip tests cover it.
+- One process tops out at a few hundred people at once. That's enough for v1. To grow, run more rooms on more processes with a tiny lobby service routing between them (after v1).
+- Because clients decide their own position, a modified client could walk through walls. The speed and bounds checks limit that, and there's nothing to win by cheating.
 
 ## Alternatives
-- **Keep HTTP polling:** simplest to host, but the experience is poor (see Context).
-- **Colyseus:** a full framework with schema sync. Heavier than we need.
-- **Cloudflare Durable Objects / PartyKit:** great managed scaling, but ties self-hosters to one vendor. We could add it later as an alternative transport, since the protocol is transport-agnostic.
-- **WebRTC data channels:** lower latency, but signalling and NAT traversal make it much more complex. Not worth it at walking speed.
+- **HTTP polling:** the simplest to host, but it feels bad (see Context).
+- **Colyseus:** a full framework with schema sync, heavier than we need.
+- **Cloudflare Durable Objects / PartyKit:** great managed scaling, but it ties self-hosters to one vendor. The protocol doesn't care about the transport, so we could add one of these later as an option.
+- **WebRTC data channels:** lower latency, but signalling and NAT traversal add a lot of complexity. At walking speed it isn't worth it.

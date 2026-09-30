@@ -3,18 +3,18 @@
 **Status:** Accepted · 2026-09-28
 
 ## Context
-The overlay has real UI: a landing form, panels, a directory with search, chat, settings and dialogs. In the reference, all of that is hand-rolled DOM code inside one 833-line `app.js`, mixed with game logic.
+The overlay is a real UI: a landing form, panels, a searchable directory, chat, settings and dialogs. Written as hand-rolled DOM code in one big file next to the game logic, that becomes hard to change quickly.
 
 ## Decision
 - The DOM UI is built with **Preact** components. Shared state lives in **@preact/signals** (`client/src/state.ts`).
-- The game loop **writes** a small set of signals only when a value changes (zone, nearby shop, online count, chat).
+- The game loop **writes** a small set of signals, and only when a value changes (zone, nearby shop, online count, chat).
 - The UI sends **commands** (`travelTo`, `openPanel`, `sendChat`) through a typed command bus.
-- UI code never imports Three.js. Game code never touches the DOM, except for the canvas.
+- UI code never imports Three.js, and game code never touches the DOM apart from the canvas.
 
 ## Consequences
-- ✅ About 5 KB gz. Components are easy to test. The separation stays clear.
-- ✅ No per-frame re-renders. The UI costs about zero while walking.
-- ⚠️ Name tags and speech bubbles are rendered in WebGL (instanced), not as DOM elements, to avoid layout cost with many players.
+- It costs about 5 KB gzipped, components are easy to test, and the line between UI and game stays clear.
+- Nothing re-renders every frame, so the UI costs next to nothing while you walk.
+- Name tags and speech bubbles are drawn in WebGL (instanced) rather than as DOM elements, so a crowd doesn't cost layout time.
 
 ## Alternatives
-Vanilla DOM (hard to maintain at this size), React (4× larger), Svelte (fine, but adds a compiler step and fewer people know it), Lit (web components add boilerplate for this use).
+Plain DOM code (hard to maintain at this size), React (four times larger), Svelte (fine, but it adds a compiler step and fewer people know it), Lit (web components add boilerplate for this use).

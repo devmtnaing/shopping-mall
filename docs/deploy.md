@@ -1,6 +1,6 @@
 # Deploying
 
-Two ways to run the whole mall: **docker compose** on any machine, or **Railway** (what the demo uses, see [ADR 0005](adr/0005-railway-postgres-s3.md)). Both run the same images.
+You can run the whole mall two ways: with **docker compose** on any machine, or on **Railway**, which the demo uses ([ADR 0005](adr/0005-railway-postgres-s3.md) explains why). Both run the same images.
 
 | Piece | Image | Compose | Railway |
 |---|---|---|---|
@@ -50,13 +50,13 @@ The production project `shopping-mall` (<https://web-production-cc219.up.railway
 
 `.railway/railway.ts` describes the same project as code (Railway [IaC](https://docs.railway.com/infrastructure-as-code)). It keeps the one secret, `HOST_SECRET`, out of the repo with `preserve()`. To compare it with the live project, install the SDK next to it (`npm install railway`, left out of the repo's dependencies) and run `railway link`, then `railway config plan` (Railway CLI 5 or newer, or `npx @railway/cli@latest`). A whole-project apply deletes anything the file leaves out, so read the plan first.
 
-**One click:** [![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/shopping-mall). The [template](https://railway.com/deploy/shopping-mall) creates all five pieces with the variables below and asks you only for `HOST_SECRET`.
+**One click:** [![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/shopping-mall). The [template](https://railway.com/deploy/shopping-mall) creates all five pieces with the variables above, and only asks you for `HOST_SECRET`.
 
-By hand: create a project with the Postgres template and a bucket named `uploads`, add three empty services named as above, set the variables in the table, connect the repo, and give `web` a domain. Or edit `.railway/railway.ts` and run `railway config apply`.
+To set it up by hand, create a project with the Postgres template and a bucket named `uploads`, add three empty services with the names above, set the variables from the table, connect the repo and give `web` a domain. Or edit `.railway/railway.ts` and run `railway config apply`.
 
 ## Backups and restoring
 
-The `backup` service runs `pg_dump --format=custom` every night and uploads it to the bucket as `backups/mall-<UTC time>.dump`, keeping the newest 30. The server never serves these files (`/files/` only serves `<kind>/<sha256>.<ext>`). Uploaded files themselves are not in the dump; they're already in the bucket, named by their content hash.
+The `backup` service runs `pg_dump --format=custom` every night and uploads it to the bucket as `backups/mall-<UTC time>.dump`, keeping the newest 30. The server never serves these files (`/files/` only serves `<kind>/<sha256>.<ext>`). The uploaded files aren't in the dump, since they're already in the bucket, named by their content hash.
 
 To run a backup now on Railway, open the `backup` service and choose **Run now**, or redeploy it.
 
@@ -71,7 +71,7 @@ docker run --rm --env-file restore.env shopping-mall-backup /usr/local/bin/resto
 
 Then restart the `server` service, so visitors reconnect and pick up the restored content.
 
-Tested on 2026-09-29. Locally against compose: back up, delete a shop, restore, and the shop and its products were back, and `KEEP` pruned older dumps. On Railway: the cron job wrote `backups/mall-2026-09-28T202057Z.dump` to the bucket.
+We tested this on 2026-09-29. Locally, with compose, we backed up, deleted a shop and restored: the shop and its products came back, and `KEEP` removed the older dumps. On Railway, the cron job wrote `backups/mall-2026-09-28T202057Z.dump` to the bucket.
 
 ## docker compose
 
@@ -80,4 +80,4 @@ cp .env.example .env        # set HOST_SECRET to use /admin/
 docker compose up --build   # → http://localhost:8080 (WEB_PORT to change)
 ```
 
-Postgres data and uploads live in the `pgdata` and `s3data` volumes. To back up the database: `docker compose exec postgres pg_dump -U mall -Fc mall > mall.dump`, and to restore it: `docker compose exec -T postgres pg_restore -U mall -d mall --clean --if-exists < mall.dump`.
+Postgres data and uploads live in the `pgdata` and `s3data` volumes. To back up the database, run `docker compose exec postgres pg_dump -U mall -Fc mall > mall.dump`, and to restore it, `docker compose exec -T postgres pg_restore -U mall -d mall --clean --if-exists < mall.dump`.

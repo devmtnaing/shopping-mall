@@ -15,7 +15,7 @@ S3_ENDPOINT=http://localhost:8333 S3_BUCKET=mall S3_ACCESS_KEY_ID=mall S3_SECRET
 HOST_SECRET=letmein pnpm dev:server   # multiplayer, /api and /admin, port 8787
 ```
 
-Open a second browser window to see yourself walk around. `?debug` shows an fps and draw-call overlay and the navgrid.
+Open a second browser window to watch yourself walk around. `?debug` adds an overlay with fps and draw calls, and shows the navgrid.
 
 ## Layout
 
@@ -47,7 +47,7 @@ Asset commands: `pnpm greybox` (layout, collision, meta, navgrid), `pnpm assets`
 ## Conventions
 
 - **Performance is a feature.** No allocations in the render loop, one draw call per thing where possible, and lazy-load anything not needed for the first frame. The budgets are in [performance.md](../performance).
-- **Code reads simply.** Short files and plain functions. Comments say *why*. Server and shared code run as TypeScript straight in Node, so they use erasable syntax only (no enums or namespaces) and `.ts` import extensions.
+- **Keep the code simple.** Short files and plain functions, with comments that say *why*. Server and shared code run as TypeScript straight in Node, so they use erasable syntax only (no enums or namespaces) and `.ts` import extensions.
 - **The UI never imports three.js,** and the game never touches the DOM except the canvas: they talk through signals (`client/src/state.ts`) and commands (`client/src/commands.ts`).
 - **Accessible and bilingual.** Every control has a label, and every string goes through `t()` with both `en` and `my` entries.
 - **Commits:** one task per commit, with an imperative subject (`feat: …`, `fix(ui): …`, `perf: …`) and the task ID or issue in the subject.

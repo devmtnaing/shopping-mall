@@ -8,9 +8,9 @@ A browser tab that feels like walking into a nice mall with friends. It opens in
 
 | Who | Wants |
 |---|---|
-| **Visitor** | To look around, find a shop, see products, hang out with friends. No install and no account |
-| **Mall owner** (the person deploying Shopping Mall) | To add shops and products by editing config. To see what visitors do. To host events |
-| **Shop owner / tenant** | A good-looking storefront, products that stay in sync, clicks through to their store |
+| **Visitor** | To look around, find a shop, see products and hang out with friends, without installing anything or making an account |
+| **Mall owner** (the person deploying Shopping Mall) | To add shops and products easily, see what visitors do, and host events |
+| **Shop owner / tenant** | A good-looking storefront, products that stay up to date, and visitors clicking through to their store |
 | **Contributor** | A codebase they can understand in an afternoon |
 
 ## Features
@@ -42,7 +42,7 @@ Priority: **P0** = MVP, **P1** = v1.0, **P2** = later.
 ### Shops
 - **P0** Storefront: signage generated from config (name, colours, logo image), window display, door trigger zone.
 - **P0** Shop panel: title, tagline, description, features, product grid, CTAs. Opens with E, a tap, or by walking inside.
-- **P0** Products come from an adapter (`static-json` built in). Each has image, name, price (formatted per locale), compare-at price and a link.
+- **P0** Products come from an adapter (`static-json` is built in). Each has an image, a name, a price (formatted for the language), a compare-at price and a link.
 - **P1** In-store product boards generated from the same product data.
 - **P1** Adapters: Shopify Storefront, WooCommerce Store API, generic JSON URL.
 - **P1** "For rent" template shop with a contact CTA.
@@ -52,7 +52,7 @@ Priority: **P0** = MVP, **P1** = v1.0, **P2** = later.
 ### Social (multiplayer)
 - **P0** See other visitors move smoothly, with name tags that fade with distance.
 - **P0** Global chat (rate-limited, length-capped). Join/leave collapsed into a single "3 people joined" line.
-- **P0** Emoji reactions (6) shown above the avatar.
+- **P0** Emoji reactions shown above the avatar (8 of them).
 - **P1** Speech bubbles above the speaker for 5 s. Per-user mute. Report button.
 - **P1** Social verbs: wave, dance, apple throw, hug (both people play an animation).
 - **P1** Host role: a gold name tag, a "Host is here" notice on the landing page, host announcements.
@@ -63,7 +63,7 @@ Priority: **P0** = MVP, **P1** = v1.0, **P2** = later.
 - **P0** Quality: Auto / Low / Medium / High. Auto picks a tier from a GPU probe and frame-time sampling.
 - **P0** Respect `prefers-reduced-motion`: no camera bob, no fly-in, instant travel.
 - **P0** The directory, shop panels and chat are all reachable by keyboard and screen reader, without using the 3D view.
-- **P1** Languages: English + one right-to-left or complex-script language in CI (Burmese as the reference test, since it exercises complex text shaping in canvas signage).
+- **P1** Languages: English plus one right-to-left or complex-script language tested in CI. Burmese is that test, because it needs complex text shaping on the canvas signs.
 - **P1** Volume sliders (ambience, SFX). Ambient music loads lazily.
 
 ### Operator features
@@ -89,14 +89,16 @@ Priority: **P0** = MVP, **P1** = v1.0, **P2** = later.
 | Sit / stand | C | Sit button |
 | Visit shop | E | Tap shop / prompt |
 | Chat | Enter | Chat button |
-| Emoji (7 dances, 8 hugs) | 1–8 | Emoji bar |
-| Pick or throw an apple | F | 🍎 prompt at a fruit stand, or while holding apples |
+| Emoji (7 dances, 8 hugs) | 1 to 8 | Emoji bar |
+| Pick or throw an apple | F | The apple prompt at a fruit stand, or while you hold one |
+| Mute | N | Speaker button |
+| Change character | Character (dock) | Character (dock) |
 | Overview | M | Dock |
 | Directory | / or K | Dock |
 | Close panel | Esc | ✕ / swipe down |
 
 ## Success metrics
 - p75 time from landing to first playable frame: **< 3 s** on desktop broadband, **< 6 s** on a Fast 4G profile.
-- p75 frame time on the reference mid-range phone: **≤ 16.7 ms**.
+- p75 frame time on the primary mid-range phone ([performance](performance.md)): **≤ 16.7 ms**.
 - ≥ 40 % of sessions open at least one shop panel.
 - Crash-free sessions ≥ 99.5 %. WebSocket reconnect success ≥ 99 %.
