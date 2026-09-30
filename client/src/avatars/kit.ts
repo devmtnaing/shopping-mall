@@ -225,12 +225,9 @@ function measureBody(root: Object3D): Body {
 }
 
 /**
- * The right hand, in the arm bone's own space, and how wide it is (m). At rest the arms hang down,
- * so the hand is the lowest part of what the arm bone carries: the middle of its bottom fifth, at its
- * front, where the fingers would close round something. (The
- * farthest point from the shoulder can be a sleeve or a bag strap on some characters.) Measured at
- * rest, when the character is made, so it doesn't depend on what it's doing when it first holds
- * something.
+ * The right hand, in the arm bone's own space, and how wide it is (m): the far end of the arm, along
+ * the arm from the shoulder (the characters' base pose is a T-pose, so "lowest" won't do), ignoring
+ * anything off to the side of the arm like a bag strap. Measured once, when the character is made.
  */
 function findHand(root: Object3D): Hand | null {
   let found: Hand | null = null;
@@ -255,15 +252,27 @@ function findHand(root: Object3D): Hand | null {
     for (let k = 0; k < count; k++)
       if (onArm(k)) pts.push(mesh.getVertexPosition(k, v).applyMatrix4(mesh.matrixWorld).clone());
     if (!pts.length) return;
-    const ys = pts.map((p) => p.y);
-    const [low, high] = [Math.min(...ys), Math.max(...ys)];
-    const hand = pts.filter((p) => p.y <= low + (high - low) * 0.2);
+    // along the arm: from the shoulder towards the arm's middle. Skip anything well off that line
+    // (a bag strap weighted to the arm), then the hand is the far end: the last fifth of the arm
+    const shoulder = bone.getWorldPosition(new Vector3());
+    const axis = pts
+      .reduce((c, p) => c.add(p), new Vector3())
+      .divideScalar(pts.length)
+      .sub(shoulder)
+      .normalize();
+    const along = (p: Vector3) => p.clone().sub(shoulder).dot(axis);
+    const off = (p: Vector3) => p.clone().sub(shoulder).addScaledVector(axis, -along(p)).length();
+    const offs = pts.map(off).sort((x, y) => x - y);
+    const limit = (offs[Math.floor(offs.length / 2)] ?? 0) * 2 + 0.02;
+    const arm = pts.filter((p) => off(p) <= limit);
+    const ts = arm.map(along);
+    const [near, far] = [Math.min(...ts), Math.max(...ts)];
+    const hand = arm.filter((p) => along(p) >= far - (far - near) * 0.2);
     const mid = hand.reduce((c, p) => c.add(p), new Vector3()).divideScalar(hand.length);
-    const width = Math.max(...hand.map((p) => Math.hypot(p.x - mid.x, p.z - mid.z))) * 2;
-    // held at the front of the hand, not in the middle of it (a chunky fist would hide it): the
-    // character faces −z at rest
-    const front = hand.reduce((z, p) => Math.min(z, p.z), mid.z);
-    mid.z = front;
+    const width = Math.max(...hand.map((p) => off(p))) * 2;
+    // held at the front of the hand (the character faces −z), where fingers would close round it;
+    // in the middle a chunky fist would hide it
+    mid.z = hand.reduce((z, p) => Math.min(z, p.z), mid.z);
     found = { bone, at: bone.worldToLocal(mid), width };
   });
   return found;
