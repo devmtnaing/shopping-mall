@@ -9,15 +9,25 @@ export type SeatSpot = { x: number; y: number; z: number; yaw: number };
 const REACH = 1.4;
 /** Spacing of the spots along a bench (m). */
 const SPREAD = 0.6;
+/** How far back from the bench's middle you sit, towards the backrest (m). */
+const BACK = 0.1;
 
-/** Every place to sit: feet on the floor in front of the seat, facing the way the bench faces. */
+/** Every place to sit: on the floor under the seat (the avatar lifts itself onto it), facing the way the bench faces. */
 export function seatSpots(meta: MallMeta): SeatSpot[] {
   return meta.seats.flatMap((s) => {
     const [x, y, z] = s.pos;
     // the bench runs across the direction you face when sitting
     const ax = Math.cos(s.yaw);
     const az = -Math.sin(s.yaw);
-    return [-SPREAD, 0, SPREAD].map((o) => ({ x: x + ax * o, y: y - 0.45, z: z + az * o, yaw: s.yaw }));
+    // back is the way you'd face turned round: +sin, +cos (yaw 0 faces −z)
+    const bx = Math.sin(s.yaw) * BACK;
+    const bz = Math.cos(s.yaw) * BACK;
+    return [-SPREAD, 0, SPREAD].map((o) => ({
+      x: x + ax * o + bx,
+      y: y - 0.45,
+      z: z + az * o + bz,
+      yaw: s.yaw,
+    }));
   });
 }
 

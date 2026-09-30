@@ -24,7 +24,7 @@ export const DEFAULT_AVATAR: AvatarId = 'female-a';
 
 export const isAvatar = (id: unknown): id is AvatarId => AVATARS.includes(id as AvatarId);
 
-/** Animation clips shipped in avatars.glb (Kenney's names, then dance and hug, keyframed in tools/assets/social-clips.ts). */
+/** Animation clips shipped in avatars.glb (Kenney's names; sit, dance and hug are keyframed in tools/assets/social-clips.ts). */
 export const CLIPS = [
   'idle',
   'walk',

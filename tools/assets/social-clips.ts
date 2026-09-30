@@ -1,6 +1,7 @@
 // Dance and hug (T-507): Kenney's pack has no clips for them, so they're keyframed here, on the same
 // seven bones, and added to avatars.glb next to Kenney's clips. Like Kenney's, they rotate the bones
-// (plus the root's height), so they play on every character, generated ones included.
+// (plus the root's height), so they play on every character, generated ones included. Sit replaces
+// Kenney's, which sits on the floor: in the mall you sit on a bench.
 //
 // Kenney's conventions, read off its clips: at rest the arms hang at ±45° about Z (arm-left −45,
 // arm-right +45); raising an arm turns it towards 0 and past; a rotation about Y swings an arm
@@ -31,6 +32,20 @@ type Pose = Record<string, [number, number, number]>; // bone → euler degrees
 type Clip = { name: string; duration: number; pose: (t: number) => Pose; lift?: (t: number) => number };
 
 const CLIPS: Clip[] = [
+  {
+    // on a bench, legs out in front (they're one bone each: no knees to bend), hands forward on the
+    // lap. The root stays put: characters differ in size, so the client lifts each onto the seat.
+    name: 'sit',
+    duration: 1,
+    pose: () => ({
+      torso: [-4, 0, 0],
+      'arm-left': [0, -30, -38],
+      'arm-right': [0, 30, 38],
+      'leg-left': [-72, 0, -4],
+      'leg-right': [-72, 0, 4],
+    }),
+    lift: () => 0,
+  },
   {
     // one bar of a happy dance: arms pumping in turn, a bounce on each beat, a sway, a knee lift
     name: 'dance',
@@ -66,6 +81,7 @@ const CLIPS: Clip[] = [
   },
 ];
 
+/** Kenney's clips of the same name are replaced. */
 export const SOCIAL_CLIPS = CLIPS.map((c) => c.name);
 
 /** Adds the clips to `doc`, animating the joints in `joints` (bone name → node). */

@@ -27,6 +27,11 @@ const FADE = 0.18;
 /** Ground speed (m/s) at which the walk and sprint cycles' feet don't slide at timeScale 1. */
 const WALK_NOMINAL = 2.4;
 const RUN_NOMINAL = 5.6;
+/** Bench seat height (m, tools/greybox/props.ts), and the hips' height at rest in rig units (every rig). */
+const SEAT = 0.45;
+const HIPS = 0.176;
+/** The hip joint sits this far above the bottom of the hips (m). */
+const HIP_DEPTH = 0.03;
 
 const BOUNDS = new Sphere(new Vector3(0, 0.3, 0), 0.55);
 
@@ -51,10 +56,15 @@ export class Avatar {
   private current: AnimationAction | null = null;
   private state = -1;
   private playing: AnimationAction | null = null;
+  /** The character under `object`, and how far to raise it to sit on a bench (its size varies). */
+  private readonly rig: Object3D | undefined;
+  private readonly sitLift: number;
 
   constructor(id: AvatarId, object: Object3D, clips: AnimationClip[]) {
     this.id = id;
     this.object = object;
+    this.rig = object.children[0];
+    this.sitLift = SEAT + HIP_DEPTH - HIPS * (this.rig?.scale.y ?? 2);
     this.mixer = new AnimationMixer(object);
     for (const c of clips) this.actions.set(c.name, this.mixer.clipAction(c));
     for (const name of ['jump', 'emote-yes', 'emote-no', 'interact-right', 'hug']) {
@@ -119,6 +129,9 @@ export class Avatar {
 
   update(dt: number) {
     this.mixer.update(dt);
+    // onto the seat as the sit fades in, and back down as it fades out
+    const sit = this.actions.get('sit');
+    if (this.rig) this.rig.position.y = sit?.isRunning() ? this.sitLift * sit.getEffectiveWeight() : 0;
   }
 
   dispose() {
