@@ -41,8 +41,9 @@ const CLIPS: Clip[] = [
       torso: [-4, 0, 0],
       'arm-left': [0, -30, -38],
       'arm-right': [0, 30, 38],
-      'leg-left': [-72, 0, -4],
-      'leg-right': [-72, 0, 4],
+      // 40° below level: over the seat's front edge and down, not along the seat
+      'leg-left': [-50, 0, -4],
+      'leg-right': [-50, 0, 4],
     }),
     lift: () => 0,
   },
