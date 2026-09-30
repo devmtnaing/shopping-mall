@@ -136,3 +136,4 @@ v1.0 shipped on 2026-09-29, then v1.1.0 and v1.1.1 on 2026-09-30 (see the [chang
 - WebGPU renderer by default once it matches WebGL on the device matrix
 - Interior theme packs for tenants (mostly covered since v1.1.0: interiors follow the shop's category)
 - Demo content: fill the live demo's empty units with sample shops, so it doesn't look vacant
+- Realistic human characters and props, in place of the stylized ones (see the [plan](plans/realistic-characters.md))
