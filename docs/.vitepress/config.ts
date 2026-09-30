@@ -39,6 +39,7 @@ export default defineConfig({
           { text: 'Performance budget', link: '/performance' },
           { text: 'Greybox layout', link: '/greybox' },
           { text: 'Roadmap', link: '/roadmap' },
+          { text: 'Plan: realistic characters', link: '/plans/realistic-characters' },
           { text: 'Tasks', link: '/tasks' },
         ],
       },
