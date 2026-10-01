@@ -49,6 +49,7 @@ Set these as environment variables, in a `.env` file if you use docker compose. 
 | `MAX_PLAYERS` | The most people in the mall at once (default 20). Anyone else is told it's full, can look around on their own, and is let in when a place frees up. |
 | `MAX_PER_IP` | The most connections at once from one IP address (default 5), so one person or script can't take all the places. `0` turns it off. Behind a proxy or CDN, see [deploying](../deploy#behind-a-proxy-or-cdn). |
 | `CHAT_KEEP_DAYS` | How many days of chat history the database keeps (default 30). |
+| `CHAT_SHOW_MIN` | How far back newcomers see the chat, in minutes (default 60). Older messages stay in the database but aren't shown. |
 | `AWAY_AFTER_S` | Seconds without a word from someone's game before they show as away, with a dimmed name tag (default 15). A visible tab talks to the server 15 times a second, so silence means their tab is in the background. |
 | `DROP_SILENT_S` | Seconds of silence before they leave the mall and free their place (default 120). Their game rejoins as soon as they're back on the tab. |
 | `IDLE_KICK_MIN` | Minutes without moving, chatting or emoting before someone leaves the mall, with a warning a minute before (default 15). Moving brings them straight back. `0` turns it off. |

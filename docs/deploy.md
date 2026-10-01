@@ -22,7 +22,7 @@ You can run the whole mall two ways: with **docker compose** on any machine, or 
 | `HOST_SECRET` | The host password: signs in on the landing screen and at `/admin/`. Unset means no host and no admin. |
 | `PORT` | Default 8787. |
 | `MAX_PLAYERS`, `MAX_PER_IP` | The most people in the mall at once (default 20), and connections per IP address (default 5). |
-| `CHAT_KEEP_DAYS` | Days of chat history to keep (default 30). |
+| `CHAT_KEEP_DAYS`, `CHAT_SHOW_MIN` | Days of chat history to keep (default 30), and how far back newcomers see it, in minutes (default 60). |
 | `AWAY_AFTER_S`, `DROP_SILENT_S`, `IDLE_KICK_MIN` | When someone shows as away (15 s), leaves because their tab is in the background (120 s), or leaves for being idle (15 min, `0` for never). See the [configuration guide](guide/config). |
 | `ROOM_CAPACITY`, `REPORT_WEBHOOK`, `BLOCKLIST_FILE`, `METRICS` | Optional, see `.env.example`. |
 

@@ -37,6 +37,19 @@ describe.skipIf(!TEST_DB)('chat history', () => {
     expect(welcome.chat?.map((c) => c.text)).toEqual(['meet at the fountain']);
   });
 
+  it("shows a newcomer only the past hour's messages, though older ones stay in the database", async () => {
+    db = await freshSchema();
+    await db.sql`insert into chat (room, name, text, at) values
+      ('main', 'Old', 'from three days ago', now() - interval '3 days'),
+      ('main', 'Recent', 'from ten minutes ago', now() - interval '10 minutes')`;
+    server = await startServer({ port: 0, db: db.sql, presenceMs: 100 });
+    const c = new TestClient(server.port);
+    clients.push(c);
+    const welcome = await c.join('Cee');
+    expect(welcome.chat?.map((m) => m.text)).toEqual(['from ten minutes ago']);
+    expect((await recentChat(db.sql, 'main', 20)).length).toBe(2); // still both kept
+  });
+
   it('deletes messages older than the retention period', async () => {
     db = await freshSchema();
     await db.sql`insert into chat (room, name, text, at) values

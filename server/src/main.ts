@@ -21,6 +21,7 @@ const server = await startServer({
   maxPlayers: Number(process.env.MAX_PLAYERS ?? 20),
   maxPerIp: Number(process.env.MAX_PER_IP ?? 5),
   chatKeepDays: Number(process.env.CHAT_KEEP_DAYS ?? 30),
+  chatShowMs: Number(process.env.CHAT_SHOW_MIN ?? 60) * 60_000,
   awayAfterMs: Number(process.env.AWAY_AFTER_S ?? 15) * 1000,
   dropSilentMs: Number(process.env.DROP_SILENT_S ?? 120) * 1000,
   idleKickMs: Number(process.env.IDLE_KICK_MIN ?? 15) * 60_000,

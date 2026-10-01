@@ -40,6 +40,8 @@ export type ServerOptions = {
   maxPerIp?: number;
   /** Days of chat history to keep in the database (CHAT_KEEP_DAYS). */
   chatKeepDays?: number;
+  /** Newcomers see messages from this far back at most (ms, CHAT_SHOW_MIN): not last week's. */
+  chatShowMs?: number;
   /** No input for this long (ms) and a player shows as away: their tab's in the background. */
   awayAfterMs?: number;
   /** No input for this long (ms) and they leave the mall: a background tab, or a dead connection. */
@@ -104,6 +106,7 @@ export async function startServer(opts: ServerOptions = {}) {
     maxPlayers = 20,
     maxPerIp = 5,
     chatKeepDays = 30,
+    chatShowMs = 60 * 60_000,
     awayAfterMs = 15_000,
     dropSilentMs = 120_000,
     idleKickMs = 15 * 60_000,
@@ -397,9 +400,11 @@ export async function startServer(opts: ServerOptions = {}) {
 
     async function welcome(s: Session, token: string) {
       const others = [...s.room.players.values()].filter((p) => p !== s.player).map((p) => p.info);
-      // what's been said lately, from the database when there is one (it outlives restarts)
-      let chat = s.room.recentChat.slice(-HISTORY);
-      if (db) chat = await recentChat(db, s.room.name, HISTORY).catch(() => chat);
+      // what's been said lately (the past hour, say), from the database when there is one (it
+      // outlives restarts); older messages stay in the database but a newcomer doesn't see them
+      const since = Date.now() - chatShowMs;
+      let chat = s.room.recentChat.filter((c) => c.at > since).slice(-HISTORY);
+      if (db) chat = await recentChat(db, s.room.name, HISTORY, new Date(since)).catch(() => chat);
       s.player.send({
         t: 'welcome',
         id: s.player.id,

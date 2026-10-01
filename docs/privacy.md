@@ -8,7 +8,7 @@ Shopping Mall is built to know as little about visitors as possible.
 |---|---|---|
 | Your name, character and colour | Your own browser (`localStorage`), so you don't retype them | Until you clear site data |
 | Your language, quality, volume and mute settings | Your own browser | Until you clear site data |
-| Chat messages | The operator's database: the name, the message (with blocked words masked), the room and the time. People who join see the last 20 messages in their room. | 30 days by default (`CHAT_KEEP_DAYS`), then deleted automatically |
+| Chat messages | The operator's database: the name, the message (with blocked words masked), the room and the time. People who join see the last 20 messages from the past hour in their room. | 30 days by default (`CHAT_KEEP_DAYS`), then deleted automatically |
 | Player reports | The server log (and the operator's webhook, if set): the reported name, the reason and the last 20 chat messages | As long as the operator keeps logs |
 | Shops, products, uploads | The operator's database and bucket | Until the host deletes them |
 
