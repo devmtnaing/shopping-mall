@@ -117,6 +117,7 @@ export const my: Partial<Record<Key, string>> = {
   'chat.left': '{name} ထွက်သွားပါပြီ',
   'chat.leftMany': '{n} ယောက် ထွက်သွားပါပြီ',
   'chat.slowDown': 'နည်းနည်း ဖြည်းဖြည်း ပို့ပါ။',
+  'chat.renamed': '{asked} ဆိုတဲ့ နာမည်နဲ့ လူရှိနေပြီမို့ သင့်ကို {name} လို့ ခေါ်ပါမယ်။',
   'emote.label': 'တုံ့ပြန်မယ်',
   'host.here': 'တာဝန်ခံ ရောက်နေပါတယ်!',
   'host.signIn': 'တာဝန်ခံလား? ဝင်ရောက်ပါ',

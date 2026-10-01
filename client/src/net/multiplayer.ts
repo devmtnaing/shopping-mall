@@ -63,6 +63,8 @@ export function createMultiplayer(opts: {
   const room = new URLSearchParams(location.search).get('room') ?? 'main';
   const remotes = new Remotes();
   let historyShown = false;
+  /** The numbered name we last told them about (Mingu-2), so a reconnect doesn't repeat it. */
+  let renamedTo: string | null = null;
   const crowd = new Crowd();
   crowd.seats = opts.seats ?? [];
   scene.add(crowd.group);
@@ -117,6 +119,11 @@ export function createMultiplayer(opts: {
       if (m.t === 'content') return onContentVersion(m.version);
       if (m.t === 'welcome') {
         remotes.welcome(m.id, m.players);
+        // someone in the room already had your name, so the server added a number: say so, once
+        if (m.name !== profile.value.name && m.name !== renamedTo) {
+          renamedTo = m.name;
+          toast(t('chat.renamed', { asked: profile.value.name, name: m.name }), 6000);
+        }
         // what's been said lately, once per visit (not again after a reconnect)
         if (!historyShown && m.chat?.length) {
           historyShown = true;
