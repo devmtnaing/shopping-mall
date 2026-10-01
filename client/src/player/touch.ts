@@ -78,9 +78,19 @@ export function createTouchControls(canvas: HTMLCanvasElement, input: Input) {
     e.preventDefault();
     input.keys.press('Space');
   });
-  run.addEventListener('click', () => {
+  // On pointerdown, like Jump: a phone doesn't send `click` for a second finger while the other is
+  // on the joystick, so a click handler would only work standing still. A keyboard or screen
+  // reader still clicks it (detail 0); a touch's own click afterwards is ignored.
+  const toggleRun = () => {
     input.runToggle = !input.runToggle;
     run.setAttribute('aria-pressed', String(input.runToggle));
+  };
+  run.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    toggleRun();
+  });
+  run.addEventListener('click', (e) => {
+    if (e.detail === 0) toggleRun();
   });
 
   return root;
