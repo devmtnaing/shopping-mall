@@ -6,6 +6,8 @@ export const rentEn = {
     'This unit is free. Tell the mall’s host about your shop and they’ll get back to you by email.',
   'rent.name': 'Your name',
   'rent.email': 'Email',
+  'rent.emailHint':
+    'Use an email you really check. If you’re approved, the host sends the link to set up your shop’s admin there, and it’s the email you’ll sign in with.',
   'rent.phone': 'Phone (optional)',
   'rent.business': 'Shop name',
   'rent.kind': 'Type of shop',
@@ -14,7 +16,8 @@ export const rentEn = {
   'rent.privacy': 'Only the mall’s host sees these details.',
   'rent.send': 'Send application',
   'rent.sending': 'Sending…',
-  'rent.sent': 'Thanks! The host will look at your application and get back to you.',
+  'rent.sent':
+    'Thanks, your application for this unit is in. The host will look at it and email you. If it’s approved, the email has a link to set up your shop.',
   'rent.taken': 'Sorry, this unit has just been taken.',
   'rent.tooMany': 'You’ve sent a few applications already. Please try again later.',
   'rent.invalid': 'Please check the details and try again.',
@@ -41,6 +44,7 @@ export const rentMy: Record<RentKey, string> = {
   'rent.intro': 'ဒီဆိုင်ခန်း လွတ်နေပါတယ်။ သင့်ဆိုင်အကြောင်း မောလ် တာဝန်ခံကို ပြောပြပါ၊ အီးမေးလ်ဖြင့် ပြန်ဆက်သွယ်ပါမယ်။',
   'rent.name': 'သင့်အမည်',
   'rent.email': 'အီးမေးလ်',
+  'rent.emailHint': 'အမှန်တကယ် စစ်ဖြစ်တဲ့ အီးမေးလ်ကို ထည့်ပါ။ လက်ခံရင် ဆိုင်ကို စီမံဖို့ လင့်ခ်ကို တာဝန်ခံက ဒီအီးမေးလ်သို့ ပို့ပါမယ်၊ ဒီအီးမေးလ်နဲ့ ဝင်ရပါမယ်။',
   'rent.phone': 'ဖုန်းနံပါတ် (မထည့်လည်း ရပါတယ်)',
   'rent.business': 'ဆိုင်အမည်',
   'rent.kind': 'ဆိုင် အမျိုးအစား',
@@ -49,7 +53,8 @@ export const rentMy: Record<RentKey, string> = {
   'rent.privacy': 'ဒီအချက်အလက်တွေကို မောလ် တာဝန်ခံသာ မြင်ရပါမယ်။',
   'rent.send': 'လျှောက်လွှာ ပို့မယ်',
   'rent.sending': 'ပို့နေပါတယ်…',
-  'rent.sent': 'ကျေးဇူးပါ! တာဝန်ခံက သင့်လျှောက်လွှာကို ကြည့်ပြီး ပြန်ဆက်သွယ်ပါမယ်။',
+  'rent.sent':
+    'ကျေးဇူးပါ၊ ဒီဆိုင်ခန်းအတွက် သင့်လျှောက်လွှာ ရောက်ပါပြီ။ တာဝန်ခံက ကြည့်ပြီး အီးမေးလ် ပို့ပါမယ်၊ လက်ခံရင် ဆိုင်ကို စီမံဖို့ လင့်ခ်ပါ ပါမယ်။',
   'rent.taken': 'စိတ်မကောင်းပါဘူး၊ ဒီဆိုင်ခန်းကို ငှားပြီးသွားပါပြီ။',
   'rent.tooMany': 'လျှောက်လွှာ အများအပြား ပို့ပြီးပါပြီ။ နောက်မှ ထပ်ကြိုးစားပါ။',
   'rent.invalid': 'အချက်အလက်တွေကို ပြန်စစ်ပြီး ထပ်ကြိုးစားပါ။',

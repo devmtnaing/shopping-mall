@@ -134,4 +134,5 @@ export const my: Partial<Record<Key, string>> = {
   'sign.comingSoon': 'မကြာမီ ဖွင့်မည်',
   'sign.available': 'ဆိုင်ခန်း ငှားရန် ရှိသည် · လာငှားပါ',
   'prompt.rent': 'ဒီဆိုင်ခန်း ငှားမယ်',
+  'prompt.applied': 'လျှောက်လွှာ ပို့ပြီး',
 };

@@ -58,6 +58,26 @@ export const nearbyUnit = signal<string | null>(null);
 /** Slot id of the vacant unit whose rental form is open. */
 export const rentUnit = signal<string | null>(null);
 
+// Units this visitor has applied for in this browser session, so they can't apply twice.
+const APPLIED = 'shopping-mall:applied';
+const readApplied = (): string[] => {
+  try {
+    return JSON.parse(sessionStorage.getItem(APPLIED) ?? '[]') as string[];
+  } catch {
+    return [];
+  }
+};
+export const appliedUnits = signal<string[]>(readApplied());
+export function markApplied(slot: string) {
+  if (appliedUnits.value.includes(slot)) return;
+  appliedUnits.value = [...appliedUnits.value, slot];
+  try {
+    sessionStorage.setItem(APPLIED, JSON.stringify(appliedUnits.value));
+  } catch {
+    /* not available: the signal still covers this page load */
+  }
+}
+
 /** Which modal dialog is open. */
 export type DialogId = 'help' | 'directory' | 'character';
 export const dialog = signal<DialogId | null>(null);

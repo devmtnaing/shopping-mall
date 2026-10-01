@@ -8,7 +8,7 @@ import { content } from '../content';
 import { locale, t } from '../i18n';
 import { RENT_TABLES, type RentKey, rentEn } from '../i18n/rent';
 import { httpUrl } from '../net/socket';
-import { mallMeta, rentUnit } from '../state';
+import { appliedUnits, mallMeta, markApplied, rentUnit } from '../state';
 import { Dialog } from './Dialog';
 import { InteriorPlan } from './InteriorPlan';
 
@@ -37,7 +37,8 @@ export function RentForm({ slot }: { slot: string }) {
   const kind = useSignal<ShopKind | ''>('');
   const honeypot = useSignal('');
   const unit = mallMeta.value?.slots.find((s) => s.id === slot);
-  const state = useSignal<'idle' | 'sending' | 'sent'>('idle');
+  // already applied for this unit earlier in this session: show the thank-you, not the form again
+  const state = useSignal<'idle' | 'sending' | 'sent'>(appliedUnits.value.includes(slot) ? 'sent' : 'idle');
   const error = useSignal<RentKey | null>(null);
   const url = httpUrl('/api/rentals');
   const close = () => (rentUnit.value = null);
@@ -69,6 +70,7 @@ export function RentForm({ slot }: { slot: string }) {
         signal: AbortSignal.timeout(10_000),
       });
       if (res.ok) {
+        markApplied(slot);
         state.value = 'sent';
         return;
       }
@@ -108,6 +110,7 @@ export function RentForm({ slot }: { slot: string }) {
                 value={values.value[f.id]}
                 onInput={set(f.id)}
               />
+              {f.id === 'email' && <span class="note rent-hint">{tr('rent.emailHint')}</span>}
             </label>
           ))}
           <label class="rent-field">

@@ -905,7 +905,8 @@ a.product:hover {
   height: 1px;
   opacity: 0;
 }
-.rent-privacy {
+.rent-privacy,
+.rent-hint {
   font-size: 13px;
 }
 .rent-done {

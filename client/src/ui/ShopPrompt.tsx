@@ -3,7 +3,7 @@
 
 import { content } from '../content';
 import { t } from '../i18n';
-import { nearbyShop, nearbyUnit, openShop, rentUnit } from '../state';
+import { appliedUnits, nearbyShop, nearbyUnit, openShop, rentUnit } from '../state';
 
 const finePointer = typeof matchMedia === 'function' && matchMedia('(pointer: fine)').matches;
 
@@ -24,7 +24,13 @@ export function ShopPrompt() {
           else rentUnit.value = unit;
         }}
       >
-        {t(shop ? 'prompt.visit' : 'prompt.rent')}
+        {t(
+          shop
+            ? 'prompt.visit'
+            : unit && appliedUnits.value.includes(unit)
+              ? 'prompt.applied'
+              : 'prompt.rent',
+        )}
         {finePointer && <kbd>E</kbd>}
       </button>
     </div>
