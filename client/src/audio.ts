@@ -6,6 +6,7 @@
 // speaker button).
 import { effect, signal } from '@preact/signals';
 import { AUDIO_LOOPS, LOOP_OVERLAP } from '@shopping-mall/shared/constants';
+import { asset } from './assets';
 import { load, save } from './storage';
 
 export type Volume = { ambience: number; effects: number };
@@ -21,7 +22,6 @@ export function toggleSound() {
   save('soundOn', soundOn.value);
 }
 
-const BASE = `${import.meta.env.BASE_URL}assets/audio/`;
 /** Loudness the loops are normalized to (RMS). The sources are generated quiet and uneven. */
 const TARGET_RMS = 0.05;
 /** LAME's encoder delay: silence some browsers' MP3 decoders leave at the start of the file. */
@@ -68,7 +68,7 @@ async function start(fountain: Vec | null): Promise<Sound> {
   });
 
   const decode = async (name: string) => {
-    const buf = await ctx.decodeAudioData(await (await fetch(`${BASE}${name}.mp3`)).arrayBuffer());
+    const buf = await ctx.decodeAudioData(await (await fetch(asset(`audio/${name}.mp3`))).arrayBuffer());
     return { buf, gain: TARGET_RMS / rms(buf) };
   };
   const [amb, water] = await Promise.all([decode('ambient'), decode('fountain')]);
@@ -91,7 +91,7 @@ async function start(fountain: Vec | null): Promise<Sound> {
   // the one-shots, after the loops (nothing waits on them): synthesized until they're in
   const shots: Partial<Record<keyof typeof PEAK, { buf: AudioBuffer; gain: number; lead: number }>> = {};
   for (const name of ['chime', 'tap'] as const) {
-    fetch(`${BASE}${name}.mp3`)
+    fetch(asset(`audio/${name}.mp3`))
       .then((r) => r.arrayBuffer())
       .then((bytes) => ctx.decodeAudioData(bytes))
       .then((buf) => {

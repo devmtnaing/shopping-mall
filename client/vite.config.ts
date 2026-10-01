@@ -1,4 +1,6 @@
-import { resolve } from 'node:path';
+import { createHash } from 'node:crypto';
+import { readdirSync, readFileSync } from 'node:fs';
+import { relative, resolve } from 'node:path';
 import preact from '@preact/preset-vite';
 import { parseConfig } from '@shopping-mall/shared/config';
 import { renderDirectory } from '@shopping-mall/shared/directory';
@@ -37,8 +39,52 @@ function mallConfig(): Plugin {
   };
 }
 
+/**
+ * A fingerprint of every file under public/assets (models, sounds, portraits), written into the page
+ * as JSON (not into the JS bundle, which is on a tight budget). The client asks for
+ * `mall.glb?v=<fingerprint>`, so a rebuilt file gets a new address and a cache (Cloudflare, the
+ * browser) can keep each one for good without ever serving a stale copy. See client/src/assets.ts.
+ */
+function assetVersions(): Plugin {
+  const root = resolve(__dirname, 'public/assets');
+  const scan = () => {
+    const out: Record<string, string> = {};
+    const walk = (dir: string) => {
+      for (const e of readdirSync(dir, { withFileTypes: true })) {
+        const path = resolve(dir, e.name);
+        if (e.isDirectory()) walk(path);
+        else
+          out[relative(root, path)] = createHash('sha256')
+            .update(readFileSync(path))
+            .digest('hex')
+            .slice(0, 10);
+      }
+    };
+    walk(root);
+    return out;
+  };
+  return {
+    name: 'asset-versions',
+    transformIndexHtml: {
+      order: 'pre',
+      handler: (_html, ctx) =>
+        // the admin page loads nothing from public/assets that needs it
+        ctx.filename.endsWith('admin/index.html')
+          ? []
+          : [
+              {
+                tag: 'script',
+                attrs: { type: 'application/json', id: 'asset-versions' },
+                children: JSON.stringify(scan()),
+                injectTo: 'head',
+              },
+            ],
+    },
+  };
+}
+
 export default defineConfig({
-  plugins: [preact(), mallConfig()],
+  plugins: [preact(), mallConfig(), assetVersions()],
   build: {
     target: 'es2022',
     // two pages: the mall, and the host's admin (its own bundle, never loaded by visitors)

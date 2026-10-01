@@ -22,8 +22,9 @@ import {
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { clone } from 'three/addons/utils/SkeletonUtils.js';
+import { asset } from '../assets';
 
-const URL = `${import.meta.env.BASE_URL}assets/avatars/avatars.glb`;
+const URL = asset('avatars/avatars.glb');
 /** Crossfade between states (s). Short enough to feel responsive, long enough not to pop. */
 const FADE = 0.18;
 /** Ground speed (m/s) at which the walk and sprint cycles' feet don't slide at timeScale 1. */

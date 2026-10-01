@@ -15,13 +15,13 @@ import {
 } from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshBVH } from 'three-mesh-bvh';
+import { asset } from '../assets';
 
-const BASE = `${import.meta.env.BASE_URL}assets/mall/`;
 export const BUILT_IN: MallArt = {
-  model: `${BASE}mall.glb`,
-  collision: `${BASE}greybox.collision.glb`,
-  meta: `${BASE}mall.meta.json`,
-  navgrid: `${BASE}navgrid.bin`,
+  model: asset('mall/mall.glb'),
+  collision: asset('mall/greybox.collision.glb'),
+  meta: asset('mall/mall.meta.json'),
+  navgrid: asset('mall/navgrid.bin'),
 };
 
 /** `collider` is the BVH over the collision mesh, shared by the player controller and the camera. */

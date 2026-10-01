@@ -1,5 +1,6 @@
 // Pick a character and a colour: on the welcome screen, and mid-visit from the dock's Character dialog.
 import { AVATARS, type AvatarId } from '@shopping-mall/shared/avatars';
+import { asset } from '../assets';
 import { t } from '../i18n';
 import { BODY_COLORS } from '../state';
 
@@ -25,7 +26,7 @@ export function LookPicker({ avatar, color, onAvatar, onColor }: Props) {
               onChange={() => onAvatar(a)}
               aria-label={t('landing.avatarOption', { n: String(i + 1) })}
             />
-            <img src={`${import.meta.env.BASE_URL}assets/avatars/${a}.png`} alt="" width={40} height={40} />
+            <img src={asset(`avatars/${a}.png`)} alt="" width={40} height={40} />
           </label>
         ))}
       </fieldset>

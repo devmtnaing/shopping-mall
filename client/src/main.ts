@@ -53,7 +53,7 @@ import { Apples, handApple, standWithin } from './world/apples';
 import { escalatorCarry, escalatorSteps } from './world/escalators';
 import { type FountainWater, fountainWater } from './world/fountain';
 import { loadMall } from './world/mall';
-import { Shoppers } from './world/shoppers';
+import type { Shoppers } from './world/shoppers';
 import { installSky } from './world/sky';
 import { buildStorefronts } from './world/storefronts';
 import { ZoneTracker } from './world/zones';
@@ -244,9 +244,12 @@ effect(() => {
   multi.setLook({ color, avatar });
 });
 // avatars load after the world (capsules until then); a failure just keeps the capsules
-import('./avatars/kit')
-  .then(({ loadAvatarKit }) => loadAvatarKit())
-  .then((kit) => {
+// (the shoppers' code comes along with the avatars: nothing needs it before them)
+Promise.all([
+  import('./avatars/kit').then(({ loadAvatarKit }) => loadAvatarKit()),
+  import('./world/shoppers'),
+])
+  .then(([kit, { Shoppers }]) => {
     multi.setAvatarKit(kit);
     shoppers = new Shoppers(kit, mall.meta, finder, TIERS.high.shoppers);
     // shoppers keep out of spots where you or other players sit

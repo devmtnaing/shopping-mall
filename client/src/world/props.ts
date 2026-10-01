@@ -11,8 +11,8 @@ import type { MallMeta } from '@shopping-mall/shared/meta';
 import { Euler, Group, InstancedMesh, Matrix4, type Mesh, type Object3D, Quaternion, Vector3 } from 'three';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { asset } from '../assets';
 
-const BASE = `${import.meta.env.BASE_URL}assets/props/`;
 /** Metres: packs with a placement this close load right away. */
 const LOAD_RADIUS = 35;
 
@@ -32,7 +32,7 @@ export class PropLibrary {
   }
 
   static async load(): Promise<PropLibrary> {
-    return new PropLibrary(await fetch(`${BASE}index.json`).then((r) => r.json()));
+    return new PropLibrary(await fetch(asset('props/index.json')).then((r) => r.json()));
   }
 
   pack(kind: string): string | undefined {
@@ -42,7 +42,7 @@ export class PropLibrary {
   model(pack: string): Promise<Object3D> {
     let m = this.loaded.get(pack);
     if (!m) {
-      m = this.loader.loadAsync(`${BASE}${pack}.glb`).then((g) => {
+      m = this.loader.loadAsync(asset(`props/${pack}.glb`)).then((g) => {
         g.scene.updateMatrixWorld(true);
         return g.scene;
       });

@@ -73,6 +73,12 @@ Only choose a header when a proxy really sets it, because otherwise visitors cou
 
 The web container prints which one it's using when it starts (`client-ip: visitors' addresses come from: …`). If this is set up wrong, the server's log says `limits: turned a connection away…` and visitors start seeing "too many connections from here", even though the mall isn't full.
 
+## Caching with a CDN
+
+Everything under `/assets/` is safe for a CDN to keep for good. The page asks for each model, sound and portrait with a fingerprint of the file's contents (`mall.glb?v=6d165415be`), and nginx marks those responses `immutable`. A rebuilt file gets a new fingerprint and so a new address, so a cache never serves a stale copy and there's nothing to purge. Uploads under `/files/` are named by their contents too, and the server marks them the same way. The page itself, `/api/` and `/ws` are never cached.
+
+With Cloudflare, add one Cache Rule (Caching → Cache Rules): when the URI path starts with `/assets/` or `/files/`, mark it eligible for cache, and leave the edge and browser TTLs to respect the origin's headers. Keep the default cache key, which includes the query string, since the fingerprint is in it.
+
 ## Backups and restoring
 
 The `backup` service runs `pg_dump --format=custom` every night and uploads it to the bucket as `backups/mall-<UTC time>.dump`, keeping the newest 30. The server never serves these files (`/files/` only serves `<kind>/<sha256>.<ext>`). The uploaded files aren't in the dump, since they're already in the bucket, named by their content hash.
