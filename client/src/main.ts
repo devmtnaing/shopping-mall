@@ -23,7 +23,7 @@ import { Intro } from './player/intro';
 import { Overview } from './player/overview';
 import { PathFinder } from './player/path';
 import { castRay } from './player/raycast';
-import { nearestSpot, type SeatSpot, seatSpots, standSpot } from './player/seats';
+import { nearestSpot, type SeatSpot, seatSpots, spotTaken, standSpot } from './player/seats';
 import { createTouchControls } from './player/touch';
 import { Travel } from './player/travel';
 import { WalkTo } from './player/walkto';
@@ -199,6 +199,8 @@ function release() {
 // benches: sit with E, stand up by moving
 const spots = seatSpots(mall.meta);
 let seated: SeatSpot | null = null;
+/** Someone (another player, or one of the shoppers) is sitting in this spot already. */
+const spotIsTaken = (s: SeatSpot) => spotTaken(s, multi.sitters()) || spotTaken(s, shoppers?.sitters() ?? []);
 function toggleSeat() {
   if (seated) {
     const up = standSpot(seated);
@@ -206,7 +208,7 @@ function toggleSeat() {
     player.place(up.x, up.y + 0.05, up.z, up.yaw);
     return;
   }
-  const spot = nearestSpot(spots, player.pos);
+  const spot = nearestSpot(spots, player.pos, spotIsTaken);
   if (!spot) return;
   follower.stop();
   travel.cancel();
@@ -247,6 +249,8 @@ import('./avatars/kit')
   .then((kit) => {
     multi.setAvatarKit(kit);
     shoppers = new Shoppers(kit, mall.meta, finder, TIERS.high.shoppers);
+    // shoppers keep out of spots where you or other players sit
+    shoppers.people = () => (seated ? [seated, ...multi.sitters()] : multi.sitters());
     scene.add(shoppers.group);
     effect(() => {
       const id = profile.value.avatar;
@@ -469,7 +473,7 @@ startLoop({
     const pick = atStand() ? 'pick' : holding && throwing <= 0 ? 'throw' : null;
     if (pick !== (applePrompt.value?.mode ?? null)) applePrompt.value = pick ? { mode: pick } : null;
     const visit = input.keys.consume('KeyE'); // always consume, so a stray press can't fire later
-    const seat = seated ? 'stand' : !near && nearestSpot(spots, player.pos) ? 'sit' : null;
+    const seat = seated ? 'stand' : !near && nearestSpot(spots, player.pos, spotIsTaken) ? 'sit' : null;
     if (seat !== seatPrompt.value) seatPrompt.value = seat;
     if (visit && !uiHasFocus.value) {
       if (near && !seated) openShop(near);

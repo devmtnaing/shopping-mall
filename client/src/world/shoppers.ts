@@ -10,7 +10,7 @@ import { ANIM } from '@shopping-mall/shared/protocol';
 import { Group, type Vector3 } from 'three';
 import type { Avatar, AvatarKit } from '../avatars/kit';
 import type { PathFinder, Waypoint } from '../player/path';
-import { type Seat, seatOf } from '../player/seats';
+import { type Seat, seatSpots } from '../player/seats';
 import { TIERS, tier } from '../quality';
 
 const SPEED = 1.3; // m/s: an unhurried stroll
@@ -21,6 +21,7 @@ const RIDE = 1.2 * Math.cos(Math.PI / 6);
 const FAR_EVERY = 3;
 
 type Spot = { x: number; y: number; z: number; yaw: number; seat?: string; sits?: Seat };
+type At = { x: number; y: number; z: number };
 type Shopper = {
   avatar: Avatar;
   path: Waypoint[];
@@ -42,7 +43,10 @@ export class Shoppers {
   private readonly list: Shopper[] = [];
   private readonly windows: Spot[];
   private readonly seats: Spot[];
+  /** Seat spots a shopper has, sitting or on the way. */
   private readonly taken = new Set<string>();
+  /** Where real people (you, other players) are sitting: shoppers keep out of those spots. */
+  people: () => readonly At[] = () => [];
 
   constructor(
     kit: AvatarKit,
@@ -57,10 +61,15 @@ export class Shoppers {
       const yaw = s.door.yaw;
       return { x: x + Math.sin(yaw) * 1.6, y, z: z + Math.cos(yaw) * 1.6, yaw };
     });
-    this.seats = meta.seats.map((s) => {
-      const sits = seatOf(s.kind);
-      return { x: s.pos[0], y: s.pos[1] - sits.height, z: s.pos[2], yaw: s.yaw, seat: s.id, sits };
-    });
+    // the same spots people sit in (as many per seat as fit side by side)
+    this.seats = seatSpots(meta).map((s) => ({
+      x: s.x,
+      y: s.y,
+      z: s.z,
+      yaw: s.yaw,
+      seat: s.id,
+      sits: s.seat,
+    }));
     for (let i = 0; i < count && this.windows.length; i++) {
       const start = this.pick(this.windows);
       const avatar = kit.create(AVATARS[Math.floor(this.random() * AVATARS.length)]);
@@ -89,6 +98,9 @@ export class Shoppers {
       s.avatar.object.visible = i < visible; // lower tiers show fewer (they keep strolling unseen)
       if (s.wait > 0) {
         s.wait -= dt;
+        // a person sat down where this shopper is sitting (another player's shoppers aren't ours to
+        // see, so it can happen): get up and go
+        if (s.spot?.seat && (this.frame + i) % 30 === 0 && this.overlaps(s.spot)) s.wait = 0;
         if (s.wait <= 0) this.leave(s);
       } else this.walk(s, dt);
       const o = s.avatar.object;
@@ -104,14 +116,26 @@ export class Shoppers {
     }
   }
 
+  /** A real person is sitting in this spot. */
+  private overlaps(spot: Spot) {
+    return this.people().some(
+      (p) => Math.abs(p.y - spot.y) < 0.7 && Math.hypot(p.x - spot.x, p.z - spot.z) < 0.45,
+    );
+  }
+
   private pick(from: Spot[]): Spot {
     return from[Math.floor(this.random() * from.length)] as Spot;
   }
 
   /** Done looking or sitting: choose somewhere else and set off. */
+  /** Where shoppers are sitting, or about to: people sitting down skip these spots. */
+  sitters(): At[] {
+    return this.seats.filter((x) => this.taken.has(x.seat as string));
+  }
+
   private leave(s: Shopper) {
     if (s.spot?.seat) this.taken.delete(s.spot.seat);
-    const free = this.seats.filter((x) => !this.taken.has(x.seat as string));
+    const free = this.seats.filter((x) => !this.taken.has(x.seat as string) && !this.overlaps(x));
     const target = this.random() < 0.35 && free.length ? this.pick(free) : this.pick(this.windows);
     const path = this.finder.find(s, target);
     if (!path?.length) {

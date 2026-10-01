@@ -3,7 +3,13 @@
 
 import { effect } from '@preact/signals';
 import { THROW_RELEASE } from '@shopping-mall/shared/avatars';
-import { animSpeed, FLAG_GROUNDED, packAnim } from '@shopping-mall/shared/protocol';
+import {
+  ANIM,
+  animSpeed,
+  FLAG_GROUNDED,
+  packAnim,
+  animState as wireState,
+} from '@shopping-mall/shared/protocol';
 import type { Camera, Scene } from 'three';
 import { Vector3 } from 'three';
 import type { AvatarKit } from '../avatars/kit';
@@ -200,6 +206,14 @@ export function createMultiplayer(opts: {
     },
     remotes,
     /** Is anyone else in view walking or running? (Keeps the frame rate up while they do.) */
+    /** Where other players are sitting down (so nobody sits on them). */
+    sitters() {
+      const out: { x: number; y: number; z: number }[] = [];
+      for (const r of remotes.players.values())
+        if (r.visible && wireState(r.pose.anim) === ANIM.sit)
+          out.push({ x: r.pose.x, y: r.pose.y, z: r.pose.z });
+      return out;
+    },
     anyoneMoving() {
       for (const r of remotes.players.values()) if (r.visible && animSpeed(r.pose.anim) > 0.3) return true;
       return false;

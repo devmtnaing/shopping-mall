@@ -435,6 +435,7 @@ function props(g: Geo, meta: MallMeta) {
   /**
    * A seat facing `yaw`. Its pos is where your back goes, `back` metres behind the piece's middle
    * (measured off the models), `h` up; each character sits as far forward as its own back needs.
+   * Its length is the piece's (PROPS), which decides how many people fit side by side.
    */
   const seat = (
     kind: 'bench' | 'sofa',
@@ -446,7 +447,8 @@ function props(g: Geo, meta: MallMeta) {
     h: number,
   ) => {
     const [bx, bz] = [Math.sin(yaw) * back, Math.cos(yaw) * back]; // behind: opposite of facing
-    meta.seats.push({ id: `${kind}-${meta.seats.length}`, kind, pos: [x + bx, y + h, z + bz], yaw });
+    const length = PROPS[kind]?.size ?? 1;
+    meta.seats.push({ id: `${kind}-${meta.seats.length}`, kind, pos: [x + bx, y + h, z + bz], yaw, length });
   };
   /** A bench facing `yaw`: its seat is 0.46 m up, its backrest 0.17 m behind its middle. */
   const bench = (x: number, y: number, z: number, yaw: number) => {
@@ -513,6 +515,7 @@ function props(g: Geo, meta: MallMeta) {
       kind: 'bench',
       pos: [island.x + dx, 0.45, island.z],
       yaw,
+      length: 0.9, // its curved ring: room for one each side
     });
   }
   // Myanmar festival lanterns hung in the atrium, clear of the bridge (#4, batch 2)
