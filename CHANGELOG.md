@@ -1,5 +1,7 @@
 # Changelog
 
+There are no versioned releases for now: the live demo runs the latest `main`, and the commit history says what changed. Below is what the first versions brought.
+
 ## 1.1.1 (2026-09-30)
 
 Polish on top of 1.1.0.

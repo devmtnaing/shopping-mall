@@ -3,7 +3,7 @@
 **An open-source, multiplayer 3D shopping mall that runs in the browser.**
 Walk around with friends, go into shops, browse their products and chat. It loads quickly and holds 60 fps on a mid-range phone. You run it from an admin page for shops and products, or from one config file if you only want a static build.
 
-> Status: **v1.1.1.** A furnished two-floor mall with shops you can walk into, 15 characters, multiplayer (chat, emotes, dancing, hugs, throwing apples), baked lighting, English and Burmese, and live content: you edit shops, products, uploads and even the building at `/admin/`, and everyone sees the change within seconds.
+> **Status:** a furnished two-floor mall with shops you can walk into, 15 characters, multiplayer (chat, emotes, dancing, hugs, throwing apples), baked lighting, English and Burmese, and live content: you edit shops, products, uploads and even the building at `/admin/`, and everyone sees the change within seconds. The live demo always runs the latest `main`; there are no versioned releases for now.
 > **Live demo:** <https://mall.devmtnaing.com> (Railway in Singapore, behind Cloudflare). **Docs:** <https://devmtnaing.github.io/shopping-mall/>. Self-host with `docker compose up`, or [deploy on Railway](https://railway.com/deploy/shopping-mall). See the [changelog](CHANGELOG.md) and the [roadmap](docs/roadmap.md).
 
 [![Gameplay: picking a character, walking the mall with other visitors, dancing, visiting a shop, the overview map, throwing apples and sitting on a bench](docs/media/gameplay.webp)](https://mall.devmtnaing.com)

@@ -125,7 +125,7 @@ The dates assume one full-time developer and one part-time 3D artist. Phases 2 a
 3D art for v1 uses **free CC0 kits** (Kenney, Quaternius, Poly Pizza). Higgsfield-generated assets come later, as file swaps (ADR 0006). We checked the licence: generated models may be committed.
 
 ## After v1.0 (P2 backlog)
-v1.0 shipped on 2026-09-29, then v1.1.0 and v1.1.1 on 2026-09-30 (see the [changelog](https://github.com/devmtnaing/shopping-mall/blob/main/CHANGELOG.md)). Still to do from v1: a check on a real Android phone (T-505).
+v1.0 shipped on 2026-09-29, with two rounds of improvements the next day (the [changelog](https://github.com/devmtnaing/shopping-mall/blob/main/CHANGELOG.md) has what changed). Since then the live demo simply runs the latest `main`. Still to do from v1: a check on a real Android phone (T-505).
 
 - Private rooms and invite links (the server already takes `?room=`; it needs an "Invite friends" button)
 - 3D product pedestals and product `.glb` viewer
@@ -134,6 +134,6 @@ v1.0 shipped on 2026-09-29, then v1.1.0 and v1.1.1 on 2026-09-30 (see the [chang
 - Proximity voice chat (WebRTC)
 - Outfit colour tints (the colour you pick also tints your character's clothes)
 - WebGPU renderer by default once it matches WebGL on the device matrix
-- Interior theme packs for tenants (mostly covered since v1.1.0: interiors follow the shop's category)
+- Interior theme packs for tenants (mostly covered: interiors follow the shop's category)
 - Demo content: fill the live demo's empty units with sample shops, so it doesn't look vacant
 - Realistic human characters and props, in place of the stylized ones (see the [plan](plans/realistic-characters.md))
