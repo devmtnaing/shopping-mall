@@ -102,7 +102,9 @@ export const api = {
     ),
   owners: () => call<OwnerInfo[]>('GET', '/api/owners'),
   inviteOwner: (shop: string, email: string) =>
-    call<{ token: string }>('POST', `/api/shops/${shop}/owner`, { email }),
+    call<{ token: string; emailed?: boolean; mailError?: string }>('POST', `/api/shops/${shop}/owner`, {
+      email,
+    }),
   removeOwner: (shop: string) => call<{ removed: string }>('DELETE', `/api/shops/${shop}/owner`),
   content: () => call<{ version: number; config: MallConfig; art?: MallArt | null }>('GET', '/api/content'),
   saveMall: (m: MallConfig['mall']) => call<{ version: number }>('PUT', '/api/mall', m),

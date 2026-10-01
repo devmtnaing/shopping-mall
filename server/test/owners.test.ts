@@ -6,6 +6,7 @@ import config from '../../mall.config';
 import { seedIfEmpty } from '../src/db/content';
 import type { Sql } from '../src/db/db';
 import { issueHostToken } from '../src/host';
+import type { Email, Mailer } from '../src/mail';
 import { startServer } from '../src/server';
 import { Storage } from '../src/storage';
 import { freshSchema, TEST_DB } from './db';
@@ -24,6 +25,16 @@ describe.runIf(TEST_DB && S3)('shop owners', () => {
   let server: Awaited<ReturnType<typeof startServer>>;
   let base = '';
   let ip = 0;
+  /** What the server emailed, and whether the next send fails. */
+  let mail: Email[] = [];
+  let mailFails = false;
+  const mailer: Mailer = {
+    name: 'test',
+    async send(email) {
+      if (mailFails) throw new Error('provider down');
+      mail.push(email);
+    },
+  };
   const call = (method: string, path: string, body?: unknown, headers: Record<string, string> = {}) =>
     fetch(base + path, {
       method,
@@ -58,12 +69,36 @@ describe.runIf(TEST_DB && S3)('shop owners', () => {
       secretAccessKey: process.env.TEST_S3_SECRET ?? 'mall-secret',
     });
     await storage.ensureBucket();
-    server = await startServer({ port: 0, db: db.sql, hostSecret: SECRET, storage });
+    mail = [];
+    mailFails = false;
+    server = await startServer({
+      port: 0,
+      db: db.sql,
+      hostSecret: SECRET,
+      storage,
+      mailer,
+      publicUrl: 'https://mall.example',
+    });
     base = `http://127.0.0.1:${server.port}`;
   });
   afterEach(async () => {
     await server.close();
     await db.drop();
+  });
+
+  it('emails the set-password link to the new owner, and says when it couldn’t', async () => {
+    const res = await call('POST', `/api/shops/${mine.id}/owner`, { email: 'owner@example.com' }, host);
+    const body = (await res.json()) as { token: string; emailed: boolean };
+    expect(body.emailed).toBe(true);
+    expect(mail).toHaveLength(1);
+    expect(mail[0]?.to).toBe('owner@example.com');
+    expect(mail[0]?.subject).toContain(mine.name);
+    expect(mail[0]?.text).toContain(`https://mall.example/admin/?invite=${body.token}`);
+
+    mailFails = true;
+    const again = await call('POST', `/api/shops/${mine.id}/owner`, { email: 'owner@example.com' }, host);
+    expect(again.status).toBe(201); // the link is still made, for the host to send by hand
+    expect(await again.json()).toMatchObject({ emailed: false, mailError: expect.any(String) });
   });
 
   it('invites by a one-time link, then signs in with email and password', async () => {

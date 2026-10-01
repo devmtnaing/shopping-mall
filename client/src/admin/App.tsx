@@ -255,7 +255,9 @@ function Admin() {
             rentals={rentals.value}
             slots={slots.value}
             shops={c.shops}
+            owners={owners.value}
             onChanged={loadRentals}
+            onOwnersChanged={loadOwners}
             onCreateShop={(a) => {
               prefill.value = a;
               editing.value = 'new';

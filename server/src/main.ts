@@ -2,6 +2,7 @@
 import { parseConfig } from '@shopping-mall/shared/config';
 import config from '../../mall.config.ts';
 import { openDatabase } from './db/index.ts';
+import { mailerFromEnv } from './mail.ts';
 import { startMetrics } from './metrics.ts';
 import { loadBlocklist } from './moderation.ts';
 import { startServer } from './server.ts';
@@ -29,6 +30,9 @@ const server = await startServer({
   reportWebhook: process.env.REPORT_WEBHOOK,
   rentalWebhook: process.env.RENTAL_WEBHOOK || undefined,
   hostSecret: process.env.HOST_SECRET || undefined,
+  // optional: email set-password links to shop owners (MAIL_PROVIDER, see mail.ts)
+  mailer: mailerFromEnv(),
+  publicUrl: process.env.PUBLIC_URL || undefined,
   db: db ?? undefined,
   fallbackContent: parseConfig(config),
   storage,

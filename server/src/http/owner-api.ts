@@ -19,6 +19,7 @@ import {
   removeOwner,
   setOwnerPassword,
 } from '../db/owners.ts';
+import { type Mailer, ownerInviteEmail } from '../mail.ts';
 import { hashPassword, issueOwnerToken, passwordMatches, readOwnerToken } from '../owners.ts';
 import type { Storage } from '../storage.ts';
 import { HttpError, json, readBody, readJson } from './util.ts';
@@ -41,10 +42,25 @@ export type OwnerApiOptions = {
   /** Rate limit for sign-in and set-password attempts. */
   allowSignIn: (req: IncomingMessage) => boolean;
   parse: <T>(schema: z.ZodType<T>, body: unknown) => T;
+  /** Emails set-password links to new owners; without it the host sends them by hand. */
+  mailer?: Mailer | null;
+  /** The mall's address for links in emails (PUBLIC_URL); defaults to the admin page's origin. */
+  publicUrl?: string;
 };
 
+/** Where a set-password link points: PUBLIC_URL, or the origin the host's /admin is open on. */
+function siteOrigin(req: IncomingMessage, publicUrl?: string): string | null {
+  const raw = publicUrl || req.headers.origin;
+  try {
+    const url = new URL(raw ?? '');
+    return url.protocol === 'https:' || url.protocol === 'http:' ? url.origin : null;
+  } catch {
+    return null;
+  }
+}
+
 export function ownerApi(opts: OwnerApiOptions) {
-  const { sql, secret, storage, allowSignIn, parse } = opts;
+  const { sql, secret, storage, allowSignIn, parse, mailer, publicUrl } = opts;
   const needSecret = () => {
     if (!secret) throw new HttpError(404, 'Shop owner sign-in is not set up on this server.');
     return secret;
@@ -168,12 +184,39 @@ export function ownerApi(opts: OwnerApiOptions) {
         z.object({ email: z.email('That email address doesn’t look right.').max(120) }),
         await readJson(req, 4096),
       );
-      json(res, 201, { token: await inviteOwner(sql, shop, email.trim()) });
+      const token = await inviteOwner(sql, shop, email.trim());
+      json(res, 201, { token, ...(await emailInvite(req, token)) });
     } else if (method === 'DELETE') {
       if (!(await removeOwner(sql, shop))) throw new HttpError(404, 'This shop has no owner.');
       json(res, 200, { removed: shop });
     } else throw new HttpError(405, 'Method not allowed.');
     return true;
+  }
+
+  /** Emails a new set-password link to its owner, if a mailer is set up. Never throws. */
+  async function emailInvite(
+    req: IncomingMessage,
+    token: string,
+  ): Promise<{ emailed: boolean; mailError?: string }> {
+    if (!mailer) return { emailed: false };
+    const origin = siteOrigin(req, publicUrl);
+    const invite = await inviteFor(sql, token);
+    if (!origin || !invite)
+      return { emailed: false, mailError: 'Couldn’t tell the mall’s address (set PUBLIC_URL).' };
+    try {
+      await mailer.send(
+        ownerInviteEmail({
+          to: invite.email,
+          shop: invite.name,
+          link: `${origin}/admin/?invite=${token}`,
+          days: OWNER_LIMITS.inviteDays,
+        }),
+      );
+      return { emailed: true };
+    } catch (e) {
+      console.warn(`mail (${mailer.name}) failed:`, (e as Error).message);
+      return { emailed: false, mailError: 'The email didn’t send. Copy the link and send it yourself.' };
+    }
   }
 
   return { ownerOf, publicRoute, ownerRoute, hostRoute };

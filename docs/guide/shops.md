@@ -52,7 +52,7 @@ To hear about applications straight away, set `RENTAL_WEBHOOK` on the server ([c
 
 ## Shop owners
 
-A tenant can look after their own shop. Open the shop in **Shops → Edit**, and under **Shop owner** type their email (the one from their approved rental application is filled in) and press **Invite owner**. You get a link to send them by email or WhatsApp; the mall doesn't send it for you. It works once, for 7 days.
+A tenant can look after their own shop. Once you've created the shop for an approved rental application, its card in **Rentals** has a **Shop owner** box with their email filled in; press **Invite owner**. (It's also at the bottom of **Shops → Edit**.) With [email set up](./config#email) the mall emails them a set-password link; otherwise `/admin` shows the link for you to send by email or WhatsApp. It works once, for 7 days.
 
 The link opens a page where they choose a password (8 characters or more). After that they sign in at `/admin/` with **I look after a shop**, their email and that password. Like your own sign-in, it lasts while the tab is open.
 

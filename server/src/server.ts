@@ -22,6 +22,7 @@ import { contentApi } from './http/content-api.ts';
 import { filesHandler } from './http/files.ts';
 import { CORS, json } from './http/util.ts';
 import { PerIpLimit, RateLimit } from './limits.ts';
+import type { Mailer } from './mail.ts';
 import { type Blocklist, containsBlocked, fileReport, maskBlocked } from './moderation.ts';
 import { plausibleMove } from './movement.ts';
 import { cleanChat, cleanName, uniqueName } from './names.ts';
@@ -66,6 +67,10 @@ export type ServerOptions = {
   rentalWebhook?: string;
   /** Enables the host role: typing this on the landing screen signs you in as host. */
   hostSecret?: string;
+  /** Emails set-password links to new shop owners (mail.ts); without it the host sends them. */
+  mailer?: Mailer | null;
+  /** The mall's public address (PUBLIC_URL), for links in emails. */
+  publicUrl?: string;
   /** Content database; without it there's no /api and clients use mall.config.ts. */
   db?: Sql;
   /** Public URL for an uploaded asset id (storage arrives in T-703). */
@@ -204,6 +209,8 @@ export async function startServer(opts: ServerOptions = {}) {
         secret: hostSecret,
         allow,
         onRental: (a) => void notifyRental(a, rentalWebhook),
+        mailer: opts.mailer,
+        publicUrl: opts.publicUrl,
         // tell every connected visitor that content changed (they refetch it)
         onChange: (version) => {
           for (const room of rooms.values()) room.broadcast({ t: 'content', version });

@@ -1,12 +1,15 @@
 // Rental applications from visitors who pressed E at a vacant unit. Approving one turns down the
-// others waiting for that unit; then "Create the shop" opens the editor with their details filled in.
+// others waiting for that unit; then "Create the shop" opens the editor with their details filled in,
+// and once the shop exists its card offers to invite the applicant as the shop's owner.
 
 import { useSignal } from '@preact/signals';
 import type { Shop } from '@shopping-mall/shared/config';
 import type { Slot } from '@shopping-mall/shared/meta';
+import type { OwnerInfo } from '@shopping-mall/shared/owners';
 import type { RentalApplication } from '@shopping-mall/shared/rentals';
 import { rentEn } from '../i18n/rent';
 import { api } from './api';
+import { OwnerAccess } from './OwnerAccess';
 import { slotLabel } from './ShopEditor';
 
 const when = (iso: string) =>
@@ -16,7 +19,9 @@ export function Rentals(props: {
   rentals: RentalApplication[];
   slots: Slot[];
   shops: Shop[];
+  owners: OwnerInfo[];
   onChanged: () => void;
+  onOwnersChanged: () => void;
   onCreateShop: (a: RentalApplication) => void;
 }) {
   const busy = useSignal<number | null>(null);
@@ -60,7 +65,8 @@ export function Rentals(props: {
       </header>
       <p class="hint">
         Visitors apply by pressing E at a vacant unit. Approve one per unit (the others waiting for it are
-        turned down), get in touch by email, then create their shop. Applicants aren't emailed automatically.
+        turned down), then create their shop and invite them as its owner: they get a link to set a password
+        and look after the shop themselves.
       </p>
       {error.value && (
         <p class="banner error" role="alert">
@@ -95,6 +101,14 @@ export function Rentals(props: {
                 )}
               </p>
               {taken && a.status !== 'rejected' && <p class="hint">This unit is now {taken.name}.</p>}
+              {taken && a.status === 'approved' && (
+                <OwnerAccess
+                  shop={taken.id}
+                  owner={props.owners.find((o) => o.shop === taken.id)}
+                  suggestedEmail={a.email}
+                  onChanged={props.onOwnersChanged}
+                />
+              )}
               <span class="actions">
                 {a.status === 'pending' && (
                   <>

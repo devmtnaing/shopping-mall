@@ -1,8 +1,10 @@
 // The host's control over who looks after a shop: invite its owner by email (a one-time link to set
-// a password, which the host sends them), make a fresh link, or take their access away.
+// a password, emailed when the server has a mailer, else sent by the host), make a fresh link, or
+// take their access away.
 
 import { useSignal } from '@preact/signals';
 import { OWNER_LIMITS, type OwnerInfo } from '@shopping-mall/shared/owners';
+import { useId } from 'preact/hooks';
 import { api } from './api';
 
 const STATUS: Record<OwnerInfo['status'], string> = {
@@ -23,6 +25,9 @@ export function OwnerAccess(props: {
   const error = useSignal('');
   const busy = useSignal(false);
   const copied = useSignal(false);
+  const id = useId(); // several of these can be on one page (one per approved rental)
+  /** Whether the server emailed the link, and why not if it tried. */
+  const sent = useSignal<{ emailed?: boolean; mailError?: string }>({});
 
   const invite = async (e: Event) => {
     e.preventDefault();
@@ -34,8 +39,9 @@ export function OwnerAccess(props: {
     busy.value = true;
     error.value = '';
     try {
-      const { token } = await api.inviteOwner(props.shop, email.value.trim());
+      const { token, emailed, mailError } = await api.inviteOwner(props.shop, email.value.trim());
       link.value = `${location.origin}/admin/?invite=${token}`;
+      sent.value = { emailed, mailError };
       copied.value = false;
       props.onChanged();
     } catch (x) {
@@ -57,8 +63,8 @@ export function OwnerAccess(props: {
   };
 
   return (
-    <section class="owner-access" aria-labelledby="owner-title">
-      <h3 id="owner-title">Shop owner</h3>
+    <section class="owner-access" aria-labelledby={`${id}-title`}>
+      <h3 id={`${id}-title`}>Shop owner</h3>
       <p class="hint">
         Let the tenant look after this shop themselves: name, tagline, colours, logo, links and up to{' '}
         {OWNER_LIMITS.products} products with photos. They can’t move units or touch other shops.
@@ -69,11 +75,11 @@ export function OwnerAccess(props: {
         </p>
       )}
       <form class="owner-row" onSubmit={invite}>
-        <label class="sr-only" for="owner-email">
+        <label class="sr-only" for={`${id}-email`}>
           Owner’s email
         </label>
         <input
-          id="owner-email"
+          id={`${id}-email`}
           type="email"
           required
           placeholder="owner@example.com"
@@ -96,11 +102,19 @@ export function OwnerAccess(props: {
       )}
       {link.value && (
         <div class="invite-link">
-          <p>
-            Send this link to <strong>{email.value}</strong> (email, WhatsApp…). It works once, for{' '}
-            {OWNER_LIMITS.inviteDays} days, and lets them set their password. The mall doesn’t send it for
-            you.
-          </p>
+          {sent.value.emailed ? (
+            <p role="status">
+              Emailed the link to <strong>{email.value}</strong>. It works once, for {OWNER_LIMITS.inviteDays}{' '}
+              days, and lets them set their password. If it doesn’t arrive, copy it and send it another way.
+            </p>
+          ) : (
+            <p>
+              {sent.value.mailError && <strong class="error">{sent.value.mailError} </strong>}
+              Send this link to <strong>{email.value}</strong> (email, WhatsApp…). It works once, for{' '}
+              {OWNER_LIMITS.inviteDays} days, and lets them set their password.
+              {!sent.value.mailError && ' The mall doesn’t email it: no mail service is set up.'}
+            </p>
+          )}
           <div class="owner-row">
             <input
               readOnly

@@ -18,6 +18,7 @@ import {
 } from '../db/content.ts';
 import type { Sql } from '../db/db.ts';
 import { decideRental, deleteRental, listRentals, saveRental, slotTaken } from '../db/rentals.ts';
+import type { Mailer } from '../mail.ts';
 import type { Storage } from '../storage.ts';
 import { ownerApi } from './owner-api.ts';
 import { bearer, CORS, HttpError, json, readBody, readJson } from './util.ts';
@@ -35,6 +36,10 @@ export type ContentApiOptions = {
   allow?: (req: IncomingMessage, what: 'rental' | 'sign-in') => boolean;
   /** A visitor applied to rent a unit (to tell the host). */
   onRental?: (application: RentalApplication) => void;
+  /** Sends set-password links to new shop owners (mail.ts). */
+  mailer?: Mailer | null;
+  /** PUBLIC_URL: the mall's address, for links in emails. */
+  publicUrl?: string;
 };
 
 const SHOP_ID = /^\/api\/shops\/([a-z0-9][a-z0-9-]*)$/;
@@ -51,8 +56,27 @@ function parse<T>(schema: z.ZodType<T>, body: unknown): T {
 
 /** Handle /api/* requests. Returns false if the path isn't ours. */
 export function contentApi(opts: ContentApiOptions) {
-  const { sql, assetUrl, isHost, onChange, storage, secret, allow = () => true, onRental } = opts;
-  const owners = ownerApi({ sql, secret, storage, parse, allowSignIn: (req) => allow(req, 'sign-in') });
+  const {
+    sql,
+    assetUrl,
+    isHost,
+    onChange,
+    storage,
+    secret,
+    allow = () => true,
+    onRental,
+    mailer,
+    publicUrl,
+  } = opts;
+  const owners = ownerApi({
+    sql,
+    secret,
+    storage,
+    parse,
+    mailer,
+    publicUrl,
+    allowSignIn: (req) => allow(req, 'sign-in'),
+  });
   const needStorage = () => {
     if (!storage) throw new HttpError(503, 'Uploads are not set up on this server (S3_* settings).');
     return storage;
