@@ -15,6 +15,7 @@ const apply = (over: Record<string, unknown> = {}) => ({
   name: 'Mya Mya',
   email: 'mya@example.com',
   business: 'Golden Tea',
+  kind: 'cafe',
   about: 'Tea leaf salad and milk tea.',
   ...over,
 });
@@ -49,16 +50,22 @@ describe.runIf(TEST_DB)('rental applications', () => {
     expect(res.status).toBe(201);
     expect((await fetch(`${base}/api/rentals`)).status).toBe(401);
     const [a] = await list();
-    expect(a).toMatchObject({ slot: 'e3', business: 'Golden Tea', phone: '09 123', status: 'pending' });
+    expect(a).toMatchObject({
+      slot: 'e3',
+      business: 'Golden Tea',
+      kind: 'cafe',
+      phone: '09 123',
+      status: 'pending',
+    });
     // not mall content: the version doesn't move
     expect((await fetch(`${base}/api/content`)).headers.get('etag')).toBe('"v1"');
   });
 
   it('rejects bad fields with their paths, and units that are taken', async () => {
-    const bad = await post(apply({ email: 'nope', business: '' }));
+    const bad = await post(apply({ email: 'nope', business: '', kind: 'casino' }));
     expect(bad.status).toBe(400);
     const body = (await bad.json()) as { fields: { path: string }[] };
-    expect(body.fields.map((f) => f.path).sort()).toEqual(['business', 'email']);
+    expect(body.fields.map((f) => f.path).sort()).toEqual(['business', 'email', 'kind']);
     expect((await post(apply({ slot: taken }))).status).toBe(409);
     expect(await list()).toEqual([]);
   });

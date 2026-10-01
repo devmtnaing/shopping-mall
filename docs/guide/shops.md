@@ -15,7 +15,7 @@ Go to `/admin/` on your mall (for example <http://localhost:8080/admin/>) and en
 | Name, tagline | On the sign and at the top of the shop's panel. Name up to 40 characters. |
 | ID | Used in links (`?s=lumen-coffee`). Lowercase letters, digits and dashes. |
 | Unit | Which storefront the shop takes. Taken units are marked. `w0` to `w5` are on the left as you walk in and `e0` to `e5` on the right, `u-` means upstairs, and `flagship` is the big store at the far end ([map](../greybox)). |
-| Category | Groups shops in the directory, and picks the furniture inside: a café gets tables and a coffee bar, a bookshop gets bookcases, and so on. "For rent" leaves the unit empty. |
+| Category | Groups shops in the directory, and picks the furniture inside: a café gets tables and a coffee bar, a bookshop gets bookcases, and so on. "For rent" leaves the unit empty. The editor shows a plan of the unit with that furniture. |
 | Sign colour, accent | The sign background and the highlight colour used in the panel. |
 | Logo | Upload a PNG, JPEG or WebP (up to 2 MB), or paste a URL. |
 | Description, features | The panel text, and up to 8 feature lines. |
@@ -41,11 +41,11 @@ The visitor's browser fetches it when they open the shop, so the feed has to all
 
 ## Renting out empty units
 
-Every empty unit's sign says **Coming soon · Unit available · Come and rent it**. A visitor who walks up to one and presses **E** (or taps **Rent this unit**) gets a short form: shop name, their name, email, an optional phone number and what they'd sell. Nothing needs uploading; logos and products come later, when you create the shop.
+Every empty unit's sign says **Coming soon · Unit available · Come and rent it**. A visitor who walks up to one and presses **E** (or taps **Rent this unit**) gets a short form: shop name, type of shop (café, books, fashion, home, games or something else), their name, email, an optional phone number and what they'd sell. Choosing a type shows a plan of how that unit would be furnished, drawn from the same layouts the mall uses. Nothing needs uploading; logos and products come later, when you create the shop.
 
 Applications arrive in **Rentals**, which shows a count of waiting ones (in the page title too, so you notice from another tab). It checks for new ones every 30 seconds. Several people can apply for the same unit:
 
-- **Approve** one and the others waiting for that unit are turned down. Then contact them by email (the mall doesn't email applicants), and **Create the shop** opens the editor with their unit, name and description filled in.
+- **Approve** one and the others waiting for that unit are turned down. Then contact them by email (the mall doesn't email applicants), and **Create the shop** opens the editor with their unit, name, description and a category for their type of shop filled in, so the unit gets that type's furniture.
 - **Turn down** declines one application. **Delete** removes a decided one for good.
 
 To hear about applications straight away, set `RENTAL_WEBHOOK` on the server ([configuration](./config)). Each application is POSTed there with a one-line summary in `text` and `content`, so a Slack or Discord incoming webhook shows it as a message. A visitor can send 3 applications, then one every 20 minutes.

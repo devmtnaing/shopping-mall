@@ -4,7 +4,10 @@ import { useSignal } from '@preact/signals';
 import type { Shop } from '@shopping-mall/shared/config';
 import type { Slot } from '@shopping-mall/shared/meta';
 import { useEffect, useRef } from 'preact/hooks';
+import { rentEn } from '../i18n/rent';
 import { paintSign } from '../render/signs';
+import { InteriorPlan } from '../ui/InteriorPlan';
+import { layoutFor } from '../world/layouts';
 import { type ApiError, api, type FieldError, fileUrl } from './api';
 import { Area, Color, errorFor, Select, slug, Text } from './fields';
 
@@ -110,6 +113,33 @@ function SignPreview({ d, aspect }: { d: Draft; aspect: number }) {
   return <div class="sign-preview" ref={host} />;
 }
 
+/** What the category puts inside the unit, as a plan from above. */
+function InteriorPreview({ slot, category, accent }: { slot?: Slot; category: string; accent: string }) {
+  const layout = layoutFor({ category: category.trim() || undefined });
+  return (
+    <figure class="interior-preview">
+      <figcaption>
+        <strong>Inside the shop</strong>
+        <small>
+          {layout
+            ? `${rentEn[`plan.${layout}`]} Categories with “food”, “book”, “fashion”, “home” or “game” get their own furniture; anything else gets shelves.`
+            : 'Left empty: the category says it’s for rent.'}
+        </small>
+      </figcaption>
+      {slot && layout ? (
+        <InteriorPlan
+          slot={slot}
+          layout={layout}
+          accent={accent}
+          label={`Plan of the unit: ${rentEn[`plan.${layout}`]}`}
+        />
+      ) : (
+        !slot && <small class="hint">Choose a unit to see the plan.</small>
+      )}
+    </figure>
+  );
+}
+
 function Upload({ kind, label, onDone }: { kind: string; label: string; onDone: (url: string) => void }) {
   const busy = useSignal(false);
   const error = useSignal('');
@@ -144,7 +174,7 @@ function Upload({ kind, label, onDone }: { kind: string; label: string; onDone: 
 export function ShopEditor(props: {
   shop?: Shop;
   /** For a new shop: details to start from (an approved rental application). */
-  prefill?: { slot: string; name: string; description: string };
+  prefill?: { slot: string; name: string; category: string; description: string };
   slots: Slot[];
   taken: Map<string, string>;
   onSaved: () => void;
@@ -157,6 +187,7 @@ export function ShopEditor(props: {
       : {
           ...toDraft(),
           slot: props.prefill.slot,
+          category: props.prefill.category,
           // trimmed to what a shop allows; the host edits from here
           name: props.prefill.name.slice(0, 40),
           id: slug(props.prefill.name),
@@ -253,6 +284,7 @@ export function ShopEditor(props: {
           label="Category"
           value={v.category}
           placeholder="Food & drink"
+          hint="Picks the furniture inside (see the plan below)."
           onInput={(category) => set({ category })}
         />
         <Text
@@ -272,6 +304,8 @@ export function ShopEditor(props: {
           />
         </div>
       </div>
+
+      <InteriorPreview slot={slot} category={v.category} accent={v.accent} />
 
       <div class="field">
         <span class="label">Logo</span>

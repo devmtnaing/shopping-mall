@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { en, type Key } from '../src/i18n/en';
 import { my } from '../src/i18n/my';
+import { type RentKey, rentEn, rentMy } from '../src/i18n/rent';
 import { translate } from '../src/i18n/translate';
 
 const placeholders = (s: string) => [...s.matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort();
@@ -19,6 +20,11 @@ describe('translate', () => {
 describe('Burmese table', () => {
   it('translates every English string', () => {
     const missing = (Object.keys(en) as Key[]).filter((k) => !my[k]);
+    expect(missing).toEqual([]);
+  });
+
+  it('translates every rental-form string', () => {
+    const missing = (Object.keys(rentEn) as RentKey[]).filter((k) => !rentMy[k]?.trim());
     expect(missing).toEqual([]);
   });
 

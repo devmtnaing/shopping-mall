@@ -1,6 +1,6 @@
 // Rental applications (migrations/004_rentals.sql). Visitors apply for a vacant unit; the host
 // approves one per unit, which turns down everyone else still waiting for that unit.
-import type { RentalApplication, RentalRequest, RentalStatus } from '@shopping-mall/shared/rentals';
+import type { RentalApplication, RentalRequest, RentalStatus, ShopKind } from '@shopping-mall/shared/rentals';
 import type { Sql } from './db.ts';
 
 type Row = {
@@ -10,6 +10,7 @@ type Row = {
   email: string;
   phone: string | null;
   business: string;
+  kind: ShopKind;
   about: string;
   status: RentalStatus;
   created_at: Date;
@@ -23,6 +24,7 @@ const toApplication = (r: Row): RentalApplication => ({
   email: r.email,
   ...(r.phone ? { phone: r.phone } : {}),
   business: r.business,
+  kind: r.kind,
   about: r.about,
   status: r.status,
   createdAt: r.created_at.toISOString(),
@@ -36,8 +38,10 @@ export async function slotTaken(sql: Sql, slot: string): Promise<boolean> {
 }
 
 export async function saveRental(sql: Sql, r: RentalRequest): Promise<RentalApplication> {
-  const [row] = await sql<Row[]>`insert into rental_applications (slot, name, email, phone, business, about)
-    values (${r.slot}, ${r.name}, ${r.email}, ${r.phone || null}, ${r.business}, ${r.about})
+  const [row] = await sql<
+    Row[]
+  >`insert into rental_applications (slot, name, email, phone, business, kind, about)
+    values (${r.slot}, ${r.name}, ${r.email}, ${r.phone || null}, ${r.business}, ${r.kind}, ${r.about})
     returning *`;
   return toApplication(row as Row);
 }

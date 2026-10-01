@@ -879,6 +879,25 @@ a.product:hover {
   resize: vertical;
   line-height: 1.45;
 }
+.rent-plan {
+  margin: 0;
+  display: grid;
+  gap: 8px;
+}
+.plan {
+  display: block;
+  width: 100%;
+  max-height: 260px;
+}
+.rent-plan-hint {
+  display: block;
+  margin-top: 2px;
+  font-size: 13px;
+}
+#ui .rent select {
+  pointer-events: auto;
+  appearance: auto;
+}
 .rent-trap {
   position: absolute;
   left: -9999px;

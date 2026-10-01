@@ -5,6 +5,7 @@ import { useSignal } from '@preact/signals';
 import type { MallConfig, Shop } from '@shopping-mall/shared/config';
 import type { MallArt, MallMeta } from '@shopping-mall/shared/meta';
 import type { RentalApplication } from '@shopping-mall/shared/rentals';
+import { CATEGORY_FOR_KIND } from '@shopping-mall/shared/shop-kinds';
 import { render } from 'preact';
 import { useEffect } from 'preact/hooks';
 import { Assets } from './Assets';
@@ -174,7 +175,12 @@ function Admin() {
             shop={editing.value === 'new' ? undefined : editing.value}
             prefill={
               editing.value === 'new' && prefill.value
-                ? { slot: prefill.value.slot, name: prefill.value.business, description: prefill.value.about }
+                ? {
+                    slot: prefill.value.slot,
+                    name: prefill.value.business,
+                    category: CATEGORY_FOR_KIND[prefill.value.kind],
+                    description: prefill.value.about,
+                  }
                 : undefined
             }
             slots={slots.value}

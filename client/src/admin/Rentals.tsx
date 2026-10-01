@@ -5,6 +5,7 @@ import { useSignal } from '@preact/signals';
 import type { Shop } from '@shopping-mall/shared/config';
 import type { Slot } from '@shopping-mall/shared/meta';
 import type { RentalApplication } from '@shopping-mall/shared/rentals';
+import { rentEn } from '../i18n/rent';
 import { api } from './api';
 import { slotLabel } from './ShopEditor';
 
@@ -76,7 +77,7 @@ export function Rentals(props: {
                 <span>
                   <strong>{a.business}</strong>
                   <small>
-                    {unit(a.slot)} · {when(a.createdAt)}
+                    {rentEn[`kind.${a.kind}`]} · {unit(a.slot)} · {when(a.createdAt)}
                   </small>
                 </span>
                 <span class={`status ${a.status}`}>

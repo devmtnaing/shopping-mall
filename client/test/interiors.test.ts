@@ -7,6 +7,7 @@ import { describe, expect, it } from 'vitest';
 import config from '../../mall.config';
 import { castRay } from '../src/player/raycast';
 import { furnish, layoutFor } from '../src/world/interiors';
+import { unitItems, unitSize } from '../src/world/layouts';
 import type { PropIndex } from '../src/world/props';
 import { collider, greybox } from './greybox';
 
@@ -95,5 +96,23 @@ describe('shop interiors', () => {
         for (const b of big.obstacles)
           expect(b.clone().expandByScalar(PLAYER.radius).containsPoint(at)).toBe(false);
       }
+  });
+
+  it('plans every rental type for every unit, the same furniture the mall places', () => {
+    const e4 = meta.slots.find((s) => s.id === 'e4');
+    if (!e4) throw new Error('no unit e4');
+    const { depth, width } = unitSize(e4);
+    expect(depth).toBeGreaterThan(4);
+    expect(width).toBeGreaterThan(4);
+    for (const layout of ['cafe', 'books', 'fashion', 'home', 'games', 'store'] as const) {
+      const items = unitItems(layout, depth, width);
+      expect(items.length, layout).toBeGreaterThan(2);
+      for (const it of items) expect(known.has(it.kind), it.kind).toBe(true);
+    }
+    // a shop in e4 gets exactly the plan's furniture
+    const cafe = { ...shops[0], slot: 'e4', category: 'Food & drink' } as (typeof shops)[number];
+    expect(furnish(meta, [cafe], index.footprints).placements.map((p) => p.kind)).toEqual(
+      unitItems('cafe', depth, width).map((it) => it.kind),
+    );
   });
 });
