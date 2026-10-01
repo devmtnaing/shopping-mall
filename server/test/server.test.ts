@@ -352,6 +352,32 @@ describe('uniqueName', () => {
   });
 });
 
+describe('floods', () => {
+  const get = (path: string, ip?: string) =>
+    fetch(`http://127.0.0.1:${server.port}${path}`, { headers: ip ? { 'X-Client-IP': ip } : {} });
+
+  it('answers 429 once one address sends too many requests, but never for /health', async () => {
+    await server.close();
+    server = await startServer({ port: 0, requestLimit: { burst: 5, perSecond: 0.001 } });
+    const codes = [];
+    for (let i = 0; i < 7; i++) codes.push((await get('/nope', '1.1.1.1')).status);
+    expect(codes).toEqual([404, 404, 404, 404, 404, 429, 429]);
+    const res = await get('/nope', '1.1.1.1');
+    expect(res.headers.get('retry-after')).toBe('5');
+    expect((await get('/health', '1.1.1.1')).status).toBe(200);
+    expect((await get('/nope', '2.2.2.2')).status).toBe(404); // someone else is fine
+  });
+
+  it('refuses new sockets from an address that keeps opening them', async () => {
+    await server.close();
+    server = await startServer({ port: 0, maxPerIp: 100, connectLimit: { burst: 2, perSecond: 0.001 } });
+    await client(undefined, '3.3.3.3').join('Aa');
+    await client(undefined, '3.3.3.3').join('Bb');
+    await expect(client(undefined, '3.3.3.3').open()).rejects.toThrow(/429/);
+    await client(undefined, '4.4.4.4').join('Cc'); // someone else is fine
+  });
+});
+
 describe('limits', () => {
   it('turns people away once the mall is full, and lets them in when someone leaves', async () => {
     await server.close();

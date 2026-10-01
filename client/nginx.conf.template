@@ -26,6 +26,13 @@ map "${CLIENT_IP_FROM}" $client_ip {
   default $remote_addr;
 }
 
+# Floods (docs/deploy.md, "Abuse and floods"): requests to the server, per visitor IP, are let
+# through at 20 a second with bursts of 60, and the rest answered 429 here, before they reach Node.
+# The server keeps its own, finer limits behind this (rentals, sign-ins, sockets). Static files
+# aren't limited: they're cheap, and Cloudflare caches them.
+limit_req_zone $client_ip zone=perip:10m rate=20r/s;
+limit_req_status 429;
+
 # Files under /assets/ (models, sounds, portraits) are asked for with a fingerprint of their
 # contents (?v=…, client/src/assets.ts): those never change, so caches (Cloudflare, browsers) keep
 # them for good. Asked for without one, they're checked every time.
@@ -46,6 +53,9 @@ server {
   set $api http://${API_UPSTREAM};
   # asset uploads go through to the server (models are up to 25 MB)
   client_max_body_size 30m;
+  # slow-request floods (slowloris): headers within 15 s, and no 30 s pause while sending a body
+  client_header_timeout 15s;
+  client_body_timeout 30s;
 
   # content-hashed build files (name-AbCd1234.js) never change: cache for a year.
   # Un-hashed files (the mall model under /assets/mall/) are revalidated instead.
@@ -69,6 +79,7 @@ server {
 
   # multiplayer server on the same origin
   location /ws {
+    limit_req zone=perip burst=60 nodelay;
     proxy_pass $api;
     proxy_http_version 1.1;
     proxy_set_header Upgrade $http_upgrade;
@@ -79,9 +90,12 @@ server {
   }
   # the shop directory is rendered live by the server from the database
   location = /directory/ {
+    limit_req zone=perip burst=60 nodelay;
     proxy_pass $api;
+    proxy_set_header X-Client-IP $client_ip;
   }
   location ~ ^/(health|host-token|api/|files/) {
+    limit_req zone=perip burst=60 nodelay;
     proxy_pass $api;
     proxy_set_header X-Forwarded-For $remote_addr;
     proxy_set_header X-Client-IP $client_ip;

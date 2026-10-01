@@ -36,4 +36,11 @@ describe('usage events', () => {
     expect((await post(JSON.stringify([{ e: 'visit' }]))).status).toBe(204);
     expect(lines).toEqual([]);
   });
+
+  it('logs 10 batches from one address at once, then drops the rest (still 204)', async () => {
+    const lines: string[] = [];
+    server = await startServer({ port: 0, eventLog: (l) => lines.push(l) });
+    for (let i = 0; i < 15; i++) expect((await post(JSON.stringify([{ e: 'visit' }]))).status).toBe(204);
+    expect(lines).toHaveLength(10);
+  });
 });

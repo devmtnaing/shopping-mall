@@ -49,6 +49,18 @@ describe.runIf(TEST_DB)('content API', () => {
     expect(again.status).toBe(304);
   });
 
+  it('serves the content and the directory from memory until something changes', async () => {
+    const read = async () =>
+      ((await (await fetch(`${base}/api/content`)).json()) as { version: number }).version;
+    const page = async () => (await fetch(`${base}/directory/`)).text();
+    expect(await read()).toBe(1);
+    expect(await page()).not.toContain('New Shop');
+    expect(await read()).toBe(1); // cached
+    expect((await put('/api/shops/new-shop', shop)).status).toBe(200);
+    expect(await read()).toBe(2);
+    expect(await page()).toContain('New Shop');
+  });
+
   it('refuses writes without a valid host token', async () => {
     expect((await put('/api/shops/new-shop', shop, { 'Content-Type': 'application/json' })).status).toBe(401);
     const forged = { ...host, Authorization: `Bearer ${issueHostToken('wrong-secret')}` };
