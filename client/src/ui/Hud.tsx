@@ -5,7 +5,17 @@ import { soundOn, toggleSound } from '../audio';
 import { content } from '../content';
 import { locales, nextLocale, setLocale, t, zoneName } from '../i18n';
 import { linkUrl } from '../links';
-import { mallMeta, netStatus, overview, pose, roomCount, viewFloor, zone } from '../state';
+import {
+  idleWarning,
+  mallMeta,
+  netStatus,
+  overview,
+  parkedFor,
+  pose,
+  roomCount,
+  viewFloor,
+  zone,
+} from '../state';
 import { IconExpand, IconGlobe, IconMuted, IconShare, IconSound } from './icons';
 import { share } from './share';
 
@@ -66,9 +76,24 @@ export function OverviewFloors() {
   );
 }
 
-/** Shown only when you're not with everyone: reconnecting, offline, or the mall is full (solo). */
+/**
+ * Shown only when you're not with everyone (reconnecting, offline, the mall is full, or you were
+ * taken out for being idle), or about to be (the idle warning).
+ */
 export function NetNotice() {
   const s = netStatus.value;
+  if (idleWarning.value)
+    return (
+      <div class="net-notice glass" role="alert">
+        {t('net.idleWarning')}
+      </div>
+    );
+  if (s === 'parked' && parkedFor.value === 'idle')
+    return (
+      <div class="net-notice glass" role="status">
+        {t('net.parkedIdle')}
+      </div>
+    );
   if (s !== 'reconnecting' && s !== 'offline' && s !== 'full') return null;
   return (
     <div class="net-notice glass" role="status">

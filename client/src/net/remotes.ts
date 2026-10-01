@@ -39,6 +39,14 @@ export class Remotes {
     this.version++;
   }
 
+  /** Someone's tab went to the background a while (or they're back). */
+  away(id: number, away: boolean) {
+    const r = this.players.get(id);
+    if (!r) return;
+    r.info = { ...r.info, away };
+    this.version++;
+  }
+
   /** Someone changed character or colour. */
   look(id: number, look: PlayerInfo['look']) {
     const r = this.players.get(id);

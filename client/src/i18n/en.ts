@@ -98,6 +98,8 @@ export const en = {
   'net.reconnecting': 'Reconnecting…',
   'net.offline': 'Offline · exploring on your own',
   'chat.earlier': 'Earlier in the mall:',
+  'net.idleWarning': "Still there? Move or say something, or you'll leave the mall in a minute.",
+  'net.parkedIdle': 'You left the mall after a long time without moving · move to come back',
   'net.full': "The mall is full · exploring on your own until there's space",
   'net.fullToast':
     "The mall is full right now, so you're exploring on your own. You'll join everyone as soon as there's space.",

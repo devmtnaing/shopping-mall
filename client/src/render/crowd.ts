@@ -212,7 +212,8 @@ export class Crowd {
     this.cell.setXY(i, (c % COLS) / COLS, 1 - (Math.floor(c / COLS) + 1) / ROWS);
     const d = camera.position.distanceTo(pos.set(p.x, p.y + TAG_Y, p.z));
     const fade = 1 - Math.min(1, Math.max(0, (d - FADE_START) / (FADE_END - FADE_START)));
-    this.alpha.setX(i, r.info.name ? fade : 0);
+    // someone whose tab is in the background shows faintly
+    this.alpha.setX(i, r.info.name ? fade * (r.info.away ? 0.35 : 1) : 0);
   }
 
   /** Free the cells of people who left or went out of view, so newcomers can use them. */

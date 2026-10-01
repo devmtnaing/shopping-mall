@@ -10,7 +10,8 @@ import {
 } from '@shopping-mall/shared/protocol';
 
 /** `full`: the server turned us away (the mall is full); we explore alone and ask again now and then. */
-export type NetStatus = 'off' | 'connecting' | 'online' | 'reconnecting' | 'offline' | 'full';
+/** `parked`: the server took us out (tab in the background, or idle too long); see `parkedFor`. */
+export type NetStatus = 'off' | 'connecting' | 'online' | 'reconnecting' | 'offline' | 'full' | 'parked';
 
 /** Retry delay for the nth failed attempt: 0.5, 1, 2, 4, 8, 8… seconds, ±20 % jitter. */
 export function backoff(attempt: number, random = Math.random): number {
@@ -42,6 +43,8 @@ export class NetClient {
   private retry: ReturnType<typeof setTimeout> | null = null;
   /** The server said no (full, or too many connections from here) before letting us in. */
   private refused = false;
+  /** Why the server took us out of the mall, while parked: we wait for `rejoin()`, not retry. */
+  parkedFor: 'away' | 'idle' | null = null;
   private join: { name: string; look: Look; hostToken?: string } | null = null;
   private seq = 0;
   private readonly inputBuf = new ArrayBuffer(INPUT_BYTES);
@@ -73,6 +76,15 @@ export class NetClient {
     this.ws = null;
     ws?.close(1000);
     this.setStatus('off');
+  }
+
+  /** Back after being parked (the tab's visible again, or you moved): join the mall again. */
+  rejoin() {
+    if (this.status !== 'parked') return;
+    this.parkedFor = null;
+    this.attempt = 0;
+    this.setStatus('connecting');
+    this.open();
   }
 
   sendInput(pose: Pose) {
@@ -108,6 +120,10 @@ export class NetClient {
     ws.onclose = () => {
       if (this.ws !== ws) return; // we closed it on purpose
       this.ws = null;
+      if (this.parkedFor) {
+        this.setStatus('parked');
+        return;
+      }
       if (this.refused) {
         this.refused = false;
         this.setStatus('full');
@@ -128,6 +144,7 @@ export class NetClient {
       return;
     }
     if (msg.t === 'error' && (msg.code === 'full' || msg.code === 'busy')) this.refused = true;
+    if (msg.t === 'error' && (msg.code === 'away' || msg.code === 'idle')) this.parkedFor = msg.code;
     if (msg.t === 'welcome') {
       this.selfId = msg.id;
       this.room = msg.room;

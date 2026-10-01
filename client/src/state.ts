@@ -58,7 +58,11 @@ export type DialogId = 'help' | 'directory' | 'character';
 export const dialog = signal<DialogId | null>(null);
 
 /** Multiplayer connection state (see net/socket.ts) and how many people are in your room. */
-export type NetState = 'off' | 'connecting' | 'online' | 'reconnecting' | 'offline' | 'full';
+export type NetState = 'off' | 'connecting' | 'online' | 'reconnecting' | 'offline' | 'full' | 'parked';
+/** Why you were taken out of the mall, while parked. */
+export const parkedFor = signal<'away' | 'idle' | null>(null);
+/** You've been idle so long you'll leave the mall soon, unless you move or say something. */
+export const idleWarning = signal(false);
 export const netStatus = signal<NetState>('off');
 export const roomCount = signal(0);
 

@@ -124,7 +124,8 @@ function toView(data: ArrayBufferView | ArrayBuffer): DataView {
 
 /** How a visitor looks: which character (shared/src/avatars.ts) and their colour (name tag, minimap). */
 export type Look = { color: string; avatar?: string };
-export type PlayerInfo = { id: number; name: string; look: Look; host?: boolean };
+/** `away`: their tab has been in the background a while (their name tag dims). */
+export type PlayerInfo = { id: number; name: string; look: Look; host?: boolean; away?: boolean };
 
 export type ClientMessage =
   | { t: 'join'; name: string; look: Look; resume?: string; hostToken?: string }
@@ -153,13 +154,21 @@ export type ServerMessage =
   | { t: 'throw'; id: number; o: [number, number, number]; v: [number, number, number] }
   /** Someone in the room changed character or colour. */
   | { t: 'look'; id: number; look: Look }
+  /** Someone's tab went to the background a while ago (away), or they're back. */
+  | { t: 'away'; id: number; away: boolean }
+  /** You haven't moved or said anything for a long time: you'll leave the mall in `seconds`. */
+  | { t: 'idle'; seconds: number }
   | { t: 'announce'; text: string }
   /** Shops or mall details changed: refetch /api/content if your version is older. */
   | { t: 'content'; version: number }
-  /** `full`: the mall has as many people as it takes. `busy`: too many connections from one place. */
+  /**
+   * `full`: the mall has as many people as it takes. `busy`: too many connections from one place.
+   * `away` and `idle`: you were taken out of the mall (your tab was in the background, or you'd been
+   * idle a long time); the client rejoins when you're back.
+   */
   | {
       t: 'error';
-      code: 'bad-name' | 'rate' | 'full' | 'busy' | 'bad-token' | 'bad-message';
+      code: 'bad-name' | 'rate' | 'full' | 'busy' | 'away' | 'idle' | 'bad-token' | 'bad-message';
       message: string;
     };
 

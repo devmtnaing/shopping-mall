@@ -23,6 +23,7 @@ You can run the whole mall two ways: with **docker compose** on any machine, or 
 | `PORT` | Default 8787. |
 | `MAX_PLAYERS`, `MAX_PER_IP` | The most people in the mall at once (default 20), and connections per IP address (default 5). |
 | `CHAT_KEEP_DAYS` | Days of chat history to keep (default 30). |
+| `AWAY_AFTER_S`, `DROP_SILENT_S`, `IDLE_KICK_MIN` | When someone shows as away (15 s), leaves because their tab is in the background (120 s), or leaves for being idle (15 min, `0` for never). See the [configuration guide](guide/config). |
 | `ROOM_CAPACITY`, `REPORT_WEBHOOK`, `BLOCKLIST_FILE`, `METRICS` | Optional, see `.env.example`. |
 
 **web**

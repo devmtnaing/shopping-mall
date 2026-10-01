@@ -366,3 +366,74 @@ describe('limits', () => {
     expect(wb.chat?.map((c) => [c.name, c.text])).toEqual([['Aye', 'hello mall']]);
   });
 });
+
+describe('away and idle', () => {
+  const quick = { port: 0, presenceMs: 50, sweepMs: 25, awayAfterMs: 150, dropSilentMs: 600 };
+  /** Keep sending input from `c` at `pose` every 40 ms (like a visible tab) until stopped. */
+  const keepSending = (c: TestClient, pose: () => Pose) => {
+    let seq = 0;
+    const t = setInterval(() => c.ws.readyState === 1 && c.ws.send(encodeInput(seq++, pose())), 40);
+    return () => clearInterval(t);
+  };
+
+  it('shows someone whose tab went quiet as away, and back again when it wakes', async () => {
+    await server.close();
+    server = await startServer({ ...quick, idleKickMs: 0 });
+    const watcher = client();
+    await watcher.join('Watch');
+    const stopWatcher = keepSending(watcher, () => at(0, 0));
+    const sleeper = client();
+    const ws = await sleeper.join('Sleepy');
+    sleeper.ws.send(encodeInput(0, at(2, 0))); // one input, then the tab goes to the background
+    expect(await watcher.waitFor((m) => m.t === 'away' && m.id === ws.id)).toMatchObject({ away: true });
+    sleeper.ws.send(encodeInput(1, at(2, 0))); // back
+    expect(await watcher.waitFor((m) => m.t === 'away' && m.id === ws.id && !m.away)).toMatchObject({
+      away: false,
+    });
+    stopWatcher();
+  });
+
+  it('takes someone silent for too long out of the mall, so their place frees up', async () => {
+    await server.close();
+    server = await startServer({ ...quick, idleKickMs: 0, maxPlayers: 1 });
+    const gone = client();
+    await gone.join('Gone');
+    gone.ws.send(encodeInput(0, at(1, 0)));
+    expect(await gone.waitFor((m) => m.t === 'error', 2000)).toMatchObject({ code: 'away' });
+    await until(() => gone.closed !== null);
+    expect(gone.closed?.code).toBe(4003);
+    expect((await client().join('Next')).room).toBe('main'); // the place is free again
+  });
+
+  it('warns someone idle, then takes them out; moving keeps you in', async () => {
+    await server.close();
+    server = await startServer({ ...quick, dropSilentMs: 60_000, idleKickMs: 61_000 }); // warned at once
+    const still = client();
+    await still.join('Still');
+    const stopStill = keepSending(still, () => at(1, 0)); // visible, but never moves
+    const mover = client();
+    await mover.join('Mover');
+    let x = 0;
+    const stopMover = keepSending(mover, () => {
+      x += 0.05; // walking
+      return at(x, 3);
+    });
+    expect(await still.waitFor((m) => m.t === 'idle')).toMatchObject({ t: 'idle' });
+    await sleep(300);
+    expect(mover.messages.some((m) => m.t === 'idle')).toBe(false);
+    stopStill();
+    stopMover();
+  });
+
+  it('takes out someone idle once their time is up', async () => {
+    await server.close();
+    server = await startServer({ ...quick, dropSilentMs: 60_000, idleKickMs: 400 });
+    const still = client();
+    await still.join('Still');
+    const stop = keepSending(still, () => at(1, 0));
+    expect(await still.waitFor((m) => m.t === 'error', 3000)).toMatchObject({ code: 'idle' });
+    await until(() => still.closed !== null);
+    expect(still.closed?.code).toBe(4004);
+    stop();
+  });
+});

@@ -25,9 +25,11 @@ import {
   addChat,
   announcement,
   hostToken,
+  idleWarning,
   muted,
   netStatus,
   others,
+  parkedFor,
   phase,
   profile,
   roomCount,
@@ -70,6 +72,8 @@ export function createMultiplayer(opts: {
     status: (s) => {
       // turned away: say so once, clearly (the notice at the top then stays while it's full)
       if (s === 'full' && netStatus.value !== 'full') toast(t('net.fullToast'), 6000);
+      parkedFor.value = s === 'parked' ? net.parkedFor : null;
+      if (s !== 'online') idleWarning.value = false;
       netStatus.value = s;
     },
     message: (m) => {
@@ -88,6 +92,11 @@ export function createMultiplayer(opts: {
         return bubbles.show(m.id === net.selfId ? 'me' : m.id, m.e, true);
       }
       if (m.t === 'look') return remotes.look(m.id, m.look);
+      if (m.t === 'away') return remotes.away(m.id, m.away);
+      if (m.t === 'idle') {
+        idleWarning.value = true;
+        return;
+      }
       if (m.t === 'throw') {
         if (m.id === net.selfId || muted.value.has(m.id)) return; // yours is already in the air
         // their apple is already on its way: swing their arm through from the moment it left the hand
@@ -157,6 +166,10 @@ export function createMultiplayer(opts: {
     if (phase.value === 'playing') connect();
   });
   addEventListener('pagehide', () => net.disconnect()); // leave promptly, don't wait out the grace period
+  // back on the tab after the server took you out for being away: join again straight away
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && net.status === 'parked' && net.parkedFor === 'away') net.rejoin();
+  });
   addEventListener('pageshow', (e) => {
     if (e.persisted && phase.value === 'playing') connect(); // restored from the back/forward cache
   });
@@ -183,10 +196,14 @@ export function createMultiplayer(opts: {
 
   return {
     net,
-    sendChat: (text: string) => net.send({ t: 'chat', text }),
+    sendChat: (text: string) => {
+      idleWarning.value = false; // saying something counts as being here
+      net.send({ t: 'chat', text });
+    },
     report: (id: number) => net.send({ t: 'report', id }),
     /** Emote: shown right away for you, and sent to people nearby when online. */
     emote(e: string) {
+      idleWarning.value = false; // so does an emote
       // a hug turns you to the nearest person (they turn back when it reaches them)
       const to = e === HUG ? nearest(HUG_RANGE) : null;
       if (to) player.facing = Math.atan2(-(to.x - player.pos.x), -(to.z - player.pos.z));
@@ -222,6 +239,11 @@ export function createMultiplayer(opts: {
     setAvatarKit: (kit: AvatarKit) => crowd.setKit(kit),
     /** Every simulation step: send our movement at 15 Hz (every 4th 60 Hz step). */
     step() {
+      // moving shows you're here: clears an idle warning, and brings you back after an idle removal
+      if (player.speed > 0.3) {
+        if (idleWarning.value) idleWarning.value = false;
+        if (net.status === 'parked' && net.parkedFor === 'idle' && !document.hidden) net.rejoin();
+      }
       if (++steps % 4 !== 0 || !net.online) return;
       wire.x = player.pos.x;
       wire.y = player.pos.y;

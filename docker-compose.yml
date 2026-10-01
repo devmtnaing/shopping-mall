@@ -43,6 +43,9 @@ services:
       MAX_PLAYERS: ${MAX_PLAYERS:-20}
       MAX_PER_IP: ${MAX_PER_IP:-5}
       CHAT_KEEP_DAYS: ${CHAT_KEEP_DAYS:-30}
+      AWAY_AFTER_S: ${AWAY_AFTER_S:-15}
+      DROP_SILENT_S: ${DROP_SILENT_S:-120}
+      IDLE_KICK_MIN: ${IDLE_KICK_MIN:-15}
       DATABASE_URL: postgres://mall:mall@postgres:5432/mall
       S3_ENDPOINT: http://storage:8333
       S3_BUCKET: mall

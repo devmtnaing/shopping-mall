@@ -14,6 +14,15 @@ export class Player {
   placed = false;
   /** Last time (ms) a movement input was accepted, for speed checks. */
   lastMoveAt = 0;
+  /** Last time (ms) any input arrived. A visible tab sends 15 a second, even standing still. */
+  lastInputAt = Date.now();
+  /** Last time (ms) they moved, chatted or emoted, and where they were then. */
+  lastActiveAt = Date.now();
+  readonly activeAt = { x: 0, z: 0, yaw: 0 };
+  /** Their tab has been quiet a while (it's in the background): others see them dimmed. */
+  away = false;
+  /** They've been told they'll leave the mall soon for being idle. */
+  idleWarned = false;
   /** Chat: a burst of 3, then one message every 1.5 s. Emotes: a burst of 4, then 2 a second. */
   readonly chatLimit = new RateLimit(3, 1 / 1.5);
   readonly emoteLimit = new RateLimit(4, 2);
@@ -32,9 +41,19 @@ export class Player {
   }
 
   get info(): PlayerInfo {
-    return this.host
-      ? { id: this.id, name: this.name, look: this.look, host: true }
-      : { id: this.id, name: this.name, look: this.look };
+    const info: PlayerInfo = { id: this.id, name: this.name, look: this.look };
+    if (this.host) info.host = true;
+    if (this.away) info.away = true;
+    return info;
+  }
+
+  /** They did something: moved, chatted, emoted. */
+  active(now = Date.now()) {
+    this.lastActiveAt = now;
+    this.idleWarned = false;
+    this.activeAt.x = this.pose.x;
+    this.activeAt.z = this.pose.z;
+    this.activeAt.yaw = this.pose.yaw;
   }
 
   send(msg: object) {

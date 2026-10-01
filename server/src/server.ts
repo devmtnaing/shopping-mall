@@ -40,6 +40,14 @@ export type ServerOptions = {
   maxPerIp?: number;
   /** Days of chat history to keep in the database (CHAT_KEEP_DAYS). */
   chatKeepDays?: number;
+  /** No input for this long (ms) and a player shows as away: their tab's in the background. */
+  awayAfterMs?: number;
+  /** No input for this long (ms) and they leave the mall: a background tab, or a dead connection. */
+  dropSilentMs?: number;
+  /** Visible but not moving, chatting or emoting for this long (ms) and they leave; 0 never. */
+  idleKickMs?: number;
+  /** How often to check for away and idle players (ms). */
+  sweepMs?: number;
   /** Nearest players each client receives per snapshot. */
   interest?: number;
   joinTimeoutMs?: number;
@@ -84,7 +92,9 @@ const TELEPORT_COOLDOWN = 2000;
 /** Emotes reach people within this many metres. */
 const EMOTE_RADIUS = 40;
 
-type Session = { player: Player; room: Room; timer: NodeJS.Timeout | null };
+type Session = { player: Player; room: Room; timer: NodeJS.Timeout | null; dropped?: boolean };
+/** How long before an idle player leaves they're warned (ms). */
+const IDLE_WARNING = 60_000;
 
 export async function startServer(opts: ServerOptions = {}) {
   const {
@@ -94,6 +104,10 @@ export async function startServer(opts: ServerOptions = {}) {
     maxPlayers = 20,
     maxPerIp = 5,
     chatKeepDays = 30,
+    awayAfterMs = 15_000,
+    dropSilentMs = 120_000,
+    idleKickMs = 15 * 60_000,
+    sweepMs = 5000,
     interest = 40,
     joinTimeoutMs = 5000,
     graceMs = 30_000,
@@ -276,6 +290,9 @@ export async function startServer(opts: ServerOptions = {}) {
   }
 
   function dropPlayer(s: Session) {
+    if (s.dropped) return; // already gone (a sweep took them out, then their socket closed)
+    s.dropped = true;
+    if (s.timer) clearTimeout(s.timer);
     s.room.remove(s.player.id);
     for (const [token, other] of sessions) if (other === s) sessions.delete(token);
     if (s.room.players.size === 0) {
@@ -323,9 +340,20 @@ export async function startServer(opts: ServerOptions = {}) {
       // the first position after joining can be anywhere (spawn point, shared link)
       if (player.placed && !plausibleMove(player.pose, input.pose, now - player.lastMoveAt, teleport)) return;
       if (teleport && player.placed) teleportUntil = 0; // one jump per announcement
+      const first = !player.placed;
       Object.assign(player.pose, input.pose);
       player.placed = true;
       player.lastMoveAt = now;
+      player.lastInputAt = now;
+      if (player.away) setAway(player, false);
+      // moving or turning counts as being here; standing (or sitting) still doesn't
+      const a = player.activeAt;
+      if (
+        first ||
+        Math.hypot(a.x - player.pose.x, a.z - player.pose.z) > 0.15 ||
+        Math.abs(a.yaw - player.pose.yaw) > 0.3
+      )
+        player.active(now);
     }
 
     function join(msg: Extract<ClientMessage, { t: 'join' }>) {
@@ -395,7 +423,47 @@ export async function startServer(opts: ServerOptions = {}) {
     });
   }
 
+  function setAway(player: Player, away: boolean) {
+    player.away = away;
+    const room = [...rooms.values()].find((r) => r.players.get(player.id) === player);
+    room?.broadcast({ t: 'away', id: player.id, away }, player.id);
+  }
+
+  /** Take someone out of the mall, telling them why (`away` or `idle`); their client rejoins later. */
+  function park(s: Session, code: 'away' | 'idle', message: string, closeCode: number) {
+    const ws = s.player.socket;
+    dropPlayer(s);
+    if (!ws) return;
+    ws.send(JSON.stringify({ t: 'error', code, message } satisfies ServerMessage));
+    ws.close(closeCode, code);
+  }
+
+  /** Every few seconds: who's gone quiet (away, or gone), and who's been idle too long. */
+  function sweep() {
+    const now = Date.now();
+    for (const s of new Set(sessions.values())) {
+      const p = s.player;
+      if (!p.socket || s.dropped) continue; // dropped connections have their own 30 s grace
+      const silent = now - p.lastInputAt;
+      if (silent >= dropSilentMs) {
+        park(s, 'away', 'You were away for a while, so you left the mall.', 4003);
+        continue;
+      }
+      if (silent >= awayAfterMs && !p.away) setAway(p, true);
+      if (idleKickMs <= 0) continue;
+      const idle = now - p.lastActiveAt;
+      if (idle >= idleKickMs)
+        park(s, 'idle', "You hadn't moved for a long time, so you left the mall.", 4004);
+      else if (idle >= idleKickMs - IDLE_WARNING && !p.idleWarned) {
+        p.idleWarned = true;
+        p.send({ t: 'idle', seconds: Math.ceil((idleKickMs - idle) / 1000) } satisfies ServerMessage);
+      }
+    }
+  }
+
   function handle(msg: ClientMessage, player: Player, room: Room) {
+    // saying or doing anything counts as being here
+    if (msg.t === 'chat' || msg.t === 'emote' || msg.t === 'throw' || msg.t === 'look') player.active();
     if (msg.t === 'chat') {
       const text = maskBlocked(blocklist, cleanChat(msg.text));
       if (!text) return;
@@ -463,6 +531,7 @@ export async function startServer(opts: ServerOptions = {}) {
   const presence = setInterval(() => {
     for (const room of rooms.values()) room.flushPresence();
   }, presenceMs);
+  const sweeper = setInterval(sweep, sweepMs);
 
   await new Promise<void>((resolve) => http.listen(port, resolve));
   const address = http.address();
@@ -470,6 +539,7 @@ export async function startServer(opts: ServerOptions = {}) {
     port: typeof address === 'object' && address ? address.port : port,
     rooms,
     async close() {
+      clearInterval(sweeper);
       clearInterval(pruneTimer);
       clearInterval(ticker);
       clearInterval(presence);
