@@ -50,6 +50,27 @@ Applications arrive in **Rentals**, which shows a count of waiting ones (in the 
 
 To hear about applications straight away, set `RENTAL_WEBHOOK` on the server ([configuration](./config)). Each application is POSTed there with a one-line summary in `text` and `content`, so a Slack or Discord incoming webhook shows it as a message. A visitor can send 3 applications, then one every 20 minutes.
 
+## Shop owners
+
+A tenant can look after their own shop. Open the shop in **Shops → Edit**, and under **Shop owner** type their email (the one from their approved rental application is filled in) and press **Invite owner**. You get a link to send them by email or WhatsApp; the mall doesn't send it for you. It works once, for 7 days.
+
+The link opens a page where they choose a password (8 characters or more). After that they sign in at `/admin/` with **I look after a shop**, their email and that password. Like your own sign-in, it lasts while the tab is open.
+
+They see only their shop, in the same editor you use, and can change its name, tagline, category, colours, description, features, links, logo and products. They can't move to another unit, change the shop's id, set up a product feed, or touch other shops, the mall or the building. Their changes go live straight away.
+
+To keep hosting costs down, owners are kept small:
+
+| | Limit |
+|---|---|
+| Products | 5 |
+| Photos (logo and product photos) kept at once | 8. Photos they stop using are deleted when they save. |
+| Each photo | 300 KB. The page shrinks photos before uploading (a logo to 512 px, a product photo to 900 px, as WebP), so a phone photo of several MB ends up around 100 KB. |
+| Sign-in attempts | 5, then one a minute, from each address |
+
+Their uploads show in **Files** as "from <shop>'s owner". One email can look after one shop.
+
+**Forgot their password**, or want to give the shop to someone else? Press **Make a new link** (for a new email, change it first). Their old password stops working and they're signed out. **Remove access** signs them out and takes the shop back. Deleting the shop removes its owner too.
+
 ## Files
 
 **Files** lists everything you've uploaded. Each file is stored once by its content, so uploading the same image twice keeps one copy, and browsers cache files for good. You can't delete a file the building uses until you change the building.

@@ -4,20 +4,25 @@
 import { useSignal } from '@preact/signals';
 import type { MallConfig, Shop } from '@shopping-mall/shared/config';
 import type { MallArt, MallMeta } from '@shopping-mall/shared/meta';
+import type { OwnerInfo } from '@shopping-mall/shared/owners';
 import type { RentalApplication } from '@shopping-mall/shared/rentals';
 import { CATEGORY_FOR_KIND } from '@shopping-mall/shared/shop-kinds';
 import { render } from 'preact';
 import { useEffect } from 'preact/hooks';
 import { Assets } from './Assets';
-import { api, fileUrl, token } from './api';
+import { api, fileUrl, ownShop, token } from './api';
 import { Building } from './Building';
 import { MallForm } from './MallForm';
+import { OwnerAdmin, SetPassword } from './Owner';
+import { OwnerAccess } from './OwnerAccess';
 import { Rentals } from './Rentals';
 import { ShopEditor } from './ShopEditor';
 import { ShopList } from './ShopList';
 import './admin.css';
 
 function SignIn() {
+  const owner = useSignal(false);
+  const email = useSignal('');
   const secret = useSignal('');
   const error = useSignal('');
   return (
@@ -27,15 +32,33 @@ function SignIn() {
         e.preventDefault();
         error.value = '';
         try {
-          await api.signIn(secret.value);
+          if (owner.value) await api.ownerSignIn(email.value.trim(), secret.value);
+          else await api.signIn(secret.value);
         } catch (x) {
           error.value = (x as Error).message;
         }
       }}
     >
-      <h1>Mall admin</h1>
-      <p>Sign in with the host password to edit shops, products and files.</p>
-      <label for="secret">Host password</label>
+      <h1>{owner.value ? 'Your shop' : 'Mall admin'}</h1>
+      <p>
+        {owner.value
+          ? 'Sign in with your email and the password you set, to look after your shop.'
+          : 'Sign in with the host password to edit shops, products and files.'}
+      </p>
+      {owner.value && (
+        <>
+          <label for="email">Email</label>
+          <input
+            id="email"
+            type="email"
+            autoComplete="username"
+            required
+            value={email.value}
+            onInput={(e) => (email.value = (e.target as HTMLInputElement).value)}
+          />
+        </>
+      )}
+      <label for="secret">{owner.value ? 'Password' : 'Host password'}</label>
       <input
         id="secret"
         type="password"
@@ -51,6 +74,17 @@ function SignIn() {
       <button type="submit" class="btn primary">
         Sign in
       </button>
+      <button
+        type="button"
+        class="link-btn"
+        onClick={() => {
+          owner.value = !owner.value;
+          error.value = '';
+        }}
+      >
+        {owner.value ? 'I’m the mall’s host' : 'I look after a shop'}
+      </button>
+      {owner.value && <small class="hint">Forgot your password? Ask the mall’s host for a new link.</small>}
     </form>
   );
 }
@@ -75,6 +109,7 @@ function Admin() {
   const editing = useSignal<Shop | 'new' | null>(null);
   const rentals = useSignal<RentalApplication[]>([]);
   const prefill = useSignal<RentalApplication | null>(null);
+  const owners = useSignal<OwnerInfo[]>([]);
   const error = useSignal('');
 
   const load = async () => {
@@ -89,6 +124,13 @@ function Admin() {
       error.value = (e as Error).message;
     }
   };
+  const loadOwners = async () => {
+    try {
+      owners.value = await api.owners();
+    } catch {
+      /* the shop editor just shows no owner */
+    }
+  };
   const loadRentals = async () => {
     try {
       rentals.value = await api.rentals();
@@ -99,6 +141,7 @@ function Admin() {
   useEffect(() => {
     void load();
     void loadRentals();
+    void loadOwners();
     const timer = setInterval(loadRentals, RENTALS_POLL_MS);
     return () => clearInterval(timer);
   }, []);
@@ -110,10 +153,13 @@ function Admin() {
 
   const c = cfg.value;
   const taken = new Map((c?.shops ?? []).map((s) => [s.slot, s.id]));
-  const done = async () => {
+  const done = async (saved: Shop) => {
+    const fromRental = prefill.value !== null;
     editing.value = null;
     prefill.value = null;
     await load();
+    // a shop made from a rental application stays open, so the host can invite its owner next
+    if (fromRental) editing.value = cfg.value?.shops.find((s) => s.id === saved.id) ?? null;
   };
 
   return (
@@ -192,6 +238,18 @@ function Admin() {
             }}
           />
         )}
+        {c && tab.value === 'shops' && editing.value !== null && editing.value !== 'new' && (
+          <OwnerAccess
+            key={editing.value.id}
+            shop={editing.value.id}
+            owner={owners.value.find((o) => o.shop === (editing.value as Shop).id)}
+            suggestedEmail={
+              rentals.value.find((r) => r.status === 'approved' && r.slot === (editing.value as Shop).slot)
+                ?.email
+            }
+            onChanged={loadOwners}
+          />
+        )}
         {c && tab.value === 'rentals' && (
           <Rentals
             rentals={rentals.value}
@@ -213,8 +271,23 @@ function Admin() {
   );
 }
 
+/** A set-password link (/admin/?invite=…), read once; the address bar loses it after use. */
+const inviteParam = new URLSearchParams(location.search).get('invite');
+
 function App() {
-  return token.value ? <Admin /> : <SignIn />;
+  const invite = useSignal(inviteParam);
+  if (invite.value && !token.value)
+    return (
+      <SetPassword
+        invite={invite.value}
+        onDone={() => {
+          history.replaceState(null, '', location.pathname);
+          invite.value = null;
+        }}
+      />
+    );
+  if (!token.value) return <SignIn />;
+  return ownShop.value ? <OwnerAdmin /> : <Admin />;
 }
 
 export function mountAdmin(el: HTMLElement) {

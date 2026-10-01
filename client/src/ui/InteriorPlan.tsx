@@ -10,10 +10,12 @@ import type { PropIndex } from '../world/props';
 
 type Footprints = PropIndex['footprints'];
 let footprintsLoad: Promise<Footprints> | null = null;
+/** Kept once loaded, so a plan drawn again (after a save) doesn't flash empty. */
+let footprintsLoaded: Footprints | null = null;
 const loadFootprints = () => {
   footprintsLoad ??= fetch(asset('props/index.json'))
     .then((r) => r.json() as Promise<PropIndex>)
-    .then((i) => i.footprints)
+    .then((i) => (footprintsLoaded = i.footprints))
     .catch(() => ({}));
   return footprintsLoad;
 };
@@ -33,8 +35,9 @@ export function InteriorPlan({
   /** What the plan shows, for screen readers. */
   label: string;
 }) {
-  const [footprints, setFootprints] = useState<Footprints | null>(null);
+  const [footprints, setFootprints] = useState<Footprints | null>(footprintsLoaded);
   useEffect(() => {
+    if (footprintsLoaded) return;
     let live = true;
     loadFootprints().then((f) => live && setFootprints(f));
     return () => {

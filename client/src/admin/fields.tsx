@@ -31,6 +31,7 @@ export function Text(
     placeholder?: string;
     required?: boolean;
     maxLength?: number;
+    readOnly?: boolean;
   },
 ) {
   const id = nextId();
@@ -42,6 +43,7 @@ export function Text(
         placeholder={props.placeholder}
         required={props.required}
         maxLength={props.maxLength}
+        readOnly={props.readOnly}
         aria-invalid={!!props.error}
         aria-describedby={props.error ? `${id}-err` : props.hint ? `${id}-hint` : undefined}
         onInput={(e) => props.onInput((e.target as HTMLInputElement).value)}

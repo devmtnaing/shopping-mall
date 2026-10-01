@@ -28,6 +28,7 @@ describe.runIf(TEST_DB)('content database', () => {
       'migrations',
       'products',
       'rental_applications',
+      'shop_owners',
       'shops',
     ]);
   });

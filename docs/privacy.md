@@ -11,6 +11,7 @@ Shopping Mall is built to know as little about visitors as possible.
 | Chat messages | The operator's database: the name, the message (with blocked words masked), the room and the time. People who join see the last 20 messages from the past hour in their room. | 30 days by default (`CHAT_KEEP_DAYS`), then deleted automatically |
 | Player reports | The server log (and the operator's webhook, if set): the reported name, the reason and the last 20 chat messages | As long as the operator keeps logs |
 | Rental applications | The operator's database (and the operator's webhook, if set): the unit, the name, email, phone (if given), shop name, type of shop and description the applicant typed. Only the host sees them. | Until the host deletes them |
+| Shop owners | The operator's database: the owner's email, and their password as a scrypt hash (it can't be read back). Set-password links are kept only as a hash, until used or 7 days. | Until the host removes the owner or deletes the shop |
 | Shops, products, uploads | The operator's database and bucket | Until the host deletes them |
 
 There are no cookies and no visitor accounts, and nothing loads from third parties: no scripts, fonts or trackers. When the host signs in, the password is swapped for a token that's kept only in memory.

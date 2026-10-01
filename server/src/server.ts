@@ -134,18 +134,32 @@ export async function startServer(opts: ServerOptions = {}) {
   /** Host sign-in attempts per IP: 5, then one a minute; and 30 a minute from everyone together. */
   const signInLimits = new Map<string, RateLimit>();
   const signInAll = new RateLimit(30, 30 / 60);
-  /** Rental applications per IP: 3, then one every 20 minutes; and 60 an hour from everyone together. */
-  const rentalLimits = new Map<string, RateLimit>();
-  const rentalAll = new RateLimit(60, 60 / 3600);
-  const rentalAllowed = (req: import('node:http').IncomingMessage) => {
+  /**
+   * Public writes to the API, per IP and from everyone together. Rental applications: 3, then one
+   * every 20 minutes (60 an hour in all). Shop owners signing in: 5, then one a minute (60 a minute).
+   */
+  const apiLimits = {
+    rental: {
+      perIp: new Map<string, RateLimit>(),
+      make: () => new RateLimit(3, 1 / 1200),
+      all: new RateLimit(60, 60 / 3600),
+    },
+    'sign-in': {
+      perIp: new Map<string, RateLimit>(),
+      make: () => new RateLimit(5, 1 / 60),
+      all: new RateLimit(60, 1),
+    },
+  };
+  const allow = (req: import('node:http').IncomingMessage, what: keyof typeof apiLimits) => {
+    const l = apiLimits[what];
     const ip = clientIp(req);
-    let limit = rentalLimits.get(ip);
+    let limit = l.perIp.get(ip);
     if (!limit) {
-      if (rentalLimits.size > 10_000) rentalLimits.clear(); // don't grow forever
-      limit = new RateLimit(3, 1 / 1200);
-      rentalLimits.set(ip, limit);
+      if (l.perIp.size > 10_000) l.perIp.clear(); // don't grow forever
+      limit = l.make();
+      l.perIp.set(ip, limit);
     }
-    return limit.take() && rentalAll.take();
+    return limit.take() && l.all.take();
   };
   /** Open connections per IP address. */
   const perIp = new Map<string, number>();
@@ -190,7 +204,8 @@ export async function startServer(opts: ServerOptions = {}) {
         assetUrl,
         storage,
         isHost: (token) => !!hostSecret && !!token && verifyHostToken(hostSecret, token),
-        rentalAllowed,
+        secret: hostSecret,
+        allow,
         onRental: (a) => void notifyRental(a, rentalWebhook),
         // tell every connected visitor that content changed (they refetch it)
         onChange: (version) => {

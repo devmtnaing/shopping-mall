@@ -1,7 +1,7 @@
 // Content API (docs/adr/0006). Public read, host-only writes, validated with the same zod schemas
 // as mall.config.ts. Every write bumps the content version and calls onChange (live updates).
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import { mallSchema, shopSchema } from '@shopping-mall/shared/config';
+import { mallSchema, type Shop, shopSchema } from '@shopping-mall/shared/config';
 import { type RentalApplication, rentalRequestSchema } from '@shopping-mall/shared/rentals';
 import { z } from 'zod';
 import { loadArt, replaceMallArt } from '../art.ts';
@@ -19,6 +19,7 @@ import {
 import type { Sql } from '../db/db.ts';
 import { decideRental, deleteRental, listRentals, saveRental, slotTaken } from '../db/rentals.ts';
 import type { Storage } from '../storage.ts';
+import { ownerApi } from './owner-api.ts';
 import { bearer, HttpError, json, readBody, readJson } from './util.ts';
 
 export type ContentApiOptions = {
@@ -28,8 +29,10 @@ export type ContentApiOptions = {
   onChange: (version: number) => void;
   /** Object storage for uploads; without it the asset endpoints answer 503. */
   storage?: Storage | null;
-  /** May this request send a rental application now? (rate limit; default yes) */
-  rentalAllowed?: (req: IncomingMessage) => boolean;
+  /** HOST_SECRET, which also signs shop owners' tokens (owner-api.ts). */
+  secret?: string;
+  /** Rate limits: may this request send a rental application, or try to sign in, now? (default yes) */
+  allow?: (req: IncomingMessage, what: 'rental' | 'sign-in') => boolean;
   /** A visitor applied to rent a unit (to tell the host). */
   onRental?: (application: RentalApplication) => void;
 };
@@ -48,7 +51,8 @@ function parse<T>(schema: z.ZodType<T>, body: unknown): T {
 
 /** Handle /api/* requests. Returns false if the path isn't ours. */
 export function contentApi(opts: ContentApiOptions) {
-  const { sql, assetUrl, isHost, onChange, storage, rentalAllowed = () => true, onRental } = opts;
+  const { sql, assetUrl, isHost, onChange, storage, secret, allow = () => true, onRental } = opts;
+  const owners = ownerApi({ sql, secret, storage, parse, allowSignIn: (req) => allow(req, 'sign-in') });
   const needStorage = () => {
     if (!storage) throw new HttpError(503, 'Uploads are not set up on this server (S3_* settings).');
     return storage;
@@ -79,7 +83,8 @@ export function contentApi(opts: ContentApiOptions) {
     if (path === '/api/rentals' && method === 'POST') {
       // validate first, so fixing a typo in the form doesn't count against the limit
       const r = parse(rentalRequestSchema, await readJson(req, 8 * 1024));
-      if (!rentalAllowed(req)) throw new HttpError(429, 'Too many applications from here. Try again later.');
+      if (!allow(req, 'rental'))
+        throw new HttpError(429, 'Too many applications from here. Try again later.');
       // the honeypot was filled in: a bot. Say thanks and keep nothing.
       if (r.website) return json(res, 201, { ok: true });
       if (await slotTaken(sql, r.slot)) throw new HttpError(409, 'Sorry, this unit has just been taken.');
@@ -88,8 +93,27 @@ export function contentApi(opts: ContentApiOptions) {
       return;
     }
 
+    if (await owners.publicRoute(req, res, path, method)) return;
+
+    // a shop owner, signed in: their own shop only (owner-api.ts)
+    const token = bearer(req);
+    const host = isHost(token);
+    const shopOwned = host ? null : await owners.ownerOf(token);
+    if (shopOwned) {
+      const current = async () =>
+        (await loadContent(sql, assetUrl)).config.shops.find((s) => s.id === shopOwned);
+      const save = async (shop: Shop) => {
+        const v = await saveShop(sql, shop);
+        onChange(v);
+        return v;
+      };
+      await owners.ownerRoute(req, res, path, method, shopOwned, current, save);
+      return;
+    }
+
     // everything below is for the host only
-    if (!isHost(bearer(req))) throw new HttpError(401, 'Sign in as the host to change the mall.');
+    if (!host) throw new HttpError(401, 'Sign in as the host to change the mall.');
+    if (await owners.hostRoute(req, res, path, method)) return;
     let version: number | null = null;
 
     // asset library: upload (raw body, ?kind=…), list, delete. Uploads don't change content by

@@ -37,7 +37,7 @@ export function Assets() {
               <span class="file-kind">{a.kind}</span>
             )}
             <small>
-              {a.kind} · {(a.bytes / 1024).toFixed(0)} KB
+              {a.kind} · {(a.bytes / 1024).toFixed(0)} KB{a.shop && ` · from ${a.shop}’s owner`}
             </small>
             <span class="actions">
               <button

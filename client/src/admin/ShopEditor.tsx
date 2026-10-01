@@ -3,6 +3,7 @@
 import { useSignal } from '@preact/signals';
 import type { Shop } from '@shopping-mall/shared/config';
 import type { Slot } from '@shopping-mall/shared/meta';
+import { OWNER_LIMITS } from '@shopping-mall/shared/owners';
 import { useEffect, useRef } from 'preact/hooks';
 import { rentEn } from '../i18n/rent';
 import { paintSign } from '../render/signs';
@@ -10,6 +11,7 @@ import { InteriorPlan } from '../ui/InteriorPlan';
 import { layoutFor } from '../world/layouts';
 import { type ApiError, api, type FieldError, fileUrl } from './api';
 import { Area, Color, errorFor, Select, slug, Text } from './fields';
+import { shrink } from './shrink';
 
 type Product = { id: string; name: string; price: string; compareAt: string; image: string; url: string };
 type Draft = {
@@ -157,7 +159,7 @@ function Upload({ kind, label, onDone }: { kind: string; label: string; onDone: 
             busy.value = true;
             error.value = '';
             try {
-              onDone((await api.upload(kind, file)).url);
+              onDone((await api.upload(kind, await shrink(file, kind))).url);
             } catch (err) {
               error.value = (err as Error).message;
             } finally {
@@ -177,10 +179,14 @@ export function ShopEditor(props: {
   prefill?: { slot: string; name: string; category: string; description: string };
   slots: Slot[];
   taken: Map<string, string>;
-  onSaved: () => void;
+  /** A shop owner editing their own shop: the unit and id are the host's, products are capped. */
+  owner?: boolean;
+  onSaved: (shop: Shop) => void;
   onCancel: () => void;
 }) {
   const isNew = !props.shop;
+  const owner = !!props.owner;
+  const maxProducts = owner ? OWNER_LIMITS.products : Infinity;
   const d = useSignal<Draft>(
     props.shop || !props.prefill
       ? toDraft(props.shop)
@@ -206,9 +212,10 @@ export function ShopEditor(props: {
     status.value = 'Saving…';
     errors.value = [];
     try {
-      await api.saveShop(toShop(v));
+      const shop = toShop(v);
+      await api.saveShop(shop);
       status.value = '';
-      props.onSaved();
+      props.onSaved(shop);
     } catch (x) {
       const ex = x as ApiError;
       errors.value = ex.fields ?? [];
@@ -222,10 +229,10 @@ export function ShopEditor(props: {
   return (
     <form class="editor" onSubmit={save} aria-labelledby="editor-title">
       <header class="editor-head">
-        <h2 id="editor-title">{isNew ? 'New shop' : `Edit ${props.shop?.name}`}</h2>
+        <h2 id="editor-title">{owner ? 'Your shop' : isNew ? 'New shop' : `Edit ${props.shop?.name}`}</h2>
         <div class="actions">
           <button type="button" class="btn ghost" onClick={props.onCancel}>
-            Cancel
+            {owner ? 'Undo changes' : 'Cancel'}
           </button>
           <button type="submit" class="btn primary">
             {isNew ? 'Add shop' : 'Save changes'}
@@ -260,26 +267,37 @@ export function ShopEditor(props: {
           required
           error={err('id')}
           hint={isNew ? `Link: ?s=${v.id || '…'}` : 'Ids can’t change after creating a shop.'}
+          readOnly={!isNew}
           onInput={(id) => isNew && set({ id: slug(id) })}
         />
-        <Select
-          label="Unit"
-          value={v.slot}
-          error={err('slot')}
-          onChange={(s) => set({ slot: s })}
-          options={[
-            { value: '', label: 'Choose a unit…', disabled: true },
-            ...props.slots.map((s) => {
-              const owner = props.taken.get(s.id);
-              const mine = owner === props.shop?.id;
-              return {
-                value: s.id,
-                label: `${slotLabel(s)}${owner && !mine ? ` (taken: ${owner})` : ''}`,
-                disabled: !!owner && !mine,
-              };
-            }),
-          ]}
-        />
+        {owner ? (
+          <Text
+            label="Unit"
+            value={slot ? slotLabel(slot) : v.slot}
+            readOnly
+            hint="Ask the mall’s host to move."
+            onInput={() => {}}
+          />
+        ) : (
+          <Select
+            label="Unit"
+            value={v.slot}
+            error={err('slot')}
+            onChange={(s) => set({ slot: s })}
+            options={[
+              { value: '', label: 'Choose a unit…', disabled: true },
+              ...props.slots.map((s) => {
+                const owner = props.taken.get(s.id);
+                const mine = owner === props.shop?.id;
+                return {
+                  value: s.id,
+                  label: `${slotLabel(s)}${owner && !mine ? ` (taken: ${owner})` : ''}`,
+                  disabled: !!owner && !mine,
+                };
+              }),
+            ]}
+          />
+        )}
         <Text
           label="Category"
           value={v.category}
@@ -379,14 +397,20 @@ export function ShopEditor(props: {
       <fieldset>
         <legend>Products</legend>
         <div class="segmented" role="radiogroup" aria-label="Where products come from">
-          {(['none', 'list', 'feed'] as const).map((m) => (
+          {(owner && v.mode !== 'feed'
+            ? (['none', 'list'] as const)
+            : (['none', 'list', 'feed'] as const)
+          ).map((m) => (
             <label key={m}>
               <input type="radio" name="mode" checked={v.mode === m} onChange={() => set({ mode: m })} />
               {m === 'none' ? 'No products' : m === 'list' ? 'List them here' : 'From a JSON feed'}
             </label>
           ))}
         </div>
-        {v.mode === 'feed' && (
+        {v.mode === 'feed' && owner && (
+          <p class="hint">Your products come from a feed the mall’s host set up. Ask them to change it.</p>
+        )}
+        {v.mode === 'feed' && !owner && (
           <Text
             label="Feed URL"
             value={v.feedUrl}
@@ -430,20 +454,24 @@ export function ShopEditor(props: {
                 </button>
               </div>
             ))}
-            <button
-              type="button"
-              class="btn small"
-              onClick={() =>
-                set({
-                  products: [
-                    ...v.products,
-                    { id: '', name: '', price: '', compareAt: '', image: '', url: '' },
-                  ],
-                })
-              }
-            >
-              Add product
-            </button>
+            {v.products.length < maxProducts ? (
+              <button
+                type="button"
+                class="btn small"
+                onClick={() =>
+                  set({
+                    products: [
+                      ...v.products,
+                      { id: '', name: '', price: '', compareAt: '', image: '', url: '' },
+                    ],
+                  })
+                }
+              >
+                Add product
+              </button>
+            ) : (
+              <p class="hint">Up to {OWNER_LIMITS.products} products.</p>
+            )}
           </>
         )}
       </fieldset>

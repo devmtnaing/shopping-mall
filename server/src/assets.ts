@@ -61,6 +61,8 @@ export type Asset = {
   contentType: string;
   bytes: number;
   hash: string;
+  /** The shop whose owner uploaded it (not the host). */
+  shop?: string;
 };
 
 const toAsset = (r: {
@@ -70,6 +72,7 @@ const toAsset = (r: {
   content_type: string;
   bytes: number;
   hash: string;
+  shop_id?: string | null;
 }): Asset => ({
   id: r.id,
   kind: r.kind,
@@ -78,20 +81,31 @@ const toAsset = (r: {
   contentType: r.content_type,
   bytes: r.bytes,
   hash: r.hash,
+  ...(r.shop_id ? { shop: r.shop_id } : {}),
 });
 
-/** Store an uploaded file. The same file uploaded twice (same kind + hash) returns the existing asset. */
+/**
+ * Store an uploaded file. The same file uploaded twice (same kind + hash) returns the existing asset.
+ * A shop owner's upload has a smaller size limit and is recorded as their shop's (`shop`).
+ */
 export async function storeAsset(
   sql: Sql,
   storage: Storage,
   kind: string,
   body: Uint8Array<ArrayBuffer>,
+  owner?: { shop: string; maxBytes: number },
 ): Promise<Asset> {
   const rule = KINDS[kind];
   if (!rule) throw new HttpError(400, `Unknown asset kind "${kind}".`);
   if (body.byteLength === 0) throw new HttpError(400, 'The file is empty.');
-  if (body.byteLength > rule.maxBytes)
-    throw new HttpError(413, `That file is too big (max ${rule.maxBytes / MB} MB).`);
+  const maxBytes = Math.min(rule.maxBytes, owner?.maxBytes ?? Infinity);
+  if (body.byteLength > maxBytes)
+    throw new HttpError(
+      413,
+      maxBytes < MB
+        ? `That file is too big (max ${Math.round(maxBytes / 1024)} KB).`
+        : `That file is too big (max ${maxBytes / MB} MB).`,
+    );
   const format = sniff(body);
   if (!format || !rule.formats.includes(format))
     throw new HttpError(415, `A ${kind} must be ${rule.formats.map((f) => f.toUpperCase()).join(', ')}.`);
@@ -105,8 +119,8 @@ export async function storeAsset(
   const key = `${kind}/${hash}.${EXT[format]}`;
   await storage.put(key, body, TYPES[format]);
   const [row] = await sql<Parameters<typeof toAsset>[0][]>`
-    insert into assets (kind, key, content_type, bytes, hash)
-    values (${kind}, ${key}, ${TYPES[format]}, ${body.byteLength}, ${hash})
+    insert into assets (kind, key, content_type, bytes, hash, shop_id)
+    values (${kind}, ${key}, ${TYPES[format]}, ${body.byteLength}, ${hash}, ${owner?.shop ?? null})
     on conflict (kind, hash) do update set kind = excluded.kind
     returning *`;
   return toAsset(row as Parameters<typeof toAsset>[0]);
