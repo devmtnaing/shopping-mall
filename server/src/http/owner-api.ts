@@ -65,6 +65,7 @@ export function ownerApi(opts: OwnerApiOptions) {
   /** Routes anyone may call (signing in). Returns true if it answered. */
   async function publicRoute(req: IncomingMessage, res: ServerResponse, path: string, method: string) {
     if (path === '/api/owner/invite' && method === 'GET') {
+      slow(req); // each look-up is a guess at a token: limit it like signing in
       const token = new URL(req.url ?? '', 'http://x').searchParams.get('token') ?? '';
       const invite = token ? await inviteFor(sql, token) : null;
       if (!invite)

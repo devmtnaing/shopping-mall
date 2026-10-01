@@ -14,14 +14,14 @@ import {
 } from '@shopping-mall/shared/protocol';
 import { type RawData, type WebSocket, WebSocketServer } from 'ws';
 import { pruneChat, recentChat, saveChat } from './db/chat.ts';
-import { loadContent } from './db/content.ts';
+import { contentVersion, loadContent } from './db/content.ts';
 import type { Sql } from './db/db.ts';
 import { eventsHandler } from './events.ts';
 import { issueHostToken, secretMatches, verifyHostToken } from './host.ts';
 import { contentApi } from './http/content-api.ts';
 import { filesHandler } from './http/files.ts';
 import { CORS, json } from './http/util.ts';
-import { RateLimit } from './limits.ts';
+import { PerIpLimit, RateLimit } from './limits.ts';
 import { type Blocklist, containsBlocked, fileReport, maskBlocked } from './moderation.ts';
 import { plausibleMove } from './movement.ts';
 import { cleanChat, cleanName, uniqueName } from './names.ts';
@@ -78,6 +78,10 @@ export type ServerOptions = {
   events?: boolean;
   /** Where event lines go (tests capture them). */
   eventLog?: (line: string) => void;
+  /** HTTP requests per IP: a burst, then this many a second (default 120, then 20 a second). */
+  requestLimit?: { burst: number; perSecond: number };
+  /** New WebSocket connections per IP: a burst, then this many a second (default 10, then one every 2 s). */
+  connectLimit?: { burst: number; perSecond: number };
 };
 
 const ROOM_NAME = /^[a-z0-9-]{1,32}$/;
@@ -128,39 +132,32 @@ export async function startServer(opts: ServerOptions = {}) {
     fallbackContent,
     events = true,
     eventLog,
+    requestLimit = { burst: 120, perSecond: 20 },
+    connectLimit = { burst: 10, perSecond: 0.5 },
   } = opts;
-  const files = filesHandler(storage);
-  const usage = eventsHandler(events, eventLog);
+  // Rate limits, per IP (clientIp) and, for the writes, from everyone together too. They're the
+  // server's own floor under abuse; nginx (client/nginx.conf.template) and Cloudflare shed most of
+  // a flood before it gets here (docs/deploy.md, "Abuse and floods").
+  /** Every HTTP request but /health: a generous backstop that only a script hits. */
+  const requests = new PerIpLimit(requestLimit.burst, requestLimit.perSecond);
+  /** New WebSocket connections: reconnecting backs off, so 10 at once, then one every 2 s is plenty. */
+  const connects = new PerIpLimit(connectLimit.burst, connectLimit.perSecond);
+  /** Usage events: a tab sends a batch every 30 s at most, so 10, then one every 10 s. */
+  const beacons = new PerIpLimit(10, 1 / 10);
   /** Host sign-in attempts per IP: 5, then one a minute; and 30 a minute from everyone together. */
-  const signInLimits = new Map<string, RateLimit>();
-  const signInAll = new RateLimit(30, 30 / 60);
+  const hostSignIns = new PerIpLimit(5, 1 / 60, new RateLimit(30, 30 / 60));
   /**
-   * Public writes to the API, per IP and from everyone together. Rental applications: 3, then one
-   * every 20 minutes (60 an hour in all). Shop owners signing in: 5, then one a minute (60 a minute).
+   * Public writes to the API. Rental applications: 3, then one every 20 minutes (60 an hour in
+   * all). Shop owners signing in or using an invite link: 5, then one a minute (60 a minute in all).
    */
   const apiLimits = {
-    rental: {
-      perIp: new Map<string, RateLimit>(),
-      make: () => new RateLimit(3, 1 / 1200),
-      all: new RateLimit(60, 60 / 3600),
-    },
-    'sign-in': {
-      perIp: new Map<string, RateLimit>(),
-      make: () => new RateLimit(5, 1 / 60),
-      all: new RateLimit(60, 1),
-    },
+    rental: new PerIpLimit(3, 1 / 1200, new RateLimit(60, 60 / 3600)),
+    'sign-in': new PerIpLimit(5, 1 / 60, new RateLimit(60, 1)),
   };
-  const allow = (req: import('node:http').IncomingMessage, what: keyof typeof apiLimits) => {
-    const l = apiLimits[what];
-    const ip = clientIp(req);
-    let limit = l.perIp.get(ip);
-    if (!limit) {
-      if (l.perIp.size > 10_000) l.perIp.clear(); // don't grow forever
-      limit = l.make();
-      l.perIp.set(ip, limit);
-    }
-    return limit.take() && l.all.take();
-  };
+  const allow = (req: import('node:http').IncomingMessage, what: keyof typeof apiLimits) =>
+    apiLimits[what].take(clientIp(req));
+  const files = filesHandler(storage);
+  const usage = eventsHandler(events, eventLog, (req) => beacons.take(clientIp(req)));
   /** Open connections per IP address. */
   const perIp = new Map<string, number>();
   /**
@@ -214,7 +211,26 @@ export async function startServer(opts: ServerOptions = {}) {
       })
     : null;
 
+  /** The directory page, kept until the content version changes (like /api/content). */
+  let directory: { version: number; html: Promise<string> } | null = null;
+  const directoryHtml = async (sql: Sql) => {
+    const version = await contentVersion(sql);
+    if (directory?.version !== version) {
+      const html = loadContent(sql, assetUrl).then((c) => renderDirectory(c.config));
+      directory = { version, html };
+      html.catch(() => {
+        if (directory?.html === html) directory = null;
+      });
+    }
+    return directory.html;
+  };
+
   const http = createServer(async (req, res) => {
+    if (req.url !== '/health' && !requests.take(clientIp(req))) {
+      json(res, 429, { error: 'Too many requests. Slow down.' }, { 'Retry-After': '5' });
+      req.resume();
+      return;
+    }
     if (req.method === 'OPTIONS') {
       res.writeHead(204, CORS).end();
       return;
@@ -224,9 +240,9 @@ export async function startServer(opts: ServerOptions = {}) {
     if (await files(req, res)) return;
     // the plain-HTML shop directory, always current (live from the database when there is one)
     if ((req.url === '/directory/' || req.url === '/directory') && (db || fallbackContent)) {
-      const cfg = db ? (await loadContent(db, assetUrl)).config : (fallbackContent as MallConfig);
+      const html = db ? await directoryHtml(db) : renderDirectory(fallbackContent as MallConfig);
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache' });
-      res.end(renderDirectory(cfg));
+      res.end(html);
       return;
     }
     if (req.url === '/health') {
@@ -248,15 +264,7 @@ export async function startServer(opts: ServerOptions = {}) {
 
   function hostSignIn(req: import('node:http').IncomingMessage, res: import('node:http').ServerResponse) {
     if (!hostSecret) return json(res, 404, { error: 'Host sign-in is not set up on this server.' });
-    const ip = clientIp(req);
-    let limit = signInLimits.get(ip);
-    if (!limit) {
-      if (signInLimits.size > 10_000) signInLimits.clear(); // don't grow forever
-      limit = new RateLimit(5, 1 / 60);
-      signInLimits.set(ip, limit);
-    }
-    if (!limit.take() || !signInAll.take())
-      return json(res, 429, { error: 'Too many tries. Wait a minute.' });
+    if (!hostSignIns.take(clientIp(req))) return json(res, 429, { error: 'Too many tries. Wait a minute.' });
     let body = '';
     req.on('data', (c: Buffer) => {
       body += c;
@@ -281,6 +289,11 @@ export async function startServer(opts: ServerOptions = {}) {
     const wanted = url.searchParams.get('room') ?? 'main';
     const roomName = ROOM_NAME.test(wanted) ? wanted : 'main';
     const ip = clientIp(req);
+    // reconnecting in a loop, or a script opening sockets: refuse before the handshake
+    if (!connects.take(ip)) {
+      socket.end('HTTP/1.1 429 Too Many Requests\r\nConnection: close\r\nContent-Length: 0\r\n\r\n');
+      return;
+    }
     wss.handleUpgrade(req, socket, head, (ws) => {
       const open = perIp.get(ip) ?? 0;
       if (maxPerIp > 0 && open >= maxPerIp) {
@@ -578,6 +591,10 @@ export async function startServer(opts: ServerOptions = {}) {
   }, presenceMs);
   const sweeper = setInterval(sweep, sweepMs);
 
+  // slow-request floods (slowloris): headers must arrive within 15 s and a whole request within
+  // 2 minutes (a host's 25 MB model upload on a slow line fits); Node's defaults are 60 s and 5 min
+  http.headersTimeout = 15_000;
+  http.requestTimeout = 120_000;
   await new Promise<void>((resolve) => http.listen(port, resolve));
   const address = http.address();
   return {

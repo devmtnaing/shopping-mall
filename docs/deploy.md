@@ -79,6 +79,30 @@ Everything under `/assets/` is safe for a CDN to keep for good. The page asks fo
 
 With Cloudflare, add one Cache Rule (Caching → Cache Rules): when the URI path starts with `/assets/` or `/files/`, mark it eligible for cache, and leave the edge and browser TTLs to respect the origin's headers. Keep the default cache key, which includes the query string, since the fingerprint is in it.
 
+## Abuse and floods
+
+Everything that reaches the server is limited per visitor IP address, so the IP settings above matter here too. There are three layers, and the outer ones take the most load:
+
+| Layer | What it does |
+|---|---|
+| **Cloudflare** (if it's in front) | Absorbs real DDoS traffic, which nothing behind it can. It's on as soon as the orange cloud is, and the settings below tighten it. |
+| **nginx** (the web container) | Lets each address send 20 requests a second to the server (`/api/`, `/ws`, `/files/`, `/directory/`, `/host-token`), with bursts of 60. The rest get a `429` without ever reaching Node. Headers have to arrive within 15 s and a body can't stall for 30 s, so slow-request floods time out. Static files aren't limited. |
+| **The server** | Finer limits per address. Any request except `/health`: 120, then 20 a second. New WebSocket connections: 10, then one every 2 s, and at most `MAX_PER_IP` open at once. Rental applications: 3, then one every 20 minutes (60 an hour from everyone together). Host sign-in: 5, then one a minute. Shop-owner sign-in, invite links and setting a password: 5, then one a minute. Usage events: 10 batches, then one every 10 s; extra ones are dropped. On the WebSocket itself it also limits chat, emotes, apples, reports and character changes, and checks movement. |
+
+The server also keeps `/api/content` and `/directory/` in memory until the content changes, so a flood of reads costs it one small database query each instead of a full load.
+
+**With Cloudflare**, these settings are in the dashboard for your domain (dash.cloudflare.com, then pick the domain). Cloudflare moves menus around now and then. If a path below doesn't match, search the dashboard for the setting's name.
+
+1. **A rate-limiting rule for the forms and sign-ins.** This is the one that matters most. Go to **Security → Security rules** (older dashboards: **Security → WAF → Rate limiting rules**), then **Create rule → Rate limiting rules**:
+   - *When incoming requests match*: Field **URI Path**, operator **is in**, values `/api/rentals`, `/host-token`, `/api/owner/sign-in`, `/api/owner/password`, `/api/owner/invite`.
+   - *With the same characteristics*: **IP**. *When rate exceeds*: **10** requests per **10 seconds**. *Then take action*: **Block**, for **10 seconds**.
+
+   The free plan allows one such rule and can only match on the path, not the method or the hostname, so it applies to these paths on every subdomain. Only the mall uses them. A person filling in a form never comes close to 10 in 10 seconds. A script hammering them is stopped at Cloudflare and never costs you anything on Railway.
+2. **Bot Fight Mode** (optional). Go to **Security → Settings**, filter by **Bot traffic**, and switch on **Bot fight mode** (older dashboards: **Security → Bots**). It challenges traffic that looks automated. It covers the **whole domain**: every subdomain, not just the mall. It can't be limited to one hostname, and no rule can make an exception. Real browsers pass, and search engines are let through. But anything else on the domain that's called by scripts (an API, webhooks, an uptime monitor, a mobile app) may start being challenged. Leave it off if something like that lives on the domain.
+3. **Under Attack Mode**, only during an actual attack. Every visitor gets a few seconds of browser check before the page loads, so turn it off afterwards. The switch under **Overview → Quick Actions** covers the whole domain. To cover just the mall, use a Configuration Rule instead: **Rules → Configuration Rules → Create rule**, *Hostname* equals `mall.devmtnaing.com`, then *Security Level*: **I'm Under Attack**. Turn the rule on when you need it and off afterwards.
+
+**Know the way around Cloudflare.** Railway's own address (`*.up.railway.app`) skips Cloudflare entirely, and so does anyone who sends requests straight to Railway with your domain name. On that path a visitor can also send a made-up `CF-Connecting-IP` with each request, so every request looks like it came from someone new and the per-IP limits stop working. The limits on everyone together (rentals and sign-ins) still hold. Removing the Railway domain from the web service, once the custom domain works, closes the easy way round. Closing it completely means having Cloudflare add a secret header to every request (a Transform Rule) and nginx refusing requests without it. That isn't built yet.
+
 ## Backups and restoring
 
 The `backup` service runs `pg_dump --format=custom` every night and uploads it to the bucket as `backups/mall-<UTC time>.dump`, keeping the newest 30. The server never serves these files (`/files/` only serves `<kind>/<sha256>.<ext>`). The uploaded files aren't in the dump, since they're already in the bucket, named by their content hash.

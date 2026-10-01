@@ -20,7 +20,7 @@ import type { Sql } from '../db/db.ts';
 import { decideRental, deleteRental, listRentals, saveRental, slotTaken } from '../db/rentals.ts';
 import type { Storage } from '../storage.ts';
 import { ownerApi } from './owner-api.ts';
-import { bearer, HttpError, json, readBody, readJson } from './util.ts';
+import { bearer, CORS, HttpError, json, readBody, readJson } from './util.ts';
 
 export type ContentApiOptions = {
   sql: Sql;
@@ -58,13 +58,32 @@ export function contentApi(opts: ContentApiOptions) {
     return storage;
   };
 
+  /**
+   * The last content response, kept until the version changes: a flood of reads costs one cheap
+   * version lookup each, not a full load. Shared while it loads, so a cold start loads it once.
+   */
+  let cached: { version: number; body: Promise<string> } | null = null;
+  const contentBody = (version: number) => {
+    if (cached?.version !== version) {
+      const body = Promise.all([loadContent(sql, assetUrl), loadArt(sql)]).then(([content, art]) =>
+        JSON.stringify({ ...content, art }),
+      );
+      cached = { version, body };
+      body.catch(() => {
+        if (cached?.body === body) cached = null; // try again next time
+      });
+    }
+    return cached.body;
+  };
+
   async function route(req: IncomingMessage, res: ServerResponse) {
     const path = (req.url ?? '').split('?')[0] ?? '';
     const method = req.method ?? 'GET';
 
     if (path === '/api/content' && method === 'GET') {
       // cheap version check first: most requests are "has anything changed?"
-      const etag = `"v${await contentVersion(sql)}"`;
+      const version = await contentVersion(sql);
+      const etag = `"v${version}"`;
       if (req.headers['if-none-match'] === etag) {
         res.writeHead(304, {
           ETag: etag,
@@ -74,8 +93,14 @@ export function contentApi(opts: ContentApiOptions) {
         res.end();
         return;
       }
-      const [content, art] = await Promise.all([loadContent(sql, assetUrl), loadArt(sql)]);
-      json(res, 200, { ...content, art }, { ETag: `"v${content.version}"`, 'Cache-Control': 'no-cache' });
+      const body = await contentBody(version);
+      res.writeHead(200, {
+        'Content-Type': 'application/json',
+        ...CORS,
+        ETag: etag,
+        'Cache-Control': 'no-cache',
+      });
+      res.end(body);
       return;
     }
 

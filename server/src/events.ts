@@ -20,10 +20,15 @@ const event = z.object({
 });
 const batch = z.array(event).max(MAX_EVENTS_PER_BATCH);
 
-export function eventsHandler(enabled: boolean, log: (line: string) => void = console.log) {
+export function eventsHandler(
+  enabled: boolean,
+  log: (line: string) => void = console.log,
+  /** May this request's events be logged? Over the limit they're dropped (still 204). */
+  allow: (req: IncomingMessage) => boolean = () => true,
+) {
   return async function handle(req: IncomingMessage, res: ServerResponse): Promise<boolean> {
     if (req.url !== '/api/events' || req.method !== 'POST') return false;
-    if (enabled) {
+    if (enabled && allow(req)) {
       try {
         const parsed = batch.safeParse(await readJson(req, 8 * 1024));
         if (parsed.success) {
