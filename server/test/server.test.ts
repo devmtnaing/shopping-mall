@@ -1,7 +1,7 @@
 import { encodeInput, type Pose } from '@shopping-mall/shared/protocol';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { RateLimit } from '../src/limits';
-import { cleanChat, cleanName } from '../src/names';
+import { cleanChat, cleanName, uniqueName } from '../src/names';
 import { startServer } from '../src/server';
 import { sleep, TestClient, until } from './helpers';
 
@@ -73,6 +73,23 @@ describe('server', () => {
     b.send({ t: 'emote', e: '👋' });
     expect(await a.waitFor((m) => m.t === 'chat')).toMatchObject({ name: 'Bo', text: 'hello' });
     expect(await a.waitFor((m) => m.t === 'emote')).toMatchObject({ e: '👋' });
+  });
+
+  it('gives a second person with the same name a number, and tells them', async () => {
+    const a = client();
+    const wa = await a.join('Mingu');
+    const b = client();
+    const wb = await b.join('mingu');
+    const c = client();
+    const wc = await c.join('Mingu');
+    expect([wa.name, wb.name, wc.name]).toEqual(['Mingu', 'mingu-2', 'Mingu-3']);
+    // typing a name that was handed out doesn't give Mingu-2-2
+    const e = client();
+    expect((await e.join('Mingu-2')).name).toBe('Mingu-4');
+    expect(wc.players.map((p) => p.name)).toEqual(['Mingu', 'mingu-2']);
+    // in another room the name is free
+    const d = client('other');
+    expect((await d.join('Mingu')).name).toBe('Mingu');
   });
 
   it('rejects bad names and closes sockets that never join', async () => {
@@ -314,6 +331,24 @@ describe('cleanName', () => {
     expect(cleanName('x'.repeat(21))).toBeNull();
     expect(cleanName('Bad‮name')).toBe('Badname'); // RTL override stripped
     expect(cleanName('မြတ်')).toBe('မြတ်');
+  });
+});
+
+describe('uniqueName', () => {
+  it('numbers a name someone already has, ignoring case, and keeps it within 20 characters', () => {
+    expect(uniqueName('Mingu', [])).toBe('Mingu');
+    expect(uniqueName('Mingu', ['Bo'])).toBe('Mingu');
+    expect(uniqueName('Mingu', ['Mingu'])).toBe('Mingu-2');
+    expect(uniqueName('mingu', ['Mingu', 'MINGU-2'])).toBe('mingu-3');
+    expect(uniqueName('Mingu', ['Mingu', 'Mingu-3'])).toBe('Mingu-2'); // the first free number
+    const long = 'Aung Kyaw Moe Thanta'; // 20, the most a name can have
+    expect(uniqueName(long, [long])).toBe('Aung Kyaw Moe Than-2');
+    expect(uniqueName('Aung Kyaw Moe Tha Z', ['Aung Kyaw Moe Tha Z'])).toBe('Aung Kyaw Moe Tha-2'); // no space before the number
+    expect(uniqueName('မြတ်', ['မြတ်'])).toBe('မြတ်-2');
+    // a typed name that already ends in a number counts on from it
+    expect(uniqueName('mingu-2', ['Mingu', 'Mingu-2'])).toBe('mingu-3');
+    expect(uniqueName('Mingu-2', ['Mingu-2', 'Mingu-3'])).toBe('Mingu-4');
+    expect(uniqueName('Mingu-2', ['Mingu'])).toBe('Mingu-2'); // free: kept as typed
   });
 });
 

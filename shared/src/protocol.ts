@@ -143,6 +143,8 @@ export type ServerMessage =
   | {
       t: 'welcome';
       id: number;
+      /** Your name in this room: what you asked for, or with -2, -3… if someone there already has it. */
+      name: string;
       room: string;
       resume: string;
       players: PlayerInfo[];

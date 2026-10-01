@@ -24,7 +24,7 @@ import { CORS, json } from './http/util.ts';
 import { RateLimit } from './limits.ts';
 import { type Blocklist, containsBlocked, fileReport, maskBlocked } from './moderation.ts';
 import { plausibleMove } from './movement.ts';
-import { cleanChat, cleanName } from './names.ts';
+import { cleanChat, cleanName, uniqueName } from './names.ts';
 import { Player } from './player.ts';
 import { notifyRental } from './rentals.ts';
 import { Room } from './room.ts';
@@ -423,7 +423,12 @@ export async function startServer(opts: ServerOptions = {}) {
         return;
       }
       const room = roomFor(roomName);
-      const player = new Player(newId(), name, msg.look, ws);
+      // two Mingus in one room become Mingu and Mingu-2, so chat and name tags tell them apart
+      const unique = uniqueName(
+        name,
+        [...room.players.values()].map((p) => p.name),
+      );
+      const player = new Player(newId(), unique, msg.look, ws);
       player.host = !!msg.hostToken;
       room.add(player);
       const token = randomBytes(18).toString('base64url');
@@ -442,6 +447,7 @@ export async function startServer(opts: ServerOptions = {}) {
       s.player.send({
         t: 'welcome',
         id: s.player.id,
+        name: s.player.name,
         room: s.room.name,
         resume: token,
         players: others,

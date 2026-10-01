@@ -117,6 +117,7 @@ export const en = {
   'chat.left': '{name} left',
   'chat.leftMany': '{n} people left',
   'chat.slowDown': 'Slow down a little.',
+  'chat.renamed': 'Someone here is already called {asked}, so you’re {name}.',
   'emote.label': 'React',
   'host.here': 'The host is here!',
   'host.signIn': 'Are you the host? Sign in',
