@@ -39,6 +39,17 @@ The arrows **reorder** shops, which sets their order in the directory. **Delete*
 
 The visitor's browser fetches it when they open the shop, so the feed has to allow cross-origin requests (`Access-Control-Allow-Origin: *`). Your shop system, or a small script, can keep it up to date.
 
+## Renting out empty units
+
+Every empty unit's sign says **Coming soon · Unit available · Come and rent it**. A visitor who walks up to one and presses **E** (or taps **Rent this unit**) gets a short form: shop name, their name, email, an optional phone number and what they'd sell. Nothing needs uploading; logos and products come later, when you create the shop.
+
+Applications arrive in **Rentals**, which shows a count of waiting ones (in the page title too, so you notice from another tab). It checks for new ones every 30 seconds. Several people can apply for the same unit:
+
+- **Approve** one and the others waiting for that unit are turned down. Then contact them by email (the mall doesn't email applicants), and **Create the shop** opens the editor with their unit, name and description filled in.
+- **Turn down** declines one application. **Delete** removes a decided one for good.
+
+To hear about applications straight away, set `RENTAL_WEBHOOK` on the server ([configuration](./config)). Each application is POSTed there with a one-line summary in `text` and `content`, so a Slack or Discord incoming webhook shows it as a message. A visitor can send 3 applications, then one every 20 minutes.
+
 ## Files
 
 **Files** lists everything you've uploaded. Each file is stored once by its content, so uploading the same image twice keeps one copy, and browsers cache files for good. You can't delete a file the building uses until you change the building.

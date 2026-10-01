@@ -131,7 +131,25 @@ export const en = {
   'mod.reported': 'Thanks. The mall’s hosts have been told.',
   'mod.options': 'Options for {name}',
   'sign.comingSoon': 'Coming soon',
-  'sign.available': 'This unit is available',
+  'sign.available': 'Unit available · Come and rent it',
+  'prompt.rent': 'Rent this unit',
+  'rent.title': 'Rent this unit',
+  'rent.intro':
+    'This unit is free. Tell the mall’s host about your shop and they’ll get back to you by email.',
+  'rent.name': 'Your name',
+  'rent.email': 'Email',
+  'rent.phone': 'Phone (optional)',
+  'rent.business': 'Shop name',
+  'rent.about': 'What will you sell?',
+  'rent.privacy': 'Only the mall’s host sees these details.',
+  'rent.send': 'Send application',
+  'rent.sending': 'Sending…',
+  'rent.sent': 'Thanks! The host will look at your application and get back to you.',
+  'rent.taken': 'Sorry, this unit has just been taken.',
+  'rent.tooMany': 'You’ve sent a few applications already. Please try again later.',
+  'rent.invalid': 'Please check the details and try again.',
+  'rent.error': 'Couldn’t send your application. Please try again.',
+  'rent.offline': 'Applications open when the mall is online. Please try again later.',
 } as const;
 
 export type Key = keyof typeof en;

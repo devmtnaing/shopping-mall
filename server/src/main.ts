@@ -27,6 +27,7 @@ const server = await startServer({
   idleKickMs: Number(process.env.IDLE_KICK_MIN ?? 15) * 60_000,
   blocklist: loadBlocklist(process.env.BLOCKLIST_FILE),
   reportWebhook: process.env.REPORT_WEBHOOK,
+  rentalWebhook: process.env.RENTAL_WEBHOOK || undefined,
   hostSecret: process.env.HOST_SECRET || undefined,
   db: db ?? undefined,
   fallbackContent: parseConfig(config),

@@ -4,6 +4,7 @@
 import { signal } from '@preact/signals';
 import type { MallConfig, Shop } from '@shopping-mall/shared/config';
 import type { MallArt } from '@shopping-mall/shared/meta';
+import type { RentalApplication } from '@shopping-mall/shared/rentals';
 import { httpUrl, signInAsHost } from '../net/socket';
 
 export const token = signal<string | null>(null);
@@ -67,4 +68,8 @@ export const api = {
   replaceArt: (ids: { model: string; collision: string; meta: string }) =>
     call<{ version: number }>('PUT', '/api/art/mall', ids),
   resetArt: () => call<{ version: number }>('DELETE', '/api/art/mall'),
+  rentals: () => call<RentalApplication[]>('GET', '/api/rentals'),
+  decideRental: (id: number, action: 'approve' | 'reject') =>
+    call<RentalApplication>('POST', `/api/rentals/${id}/${action}`),
+  deleteRental: (id: number) => call<{ deleted: number }>('DELETE', `/api/rentals/${id}`),
 };

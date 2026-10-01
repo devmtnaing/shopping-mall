@@ -36,12 +36,14 @@ import {
   applePrompt,
   mallMeta,
   nearbyShop,
+  nearbyUnit,
   openShop,
   overview,
   panel,
   phase,
   pose,
   profile,
+  rentUnit,
   seatPrompt,
   toast,
   uiHasFocus,
@@ -451,6 +453,8 @@ startLoop({
     }
     const near = storefronts.nearby(player.pos)?.id ?? null;
     if (near !== nearbyShop.value) nearbyShop.value = near;
+    const unit = near ? null : (storefronts.vacantNearby(player.pos)?.id ?? null);
+    if (unit !== nearbyUnit.value) nearbyUnit.value = unit;
     // arrived after directory travel: open that shop's panel
     const arrived = intro.done ? travel.arrived(near) : null;
     if (arrived) openShop(arrived);
@@ -476,10 +480,15 @@ startLoop({
     const pick = atStand() ? 'pick' : holding && throwing <= 0 ? 'throw' : null;
     if (pick !== (applePrompt.value?.mode ?? null)) applePrompt.value = pick ? { mode: pick } : null;
     const visit = input.keys.consume('KeyE'); // always consume, so a stray press can't fire later
-    const seat = seated ? 'stand' : !near && nearestSpot(spots, player.pos, spotIsTaken) ? 'sit' : null;
+    const seat = seated
+      ? 'stand'
+      : !near && !unit && nearestSpot(spots, player.pos, spotIsTaken)
+        ? 'sit'
+        : null;
     if (seat !== seatPrompt.value) seatPrompt.value = seat;
     if (visit && !uiHasFocus.value) {
       if (near && !seated) openShop(near);
+      else if (unit && !seated) rentUnit.value = unit;
       else if (seat) toggleSeat();
     }
     if (zones.update(dt, player.pos)) showZone();

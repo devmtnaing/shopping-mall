@@ -26,6 +26,7 @@ import { type Blocklist, containsBlocked, fileReport, maskBlocked } from './mode
 import { plausibleMove } from './movement.ts';
 import { cleanChat, cleanName } from './names.ts';
 import { Player } from './player.ts';
+import { notifyRental } from './rentals.ts';
 import { Room } from './room.ts';
 import type { Storage } from './storage.ts';
 
@@ -61,6 +62,8 @@ export type ServerOptions = {
   blocklist?: Blocklist;
   /** POST reports here as JSON (they're always logged too). */
   reportWebhook?: string;
+  /** POST rental applications here as JSON (they're always in /admin too). */
+  rentalWebhook?: string;
   /** Enables the host role: typing this on the landing screen signs you in as host. */
   hostSecret?: string;
   /** Content database; without it there's no /api and clients use mall.config.ts. */
@@ -117,6 +120,7 @@ export async function startServer(opts: ServerOptions = {}) {
     presenceMs = 2000,
     blocklist = { words: [] },
     reportWebhook,
+    rentalWebhook,
     hostSecret,
     db,
     assetUrl = (id: string) => `/assets/${id}`,
@@ -130,6 +134,19 @@ export async function startServer(opts: ServerOptions = {}) {
   /** Host sign-in attempts per IP: 5, then one a minute; and 30 a minute from everyone together. */
   const signInLimits = new Map<string, RateLimit>();
   const signInAll = new RateLimit(30, 30 / 60);
+  /** Rental applications per IP: 3, then one every 20 minutes; and 60 an hour from everyone together. */
+  const rentalLimits = new Map<string, RateLimit>();
+  const rentalAll = new RateLimit(60, 60 / 3600);
+  const rentalAllowed = (req: import('node:http').IncomingMessage) => {
+    const ip = clientIp(req);
+    let limit = rentalLimits.get(ip);
+    if (!limit) {
+      if (rentalLimits.size > 10_000) rentalLimits.clear(); // don't grow forever
+      limit = new RateLimit(3, 1 / 1200);
+      rentalLimits.set(ip, limit);
+    }
+    return limit.take() && rentalAll.take();
+  };
   /** Open connections per IP address. */
   const perIp = new Map<string, number>();
   /**
@@ -173,6 +190,8 @@ export async function startServer(opts: ServerOptions = {}) {
         assetUrl,
         storage,
         isHost: (token) => !!hostSecret && !!token && verifyHostToken(hostSecret, token),
+        rentalAllowed,
+        onRental: (a) => void notifyRental(a, rentalWebhook),
         // tell every connected visitor that content changed (they refetch it)
         onChange: (version) => {
           for (const room of rooms.values()) room.broadcast({ t: 'content', version });

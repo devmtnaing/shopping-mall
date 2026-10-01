@@ -2,6 +2,7 @@
 // as mall.config.ts. Every write bumps the content version and calls onChange (live updates).
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { mallSchema, shopSchema } from '@shopping-mall/shared/config';
+import { type RentalApplication, rentalRequestSchema } from '@shopping-mall/shared/rentals';
 import { z } from 'zod';
 import { loadArt, replaceMallArt } from '../art.ts';
 import { deleteAsset, KINDS, listAssets, storeAsset } from '../assets.ts';
@@ -16,6 +17,7 @@ import {
   setMallArt,
 } from '../db/content.ts';
 import type { Sql } from '../db/db.ts';
+import { decideRental, deleteRental, listRentals, saveRental, slotTaken } from '../db/rentals.ts';
 import type { Storage } from '../storage.ts';
 import { bearer, HttpError, json, readBody, readJson } from './util.ts';
 
@@ -26,9 +28,14 @@ export type ContentApiOptions = {
   onChange: (version: number) => void;
   /** Object storage for uploads; without it the asset endpoints answer 503. */
   storage?: Storage | null;
+  /** May this request send a rental application now? (rate limit; default yes) */
+  rentalAllowed?: (req: IncomingMessage) => boolean;
+  /** A visitor applied to rent a unit (to tell the host). */
+  onRental?: (application: RentalApplication) => void;
 };
 
 const SHOP_ID = /^\/api\/shops\/([a-z0-9][a-z0-9-]*)$/;
+const RENTAL = /^\/api\/rentals\/(\d{1,15})(?:\/(approve|reject))?$/;
 
 function parse<T>(schema: z.ZodType<T>, body: unknown): T {
   const r = schema.safeParse(body);
@@ -41,7 +48,7 @@ function parse<T>(schema: z.ZodType<T>, body: unknown): T {
 
 /** Handle /api/* requests. Returns false if the path isn't ours. */
 export function contentApi(opts: ContentApiOptions) {
-  const { sql, assetUrl, isHost, onChange, storage } = opts;
+  const { sql, assetUrl, isHost, onChange, storage, rentalAllowed = () => true, onRental } = opts;
   const needStorage = () => {
     if (!storage) throw new HttpError(503, 'Uploads are not set up on this server (S3_* settings).');
     return storage;
@@ -68,7 +75,20 @@ export function contentApi(opts: ContentApiOptions) {
       return;
     }
 
-    // everything below changes content: host only
+    // a visitor asks to rent a vacant unit (the one public write)
+    if (path === '/api/rentals' && method === 'POST') {
+      // validate first, so fixing a typo in the form doesn't count against the limit
+      const r = parse(rentalRequestSchema, await readJson(req, 8 * 1024));
+      if (!rentalAllowed(req)) throw new HttpError(429, 'Too many applications from here. Try again later.');
+      // the honeypot was filled in: a bot. Say thanks and keep nothing.
+      if (r.website) return json(res, 201, { ok: true });
+      if (await slotTaken(sql, r.slot)) throw new HttpError(409, 'Sorry, this unit has just been taken.');
+      onRental?.(await saveRental(sql, r));
+      json(res, 201, { ok: true });
+      return;
+    }
+
+    // everything below is for the host only
     if (!isHost(bearer(req))) throw new HttpError(401, 'Sign in as the host to change the mall.');
     let version: number | null = null;
 
@@ -89,6 +109,27 @@ export function contentApi(opts: ContentApiOptions) {
     if (assetId && method === 'DELETE') {
       if (!(await deleteAsset(sql, needStorage(), assetId))) throw new HttpError(404, 'No such asset.');
       json(res, 200, { deleted: assetId });
+      return;
+    }
+
+    // rental applications: list, approve or turn down, delete. They aren't mall content, so no version bump.
+    if (path === '/api/rentals' && method === 'GET') {
+      json(res, 200, await listRentals(sql));
+      return;
+    }
+    const rental = RENTAL.exec(path);
+    if (rental) {
+      const id = Number(rental[1]);
+      const action = rental[2];
+      if (action && method === 'POST') {
+        const done = await decideRental(sql, id, action === 'approve' ? 'approved' : 'rejected');
+        if (!done) throw new HttpError(404, 'No such application.');
+        if (done === 'decided') throw new HttpError(409, 'This application has already been decided.');
+        json(res, 200, done);
+      } else if (!action && method === 'DELETE') {
+        if (!(await deleteRental(sql, id))) throw new HttpError(404, 'No such application.');
+        json(res, 200, { deleted: id });
+      } else throw new HttpError(405, 'Method not allowed.');
       return;
     }
 

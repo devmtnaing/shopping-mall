@@ -4,7 +4,7 @@
 import { useSignal } from '@preact/signals';
 import { render } from 'preact';
 import { useEffect } from 'preact/hooks';
-import { chatOpen, dialog, mallMeta, panel, phase } from '../state';
+import { chatOpen, dialog, mallMeta, panel, phase, rentUnit } from '../state';
 import { Announcement } from './Announcement';
 import { ApplePrompt } from './ApplePrompt';
 import { Chat } from './Chat';
@@ -28,7 +28,7 @@ const loadDialogs = () => {
 
 function App() {
   const dialogs = useSignal<Dialogs | null>(null);
-  const needDialogs = dialog.value !== null || panel.value !== null;
+  const needDialogs = dialog.value !== null || panel.value !== null || rentUnit.value !== null;
   useEffect(() => {
     if (phase.value !== 'playing' && !needDialogs) return;
     // fetch when first needed, or quietly once the visitor is in
@@ -49,7 +49,7 @@ function App() {
         e.metaKey
       )
         return;
-      if (e.key === 'Enter' && !dialog.value && !panel.value && !chatOpen.value) {
+      if (e.key === 'Enter' && !dialog.value && !panel.value && !rentUnit.value && !chatOpen.value) {
         e.preventDefault();
         chatOpen.value = true;
         return;
@@ -93,6 +93,9 @@ function App() {
       {dialogs.value && dialog.value === 'directory' && <dialogs.value.Directory />}
       {dialogs.value && dialog.value === 'character' && <dialogs.value.Character />}
       {dialogs.value && panel.value && <dialogs.value.ShopPanel id={panel.value} key={panel.value} />}
+      {dialogs.value && rentUnit.value && (
+        <dialogs.value.RentForm slot={rentUnit.value} key={rentUnit.value} />
+      )}
     </>
   );
 }

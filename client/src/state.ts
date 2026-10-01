@@ -53,6 +53,11 @@ export const nearbyShop = signal<string | null>(null);
 /** Id of the shop whose panel is open. */
 export const panel = signal<string | null>(null);
 
+/** Slot id of the vacant unit whose door the player is near (drives the "Rent" prompt). */
+export const nearbyUnit = signal<string | null>(null);
+/** Slot id of the vacant unit whose rental form is open. */
+export const rentUnit = signal<string | null>(null);
+
 /** Which modal dialog is open. */
 export type DialogId = 'help' | 'directory' | 'character';
 export const dialog = signal<DialogId | null>(null);
@@ -115,7 +120,12 @@ export const toasts = signal<Toast[]>([]);
 
 /** True while the UI owns the keyboard (a dialog is open), so the player shouldn't move. */
 export const uiHasFocus = computed(
-  () => phase.value !== 'playing' || dialog.value !== null || panel.value !== null || chatOpen.value,
+  () =>
+    phase.value !== 'playing' ||
+    dialog.value !== null ||
+    panel.value !== null ||
+    rentUnit.value !== null ||
+    chatOpen.value,
 );
 
 export function openShop(id: string) {

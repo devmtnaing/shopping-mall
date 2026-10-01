@@ -2,4 +2,5 @@
 export { Character } from './Character';
 export { Directory } from './Directory';
 export { Help } from './Help';
+export { RentForm } from './RentForm';
 export { ShopPanel } from './ShopPanel';

@@ -18,7 +18,8 @@ import { loadSignFonts, paintSign } from '../render/signs';
 const SIGN_PX = 1024;
 /** How close (m) to a door you need to be for the "Visit" prompt. */
 const PROMPT_RANGE = 2.6;
-const VACANT_COLORS = { bg: '#2a2926', accent: '#8e8b86' };
+// gold accent: the subtitle invites people to rent, so it should read from across the hall
+const VACANT_COLORS = { bg: '#2a2926', accent: '#e2b857' };
 
 function texture(canvas: HTMLCanvasElement): CanvasTexture {
   const t = new CanvasTexture(canvas);
@@ -31,6 +32,8 @@ export type Storefronts = {
   group: Group;
   /** The shop whose door the player is standing near (or inside), if any. */
   nearby(feet: Vector3): Shop | null;
+  /** The vacant unit whose door the player is near (or inside), if any: they can apply to rent it. */
+  vacantNearby(feet: Vector3): Slot | null;
   /** Repaint the shared "Coming soon" sign (e.g. after a language change). */
   setVacantText(title: string, subtitle: string): Promise<void>;
   /** Free geometries, materials and textures (before replacing it with a rebuilt one). */
@@ -50,6 +53,7 @@ export async function buildStorefronts(
   let vacantTex: CanvasTexture | null = null;
   let vacantAspect = 4;
   const placed: { slot: Slot; shop: Shop }[] = [];
+  const vacantSlots: { slot: Slot }[] = [];
   for (const slot of meta.slots) {
     const shop = bySlot.get(slot.id);
     const [w, h] = slot.sign.size;
@@ -67,11 +71,10 @@ export async function buildStorefronts(
       );
       placed.push({ slot, shop });
     } else {
+      vacantSlots.push({ slot });
       // every vacant unit shares one texture (they all say the same thing)
       vacantAspect = w / h;
-      vacantTex ??= texture(
-        paintSign({ ...vacant, ...VACANT_COLORS, width: SIGN_PX / 2, aspect: vacantAspect }),
-      );
+      vacantTex ??= texture(paintSign({ ...vacant, ...VACANT_COLORS, width: SIGN_PX, aspect: vacantAspect }));
       map = vacantTex;
     }
     // unlit and not tone-mapped: signs read as glowing panels
@@ -114,10 +117,12 @@ export async function buildStorefronts(
     o.matrixAutoUpdate = false;
   });
 
-  function nearby(feet: Vector3): Shop | null {
-    let best: Shop | null = null;
+  /** The unit whose door is nearest (or that the feet are inside), within range. */
+  function nearest<T extends { slot: Slot }>(feet: Vector3, units: readonly T[]): T | null {
+    let best: T | null = null;
     let bestD = PROMPT_RANGE;
-    for (const { slot, shop } of placed) {
+    for (const unit of units) {
+      const { slot } = unit;
       const { min, max } = slot.interior;
       const inside =
         feet.x >= min[0] &&
@@ -126,16 +131,18 @@ export async function buildStorefronts(
         feet.z <= max[2] &&
         feet.y >= min[1] - 0.5 &&
         feet.y <= max[1];
-      if (inside) return shop;
+      if (inside) return unit;
       if (Math.abs(feet.y - slot.door.pos[1]) > 1.5) continue;
       const d = Math.hypot(feet.x - slot.door.pos[0], feet.z - slot.door.pos[2]);
       if (d < bestD) {
         bestD = d;
-        best = shop;
+        best = unit;
       }
     }
     return best;
   }
+  const nearby = (feet: Vector3) => nearest(feet, placed)?.shop ?? null;
+  const vacantNearby = (feet: Vector3) => nearest(feet, vacantSlots)?.slot ?? null;
 
   async function setVacantText(title: string, subtitle: string) {
     if (!vacantTex) return;
@@ -144,7 +151,7 @@ export async function buildStorefronts(
       title,
       subtitle,
       ...VACANT_COLORS,
-      width: SIGN_PX / 2,
+      width: SIGN_PX,
       aspect: vacantAspect,
     });
     vacantTex.needsUpdate = true;
@@ -161,5 +168,5 @@ export async function buildStorefronts(
     });
   }
 
-  return { group, nearby, setVacantText, dispose };
+  return { group, nearby, vacantNearby, setVacantText, dispose };
 }

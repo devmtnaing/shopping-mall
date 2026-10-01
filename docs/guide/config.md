@@ -55,6 +55,7 @@ Set these as environment variables, in a `.env` file if you use docker compose. 
 | `IDLE_KICK_MIN` | Minutes without moving, chatting or emoting before someone leaves the mall, with a warning a minute before (default 15). Moving brings them straight back. `0` turns it off. |
 | `ROOM_CAPACITY` | How many people fit in a room before newcomers go to `main-2`, `main-3` and so on (default 100). |
 | `REPORT_WEBHOOK` | A URL that also gets each player report as a POST, for example a chat webhook. |
+| `RENTAL_WEBHOOK` | A URL that gets each rental application as a POST, for example a Slack or Discord incoming webhook ([renting out units](./shops#renting-out-empty-units)). |
 | `BLOCKLIST_FILE` | Words to mask in chat and refuse in names. |
 | `EVENTS` | Set to `off` to stop logging the anonymous usage events ([privacy](../privacy)). |
 | `PORT` | Server port (default 8787). |

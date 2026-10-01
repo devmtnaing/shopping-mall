@@ -143,13 +143,26 @@ function Upload({ kind, label, onDone }: { kind: string; label: string; onDone: 
 
 export function ShopEditor(props: {
   shop?: Shop;
+  /** For a new shop: details to start from (an approved rental application). */
+  prefill?: { slot: string; name: string; description: string };
   slots: Slot[];
   taken: Map<string, string>;
   onSaved: () => void;
   onCancel: () => void;
 }) {
   const isNew = !props.shop;
-  const d = useSignal<Draft>(toDraft(props.shop));
+  const d = useSignal<Draft>(
+    props.shop || !props.prefill
+      ? toDraft(props.shop)
+      : {
+          ...toDraft(),
+          slot: props.prefill.slot,
+          // trimmed to what a shop allows; the host edits from here
+          name: props.prefill.name.slice(0, 40),
+          id: slug(props.prefill.name),
+          description: props.prefill.description.slice(0, 600),
+        },
+  );
   const errors = useSignal<FieldError[]>([]);
   const status = useSignal('');
   const set = (patch: Partial<Draft>) => (d.value = { ...d.value, ...patch });

@@ -4,12 +4,14 @@
 import { useSignal } from '@preact/signals';
 import type { MallConfig, Shop } from '@shopping-mall/shared/config';
 import type { MallArt, MallMeta } from '@shopping-mall/shared/meta';
+import type { RentalApplication } from '@shopping-mall/shared/rentals';
 import { render } from 'preact';
 import { useEffect } from 'preact/hooks';
 import { Assets } from './Assets';
 import { api, fileUrl, token } from './api';
 import { Building } from './Building';
 import { MallForm } from './MallForm';
+import { Rentals } from './Rentals';
 import { ShopEditor } from './ShopEditor';
 import { ShopList } from './ShopList';
 import './admin.css';
@@ -52,8 +54,16 @@ function SignIn() {
   );
 }
 
-type Tab = 'shops' | 'mall' | 'building' | 'files';
-const TABS: Record<Tab, string> = { shops: 'Shops', mall: 'Mall', building: 'Building', files: 'Files' };
+type Tab = 'shops' | 'rentals' | 'mall' | 'building' | 'files';
+const TABS: Record<Tab, string> = {
+  shops: 'Shops',
+  rentals: 'Rentals',
+  mall: 'Mall',
+  building: 'Building',
+  files: 'Files',
+};
+/** How often to look for new rental applications while the admin is open. */
+const RENTALS_POLL_MS = 30_000;
 const BUILT_IN_META = '/assets/mall/mall.meta.json';
 
 function Admin() {
@@ -62,6 +72,8 @@ function Admin() {
   const slots = useSignal<MallMeta['slots']>([]);
   const tab = useSignal<Tab>('shops');
   const editing = useSignal<Shop | 'new' | null>(null);
+  const rentals = useSignal<RentalApplication[]>([]);
+  const prefill = useSignal<RentalApplication | null>(null);
   const error = useSignal('');
 
   const load = async () => {
@@ -76,14 +88,30 @@ function Admin() {
       error.value = (e as Error).message;
     }
   };
+  const loadRentals = async () => {
+    try {
+      rentals.value = await api.rentals();
+    } catch {
+      /* shown as no news; the next poll tries again */
+    }
+  };
   useEffect(() => {
     void load();
+    void loadRentals();
+    const timer = setInterval(loadRentals, RENTALS_POLL_MS);
+    return () => clearInterval(timer);
   }, []);
+  const pending = rentals.value.filter((r) => r.status === 'pending').length;
+  // the tab title shows waiting applications, so they're noticed from another tab
+  useEffect(() => {
+    document.title = `${pending ? `(${pending}) ` : ''}Mall admin`;
+  }, [pending]);
 
   const c = cfg.value;
   const taken = new Map((c?.shops ?? []).map((s) => [s.slot, s.id]));
   const done = async () => {
     editing.value = null;
+    prefill.value = null;
     await load();
   };
 
@@ -101,9 +129,15 @@ function Admin() {
               onClick={() => {
                 tab.value = t;
                 editing.value = null;
+                prefill.value = null;
               }}
             >
               {TABS[t]}
+              {t === 'rentals' && pending > 0 && (
+                <span class="badge" role="status" aria-label={`${pending} waiting`}>
+                  {pending}
+                </span>
+              )}
             </button>
           ))}
         </nav>
@@ -138,10 +172,31 @@ function Admin() {
           <ShopEditor
             key={editing.value === 'new' ? 'new' : editing.value.id}
             shop={editing.value === 'new' ? undefined : editing.value}
+            prefill={
+              editing.value === 'new' && prefill.value
+                ? { slot: prefill.value.slot, name: prefill.value.business, description: prefill.value.about }
+                : undefined
+            }
             slots={slots.value}
             taken={taken}
             onSaved={done}
-            onCancel={() => (editing.value = null)}
+            onCancel={() => {
+              editing.value = null;
+              prefill.value = null;
+            }}
+          />
+        )}
+        {c && tab.value === 'rentals' && (
+          <Rentals
+            rentals={rentals.value}
+            slots={slots.value}
+            shops={c.shops}
+            onChanged={loadRentals}
+            onCreateShop={(a) => {
+              prefill.value = a;
+              editing.value = 'new';
+              tab.value = 'shops';
+            }}
           />
         )}
         {c && tab.value === 'mall' && <MallForm mall={c.mall} onSaved={load} />}
