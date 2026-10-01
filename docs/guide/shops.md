@@ -67,7 +67,7 @@ To keep hosting costs down, owners are kept small:
 | Each photo | 300 KB. The page shrinks photos before uploading (a logo to 512 px, a product photo to 900 px, as WebP), so a phone photo of several MB ends up around 100 KB. |
 | Sign-in attempts | 5, then one a minute, from each address |
 
-Their uploads show in **Files** as "from <shop>'s owner". One email can look after one shop.
+Their uploads show in **Files** as "from *shop*'s owner". One email can look after one shop.
 
 **Forgot their password**, or want to give the shop to someone else? Press **Make a new link** (for a new email, change it first). Their old password stops working and they're signed out. **Remove access** signs them out and takes the shop back. Deleting the shop removes its owner too.
 
