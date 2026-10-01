@@ -38,6 +38,9 @@ server {
   listen ${PORT};
   listen [::]:${PORT};
   root /usr/share/nginx/html;
+  # redirects (/admin → /admin/) say just the path: nginx would otherwise write out its own scheme
+  # and port (http://…:8080), which aren't the ones visitors use behind Railway and Cloudflare
+  absolute_redirect off;
   # look the server up per request (it may start after us, or move), with the container's resolver
   resolver ${NGINX_LOCAL_RESOLVERS} valid=10s;
   set $api http://${API_UPSTREAM};
