@@ -91,11 +91,15 @@ Everything that reaches the server is limited per visitor IP address, so the IP 
 
 The server also keeps `/api/content` and `/directory/` in memory until the content changes, so a flood of reads costs it one small database query each instead of a full load.
 
-**With Cloudflare, turn on** (in the dashboard for the domain):
+**With Cloudflare**, these settings are in the dashboard for your domain (dash.cloudflare.com, then pick the domain). Cloudflare moves menus around now and then. If a path below doesn't match, search the dashboard for the setting's name.
 
-- **Security → Bots → Bot Fight Mode.** It blocks known bots, and it's free.
-- **Security → WAF → Rate limiting rules**, one rule: when the URI path is `/api/rentals`, `/host-token`, or starts with `/api/owner/`, with method `POST`, allow 10 requests per 10 seconds per IP, then block for 10 seconds. The free plan allows one rule, and this is the one that matters. It stops a flood at the edge before it costs your Railway bill anything.
-- **Under Attack Mode** (Overview, under Quick Actions) for the duration of an actual attack. Every visitor gets a short browser check before the page loads. Turn it off afterwards.
+1. **A rate-limiting rule for the forms and sign-ins.** This is the one that matters most. Go to **Security → Security rules** (older dashboards: **Security → WAF → Rate limiting rules**), then **Create rule → Rate limiting rules**:
+   - *When incoming requests match*: Field **URI Path**, operator **is in**, values `/api/rentals`, `/host-token`, `/api/owner/sign-in`, `/api/owner/password`, `/api/owner/invite`.
+   - *With the same characteristics*: **IP**. *When rate exceeds*: **10** requests per **10 seconds**. *Then take action*: **Block**, for **10 seconds**.
+
+   The free plan allows one such rule and can only match on the path, not the method or the hostname, so it applies to these paths on every subdomain. Only the mall uses them. A person filling in a form never comes close to 10 in 10 seconds. A script hammering them is stopped at Cloudflare and never costs you anything on Railway.
+2. **Bot Fight Mode** (optional). Go to **Security → Settings**, filter by **Bot traffic**, and switch on **Bot fight mode** (older dashboards: **Security → Bots**). It challenges traffic that looks automated. It covers the **whole domain**: every subdomain, not just the mall. It can't be limited to one hostname, and no rule can make an exception. Real browsers pass, and search engines are let through. But anything else on the domain that's called by scripts (an API, webhooks, an uptime monitor, a mobile app) may start being challenged. Leave it off if something like that lives on the domain.
+3. **Under Attack Mode**, only during an actual attack. Every visitor gets a few seconds of browser check before the page loads, so turn it off afterwards. The switch under **Overview → Quick Actions** covers the whole domain. To cover just the mall, use a Configuration Rule instead: **Rules → Configuration Rules → Create rule**, *Hostname* equals `mall.devmtnaing.com`, then *Security Level*: **I'm Under Attack**. Turn the rule on when you need it and off afterwards.
 
 **Know the way around Cloudflare.** Railway's own address (`*.up.railway.app`) skips Cloudflare entirely, and so does anyone who sends requests straight to Railway with your domain name. On that path a visitor can also send a made-up `CF-Connecting-IP` with each request, so every request looks like it came from someone new and the per-IP limits stop working. The limits on everyone together (rentals and sign-ins) still hold. Removing the Railway domain from the web service, once the custom domain works, closes the easy way round. Closing it completely means having Cloudflare add a secret header to every request (a Transform Rule) and nginx refusing requests without it. That isn't built yet.
 
