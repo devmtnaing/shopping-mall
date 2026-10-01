@@ -83,6 +83,9 @@ describe('server', () => {
     const c = client();
     const wc = await c.join('Mingu');
     expect([wa.name, wb.name, wc.name]).toEqual(['Mingu', 'mingu-2', 'Mingu-3']);
+    // typing a name that was handed out doesn't give Mingu-2-2
+    const e = client();
+    expect((await e.join('Mingu-2')).name).toBe('Mingu-4');
     expect(wc.players.map((p) => p.name)).toEqual(['Mingu', 'mingu-2']);
     // in another room the name is free
     const d = client('other');
@@ -342,6 +345,10 @@ describe('uniqueName', () => {
     expect(uniqueName(long, [long])).toBe('Aung Kyaw Moe Than-2');
     expect(uniqueName('Aung Kyaw Moe Tha Z', ['Aung Kyaw Moe Tha Z'])).toBe('Aung Kyaw Moe Tha-2'); // no space before the number
     expect(uniqueName('မြတ်', ['မြတ်'])).toBe('မြတ်-2');
+    // a typed name that already ends in a number counts on from it
+    expect(uniqueName('mingu-2', ['Mingu', 'Mingu-2'])).toBe('mingu-3');
+    expect(uniqueName('Mingu-2', ['Mingu-2', 'Mingu-3'])).toBe('Mingu-4');
+    expect(uniqueName('Mingu-2', ['Mingu'])).toBe('Mingu-2'); // free: kept as typed
   });
 });
 

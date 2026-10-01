@@ -13,14 +13,17 @@ export function cleanName(raw: string): string | null {
 
 /**
  * A name nobody else in the room is using (ignoring case): the name itself if it's free, otherwise
- * Mingu-2, Mingu-3… shortening the name if the number would take it past NAME_MAX.
+ * Mingu-2, Mingu-3… shortening the name if the number would take it past NAME_MAX. A name that
+ * already ends in a number counts on from it: a second Mingu-2 becomes Mingu-3, not Mingu-2-2.
  */
 export function uniqueName(name: string, taken: Iterable<string>): string {
   const used = new Set([...taken].map((n) => n.toLowerCase()));
   if (!used.has(name.toLowerCase())) return name;
-  for (let n = 2; ; n++) {
+  const numbered = /^(.*\S)-(\d{1,3})$/u.exec(name);
+  const stem = numbered ? (numbered[1] as string) : name;
+  for (let n = numbered ? Number(numbered[2]) + 1 : 2; ; n++) {
     const suffix = `-${n}`;
-    const base = [...name]
+    const base = [...stem]
       .slice(0, NAME_MAX - suffix.length)
       .join('')
       .trimEnd();
