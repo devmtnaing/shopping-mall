@@ -1,6 +1,7 @@
 // The schema for mall.config.ts — the one file operators edit.
 // Validated at build time (client/vite.config.ts) so mistakes fail loudly with a readable path.
 import { z } from 'zod';
+import { MEASURES, SIZE_LIMITS } from './fit.ts';
 
 const color = z.string().regex(/^#[0-9a-fA-F]{6}$/, 'must be a hex colour like #e2b857');
 const id = z.string().regex(/^[a-z0-9][a-z0-9-]*$/, 'lowercase letters, digits and dashes only');
@@ -10,6 +11,21 @@ const url = z
   .refine((s) => s.startsWith('/') || /^https?:\/\//.test(s), 'must be https://… or /path');
 
 const link = z.object({ label: z.string().min(1), url });
+
+const cm = z
+  .number()
+  .min(SIZE_LIMITS.min, `at least ${SIZE_LIMITS.min} cm`)
+  .max(SIZE_LIMITS.max, `at most ${SIZE_LIMITS.max} cm`);
+/** A clothing size chart: the garment's own measurements in each size (shared/src/fit.ts). */
+export const sizesSchema = z
+  .array(
+    z.object({
+      size: z.string().trim().min(1, 'name the size').max(SIZE_LIMITS.label),
+      cm: z.partialRecord(z.enum(MEASURES), cm),
+    }),
+  )
+  .max(SIZE_LIMITS.sizes, `at most ${SIZE_LIMITS.sizes} sizes`)
+  .refine((rows) => new Set(rows.map((r) => r.size.toLowerCase())).size === rows.length, 'each size once');
 
 const products = z.discriminatedUnion('adapter', [
   z.object({
@@ -22,6 +38,7 @@ const products = z.discriminatedUnion('adapter', [
         compareAt: z.number().nonnegative().optional(),
         image: url.optional(),
         url: url.optional(),
+        sizes: sizesSchema.optional(),
       }),
     ),
   }),

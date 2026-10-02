@@ -1,7 +1,7 @@
 import { parseConfig } from '@shopping-mall/shared/config';
 import { afterEach, describe, expect, it } from 'vitest';
 import config from '../../mall.config';
-import { loadContent, seedIfEmpty } from '../src/db/content';
+import { loadContent, saveShop, seedIfEmpty } from '../src/db/content';
 import { migrate, type Sql } from '../src/db/db';
 import { freshSchema, TEST_DB } from './db';
 
@@ -50,6 +50,32 @@ describe.runIf(TEST_DB)('content database', () => {
     expect(loaded.shops).toEqual(seed.shops);
     // and it passes the same validation the config file does
     expect(() => parseConfig(loaded)).not.toThrow();
+  });
+
+  it('keeps a product’s size chart', async () => {
+    db = await freshSchema();
+    await seedIfEmpty(db.sql, seed);
+    const sizes = [
+      { size: 'S', cm: { chest: 96, shoulder: 44, length: 70 } },
+      { size: 'M', cm: { chest: 102, shoulder: 46, length: 72 } },
+    ];
+    const tee = { id: 'tee', name: 'Everyday tee', price: 20, sizes };
+    const shop = parseConfig({
+      mall: seed.mall,
+      shops: [
+        {
+          id: 'cloth',
+          slot: 'u-w0',
+          name: 'Cloth',
+          colors: { bg: '#000000', accent: '#ffffff' },
+          products: { adapter: 'static', items: [tee, { id: 'cap', name: 'Cap', price: 9 }] },
+        },
+      ],
+    }).shops[0];
+    await saveShop(db.sql, shop as (typeof seed.shops)[number]);
+    const { config: loaded } = await loadContent(db.sql, assetUrl);
+    const items = loaded.shops.find((s) => s.id === 'cloth')?.products;
+    expect(items).toEqual({ adapter: 'static', items: [tee, { id: 'cap', name: 'Cap', price: 9 }] });
   });
 
   it('refuses two shops in one slot, and removes products with their shop', async () => {

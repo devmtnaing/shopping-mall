@@ -20,6 +20,27 @@ describe('parseConfig', () => {
     expect(() => parseConfig(bad)).toThrow(/shops\[0\]\.colors\.bg/);
   });
 
+  it('checks size charts on products', () => {
+    const withSizes = (sizes: unknown) => ({
+      mall: { name: 'M' },
+      shops: [
+        { ...shop, products: { adapter: 'static', items: [{ id: 't', name: 'Tee', price: 1, sizes }] } },
+      ],
+    });
+    const ok = parseConfig(withSizes([{ size: 'M', cm: { chest: 100 } }]));
+    expect(ok.shops[0]?.products).toMatchObject({ items: [{ sizes: [{ size: 'M', cm: { chest: 100 } }] }] });
+    expect(() => parseConfig(withSizes([{ size: 'M', cm: { chest: 5 } }]))).toThrow(/at least 10 cm/);
+    expect(() => parseConfig(withSizes([{ size: 'M', cm: { elbow: 30 } }]))).toThrow();
+    expect(() =>
+      parseConfig(
+        withSizes([
+          { size: 'M', cm: { chest: 100 } },
+          { size: 'm', cm: { chest: 104 } },
+        ]),
+      ),
+    ).toThrow(/each size once/);
+  });
+
   it('rejects two shops in one slot', () => {
     const two = { mall: { name: 'M' }, shops: [shop, { ...shop, id: 'b' }] };
     expect(() => parseConfig(two)).toThrow(/slot "w0" is already used by shop "a"/);

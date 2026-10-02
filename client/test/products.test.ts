@@ -89,3 +89,23 @@ describe('formatPrice', () => {
     expect(formatPrice(32000, 'MMK', 'en-US')).toMatch(/32,000/);
   });
 });
+
+describe('size charts from feeds', () => {
+  it('keeps well-formed sizes and drops the rest', () => {
+    const [p] = normalize([
+      {
+        name: 'Tee',
+        price: 20,
+        sizes: [
+          { size: ' M ', cm: { chest: 100, elbow: 30, waist: 'x', hips: 2 } },
+          { size: 'm', cm: { chest: 104 } }, // the same size twice
+          { size: 'L', cm: {} },
+          { size: '', cm: { chest: 108 } },
+          'XL',
+        ],
+      },
+    ]);
+    expect(p?.sizes).toEqual([{ size: 'M', cm: { chest: 100 } }]);
+    expect(normalize([{ name: 'Mug', price: 5, sizes: 'one size' }])[0]).not.toHaveProperty('sizes');
+  });
+});
