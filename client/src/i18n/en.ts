@@ -133,6 +133,7 @@ export const en = {
   'mod.options': 'Options for {name}',
   'sign.comingSoon': 'Coming soon',
   'sign.available': 'Unit available · Come and rent it',
+  'sign.requested': 'Unit requested · Application under review',
   'prompt.rent': 'Rent this unit',
   'prompt.applied': 'Application sent',
   'prompt.requested': 'Already requested',

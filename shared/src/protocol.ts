@@ -163,6 +163,8 @@ export type ServerMessage =
   | { t: 'announce'; text: string }
   /** Shops or mall details changed: refetch /api/content if your version is older. */
   | { t: 'content'; version: number }
+  /** Vacant units with a rental application waiting: their signs say so (after any change). */
+  | { t: 'requested'; slots: string[] }
   /**
    * `full`: the mall has as many people as it takes. `busy`: too many connections from one place.
    * `away` and `idle`: you were taken out of the mall (your tab was in the background, or you'd been

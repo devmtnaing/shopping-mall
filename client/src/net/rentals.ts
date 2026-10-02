@@ -3,15 +3,13 @@
 import { requestedUnits } from '../state';
 import { httpUrl } from './socket';
 
-let requestedAt = 0;
 /**
- * Refresh which vacant units already have an application waiting (state.requestedUnits). Called
- * when someone walks up to a vacant unit or opens its form; at most every few seconds unless forced.
+ * Refresh which vacant units already have an application waiting (state.requestedUnits), when the
+ * rental form opens. The server also sends the list on joining and after every change.
  */
-export async function refreshRequested(force = false) {
+export async function refreshRequested() {
   const url = httpUrl('/api/rentals/requested');
-  if (!url || (!force && Date.now() - requestedAt < 5000)) return;
-  requestedAt = Date.now();
+  if (!url) return;
   try {
     const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
     if (res.ok) requestedUnits.value = ((await res.json()) as { slots: string[] }).slots;

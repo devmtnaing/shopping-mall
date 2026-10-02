@@ -44,6 +44,7 @@ import {
   pose,
   profile,
   rentUnit,
+  requestedUnits,
   seatPrompt,
   toast,
   uiHasFocus,
@@ -98,10 +99,16 @@ import('./render/mirror')
     mirror = installFloorMirror(renderer, scene);
   })
   .catch((e) => console.warn('mirror:', e));
-const vacant = () => ({ title: t('sign.comingSoon'), subtitle: t('sign.available') });
+const vacant = () => ({
+  title: t('sign.comingSoon'),
+  available: t('sign.available'),
+  requested: t('sign.requested'),
+});
 let storefronts = await buildStorefronts(mall.meta, content.value.shops, vacant());
 // repaint the "Coming soon" signs when the language changes
-locale.subscribe(() => storefronts.setVacantText(t('sign.comingSoon'), t('sign.available')));
+locale.subscribe(() => storefronts.setVacantText(vacant()));
+// a unit someone has applied for says so, for everyone (requestedUnits comes from the server)
+effect(() => storefronts.setRequested(requestedUnits.value));
 scene.add(storefronts.group);
 mallMeta.value = mall.meta;
 // benches, plants, lamps…: after the mall, never blocking it, and far-off packs as you approach
@@ -382,6 +389,7 @@ effect(() => {
     scene.remove(storefronts.group);
     storefronts.dispose();
     storefronts = next;
+    next.setRequested(requestedUnits.value);
     scene.add(next.group);
   });
   // a shop that no longer exists can't keep its panel open

@@ -34,30 +34,48 @@ export type Storefronts = {
   nearby(feet: Vector3): Shop | null;
   /** The vacant unit whose door the player is near (or inside), if any: they can apply to rent it. */
   vacantNearby(feet: Vector3): Slot | null;
-  /** Repaint the shared "Coming soon" sign (e.g. after a language change). */
-  setVacantText(title: string, subtitle: string): Promise<void>;
+  /** Repaint the shared "Coming soon" signs (e.g. after a language change). */
+  setVacantText(text: VacantText): Promise<void>;
+  /** Which vacant units have an application waiting: their signs say "requested" instead. */
+  setRequested(slots: readonly string[]): void;
   /** Free geometries, materials and textures (before replacing it with a rebuilt one). */
   dispose(): void;
 };
 
+/** What vacant units' signs say: free to rent, or already applied for. */
+export type VacantText = { title: string; available: string; requested: string };
+
 export async function buildStorefronts(
   meta: MallMeta,
   shops: readonly Shop[],
-  vacant: { title: string; subtitle: string },
+  vacant: VacantText,
 ): Promise<Storefronts> {
   const group = new Group();
   group.name = 'storefronts';
   const bySlot = new Map(shops.map((s) => [s.slot, s]));
-  await loadSignFonts(shops.flatMap((s) => [s.name, s.tagline ?? '']).concat(vacant.title, vacant.subtitle));
+  await loadSignFonts(
+    shops.flatMap((s) => [s.name, s.tagline ?? '']).concat(vacant.title, vacant.available, vacant.requested),
+  );
 
-  let vacantTex: CanvasTexture | null = null;
+  // every vacant unit shares one of two textures: free to rent, or requested
   let vacantAspect = 4;
+  const paintVacant = (text: VacantText, which: 'available' | 'requested') =>
+    paintSign({
+      title: text.title,
+      subtitle: text[which],
+      ...VACANT_COLORS,
+      width: SIGN_PX,
+      aspect: vacantAspect,
+    });
+  let availableTex: CanvasTexture | null = null;
+  let requestedTex: CanvasTexture | null = null;
   const placed: { slot: Slot; shop: Shop }[] = [];
-  const vacantSlots: { slot: Slot }[] = [];
+  const vacantSlots: { slot: Slot; material: MeshBasicMaterial }[] = [];
   for (const slot of meta.slots) {
     const shop = bySlot.get(slot.id);
     const [w, h] = slot.sign.size;
     let map: Texture;
+    let vacantSlot = false;
     if (shop) {
       map = texture(
         paintSign({
@@ -71,14 +89,16 @@ export async function buildStorefronts(
       );
       placed.push({ slot, shop });
     } else {
-      vacantSlots.push({ slot });
-      // every vacant unit shares one texture (they all say the same thing)
+      vacantSlot = true;
       vacantAspect = w / h;
-      vacantTex ??= texture(paintSign({ ...vacant, ...VACANT_COLORS, width: SIGN_PX, aspect: vacantAspect }));
-      map = vacantTex;
+      availableTex ??= texture(paintVacant(vacant, 'available'));
+      requestedTex ??= texture(paintVacant(vacant, 'requested'));
+      map = availableTex;
     }
     // unlit and not tone-mapped: signs read as glowing panels
-    const sign = new Mesh(new PlaneGeometry(w, h), new MeshBasicMaterial({ map, toneMapped: false }));
+    const material = new MeshBasicMaterial({ map, toneMapped: false });
+    if (vacantSlot) vacantSlots.push({ slot, material });
+    const sign = new Mesh(new PlaneGeometry(w, h), material);
     sign.position.fromArray(slot.sign.pos);
     // a plane faces +Z; yaw + π turns it to face along the slot's "out" direction
     sign.rotation.y = slot.sign.yaw + Math.PI;
@@ -144,17 +164,18 @@ export async function buildStorefronts(
   const nearby = (feet: Vector3) => nearest(feet, placed)?.shop ?? null;
   const vacantNearby = (feet: Vector3) => nearest(feet, vacantSlots)?.slot ?? null;
 
-  async function setVacantText(title: string, subtitle: string) {
-    if (!vacantTex) return;
-    await loadSignFonts([title, subtitle]);
-    vacantTex.image = paintSign({
-      title,
-      subtitle,
-      ...VACANT_COLORS,
-      width: SIGN_PX,
-      aspect: vacantAspect,
-    });
-    vacantTex.needsUpdate = true;
+  async function setVacantText(text: VacantText) {
+    if (!availableTex || !requestedTex) return;
+    await loadSignFonts([text.title, text.available, text.requested]);
+    availableTex.image = paintVacant(text, 'available');
+    requestedTex.image = paintVacant(text, 'requested');
+    availableTex.needsUpdate = true;
+    requestedTex.needsUpdate = true;
+  }
+
+  function setRequested(slots: readonly string[]) {
+    for (const { slot, material } of vacantSlots)
+      material.map = slots.includes(slot.id) ? requestedTex : availableTex;
   }
 
   function dispose() {
@@ -166,7 +187,10 @@ export async function buildStorefronts(
       mat.map?.dispose();
       mat.dispose();
     });
+    // a vacant sign shows only one of the two at a time
+    availableTex?.dispose();
+    requestedTex?.dispose();
   }
 
-  return { group, nearby, vacantNearby, setVacantText, dispose };
+  return { group, nearby, vacantNearby, setVacantText, setRequested, dispose };
 }

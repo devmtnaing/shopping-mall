@@ -32,6 +32,7 @@ import {
   parkedFor,
   phase,
   profile,
+  requestedUnits,
   roomCount,
   toast,
 } from '../state';
@@ -117,6 +118,10 @@ export function createMultiplayer(opts: {
         return addChat({ kind: 'sys', text: `📣 ${m.text}` });
       }
       if (m.t === 'content') return onContentVersion(m.version);
+      if (m.t === 'requested') {
+        requestedUnits.value = m.slots;
+        return;
+      }
       if (m.t === 'welcome') {
         remotes.welcome(m.id, m.players);
         // someone in the room already had your name, so the server added a number: say so, once

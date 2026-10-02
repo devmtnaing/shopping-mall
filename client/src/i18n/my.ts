@@ -133,6 +133,7 @@ export const my: Partial<Record<Key, string>> = {
   'mod.options': '{name} အတွက် ရွေးချယ်စရာများ',
   'sign.comingSoon': 'မကြာမီ ဖွင့်မည်',
   'sign.available': 'ဆိုင်ခန်း ငှားရန် ရှိသည် · လာငှားပါ',
+  'sign.requested': 'ဆိုင်ခန်း လျှောက်ထားပြီး · စစ်ဆေးနေဆဲ',
   'prompt.rent': 'ဒီဆိုင်ခန်း ငှားမယ်',
   'prompt.applied': 'လျှောက်လွှာ ပို့ပြီး',
   'prompt.requested': 'လျှောက်ထားသူ ရှိပြီ',

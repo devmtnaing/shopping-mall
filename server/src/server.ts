@@ -16,6 +16,7 @@ import { type RawData, type WebSocket, WebSocketServer } from 'ws';
 import { pruneChat, recentChat, saveChat } from './db/chat.ts';
 import { contentVersion, loadContent } from './db/content.ts';
 import type { Sql } from './db/db.ts';
+import { requestedSlots } from './db/rentals.ts';
 import { eventsHandler } from './events.ts';
 import { issueHostToken, secretMatches, verifyHostToken } from './host.ts';
 import { contentApi } from './http/content-api.ts';
@@ -209,6 +210,10 @@ export async function startServer(opts: ServerOptions = {}) {
         secret: hostSecret,
         allow,
         onRental: (a) => void notifyRental(a, rentalWebhook),
+        // repaint the vacant units' signs for everyone in the mall
+        onRequested: (slots) => {
+          for (const room of rooms.values()) room.broadcast({ t: 'requested', slots });
+        },
         mailer: opts.mailer,
         publicUrl: opts.publicUrl,
         // tell every connected visitor that content changed (they refetch it)
@@ -473,6 +478,11 @@ export async function startServer(opts: ServerOptions = {}) {
         players: others,
         chat,
       } satisfies ServerMessage);
+      // which vacant units are applied for, so their signs are right from the start
+      if (db) {
+        const slots = await requestedSlots(db).catch(() => null);
+        if (slots?.length) s.player.send({ t: 'requested', slots } satisfies ServerMessage);
+      }
     }
 
     ws.on('close', (code: number) => {

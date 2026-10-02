@@ -7,6 +7,7 @@ import type { Sql } from '../src/db/db';
 import { issueHostToken } from '../src/host';
 import { startServer } from '../src/server';
 import { freshSchema, TEST_DB } from './db';
+import { TestClient } from './helpers';
 
 const SECRET = 'test-secret';
 const taken = config.shops[0]?.slot as string;
@@ -95,6 +96,24 @@ describe.runIf(TEST_DB)('rental applications', () => {
     await fetch(`${base}/api/rentals/${a.id}/reject`, { method: 'POST', headers: host });
     expect(await requested()).toEqual([]);
     expect((await post(apply({ business: 'B' }), '10.0.0.2')).status).toBe(201);
+  });
+
+  it('tells everyone in the mall when a unit is requested and when it frees up', async () => {
+    const visitor = new TestClient(server.port);
+    await visitor.join('Visitor');
+    await post(apply());
+    expect(await visitor.waitFor((m) => m.t === 'requested')).toEqual({ t: 'requested', slots: ['e3'] });
+    // someone arriving later is told on joining
+    const late = new TestClient(server.port);
+    await late.join('Late');
+    expect(await late.waitFor((m) => m.t === 'requested')).toEqual({ t: 'requested', slots: ['e3'] });
+    late.close();
+    const a = (await list())[0] as RentalApplication;
+    await fetch(`${base}/api/rentals/${a.id}/reject`, { method: 'POST', headers: host });
+    expect(
+      await visitor.waitFor((m) => m.t === 'requested' && (m as { slots: string[] }).slots.length === 0),
+    ).toEqual({ t: 'requested', slots: [] });
+    visitor.close();
   });
 
   it('keeps exactly one when several apply for the same unit at once', async () => {

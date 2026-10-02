@@ -43,6 +43,8 @@ export type ContentApiOptions = {
   allow?: (req: IncomingMessage, what: 'rental' | 'sign-in') => boolean;
   /** A visitor applied to rent a unit (to tell the host). */
   onRental?: (application: RentalApplication) => void;
+  /** Which units have an application waiting changed (to repaint everyone's signs). */
+  onRequested?: (slots: string[]) => void;
   /** Sends set-password links to new shop owners (mail.ts). */
   mailer?: Mailer | null;
   /** PUBLIC_URL: the mall's address, for links in emails. */
@@ -72,6 +74,7 @@ export function contentApi(opts: ContentApiOptions) {
     secret,
     allow = () => true,
     onRental,
+    onRequested,
     mailer,
     publicUrl,
   } = opts;
@@ -105,6 +108,16 @@ export function contentApi(opts: ContentApiOptions) {
       });
     }
     return cached.body;
+  };
+
+  /** Tell onRequested which units are held now. Runs after the reply is sent, so it never throws. */
+  const requestedChanged = async () => {
+    if (!onRequested) return;
+    try {
+      onRequested(await requestedSlots(sql));
+    } catch (e) {
+      console.warn('rentals: couldn’t list requested units:', (e as Error).message);
+    }
   };
 
   async function route(req: IncomingMessage, res: ServerResponse) {
@@ -154,6 +167,7 @@ export function contentApi(opts: ContentApiOptions) {
         });
       onRental?.(saved);
       json(res, 201, { ok: true });
+      await requestedChanged();
       return;
     }
 
@@ -224,6 +238,7 @@ export function contentApi(opts: ContentApiOptions) {
         if (!(await deleteRental(sql, id))) throw new HttpError(404, 'No such application.');
         json(res, 200, { deleted: id });
       } else throw new HttpError(405, 'Method not allowed.');
+      await requestedChanged(); // a decided or deleted application may free its unit
       return;
     }
 

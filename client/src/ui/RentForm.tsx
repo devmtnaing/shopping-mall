@@ -51,7 +51,7 @@ export function RentForm({ slot }: { slot: string }) {
   // someone else's application is waiting for this unit (this visitor's own shows as 'sent')
   const held = state.value !== 'sent' && requestedUnits.value.includes(slot);
   useEffect(() => {
-    void refreshRequested(true);
+    void refreshRequested();
   }, []);
   const set = (id: Field) => (e: Event) => {
     values.value = { ...values.value, [id]: (e.target as HTMLInputElement).value };

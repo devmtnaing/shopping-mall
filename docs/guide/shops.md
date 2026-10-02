@@ -45,7 +45,7 @@ Every empty unit's sign says **Coming soon · Unit available · Come and rent it
 
 Applications arrive in **Rentals**, which shows a count of waiting ones (in the page title too, so you notice from another tab). It checks for new ones every 30 seconds.
 
-The first visitor to apply holds the unit until you decide. Meanwhile its prompt says **Already requested** and the form tells others that someone has applied and the unit opens again if you turn them down. This holds even when several people send at the same moment: the database keeps exactly one application, and the others are told someone got there first.
+The first visitor to apply holds the unit until you decide. Meanwhile its sign says **Unit requested · Application under review** (for everyone in the mall, as soon as it happens), its prompt says **Already requested** and the form tells others that someone has applied and the unit opens again if you turn them down. This holds even when several people send at the same moment: the database keeps exactly one application, and the others are told someone got there first.
 
 - **Approve** the application, then **Create the shop**: it opens the editor with their unit, name, description and a category for their type of shop filled in, so the unit gets that type's furniture. Then invite them as the shop's owner ([shop owners](#shop-owners)).
 - **Turn down** declines it, and the unit is open to apply for again. **Delete** removes a decided one for good.
