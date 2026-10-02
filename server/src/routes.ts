@@ -68,6 +68,13 @@ export const ROUTES: Route[] = [
     edgeExempt: 'only logs a line, never stores anything, and drops what is over the limit',
   },
   {
+    route: '/api/rentals/requested',
+    methods: ['GET'],
+    access: 'public',
+    limit: 'the general per-IP limit; one small query on the index of waiting applications',
+    edgeExempt: 'a small read the rental form makes when it opens (signs get the list over the socket)',
+  },
+  {
     route: '/api/content',
     methods: ['GET'],
     access: 'public',
