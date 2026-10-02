@@ -19,6 +19,8 @@ export const rentEn = {
   'rent.sent':
     'Thanks, your application for this unit is in. If the host approves it, you’ll get an email with a link to set up your shop.',
   'rent.taken': 'Sorry, this unit has just been taken.',
+  'rent.requested':
+    'Someone has already applied for this unit, and the host is looking at it. If they turn it down, the unit opens again. Other vacant units are free to apply for.',
   'rent.tooMany': 'You’ve sent a few applications already. Please try again later.',
   'rent.invalid': 'Please check the details and try again.',
   'rent.error': 'Couldn’t send your application. Please try again.',
@@ -55,6 +57,8 @@ export const rentMy: Record<RentKey, string> = {
   'rent.sending': 'ပို့နေပါတယ်…',
   'rent.sent': 'ကျေးဇူးပါ၊ ဒီဆိုင်ခန်းအတွက် သင့်လျှောက်လွှာ ရောက်ပါပြီ။ တာဝန်ခံက လက်ခံရင် ဆိုင်ကို စီမံဖို့ လင့်ခ်ပါတဲ့ အီးမေးလ် ရပါမယ်။',
   'rent.taken': 'စိတ်မကောင်းပါဘူး၊ ဒီဆိုင်ခန်းကို ငှားပြီးသွားပါပြီ။',
+  'rent.requested':
+    'ဒီဆိုင်ခန်းအတွက် တခြားသူ လျှောက်ထားပြီးပါပြီ၊ တာဝန်ခံက စစ်ဆေးနေပါတယ်။ ငြင်းပယ်ရင် ပြန်လျှောက်လို့ ရပါမယ်။ တခြား လွတ်နေတဲ့ ဆိုင်ခန်းတွေကို လျှောက်နိုင်ပါတယ်။',
   'rent.tooMany': 'လျှောက်လွှာ အများအပြား ပို့ပြီးပါပြီ။ နောက်မှ ထပ်ကြိုးစားပါ။',
   'rent.invalid': 'အချက်အလက်တွေကို ပြန်စစ်ပြီး ထပ်ကြိုးစားပါ။',
   'rent.error': 'လျှောက်လွှာ ပို့လို့ မရပါ။ ထပ်ကြိုးစားပါ။',

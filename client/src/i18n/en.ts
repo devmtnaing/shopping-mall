@@ -135,6 +135,7 @@ export const en = {
   'sign.available': 'Unit available · Come and rent it',
   'prompt.rent': 'Rent this unit',
   'prompt.applied': 'Application sent',
+  'prompt.requested': 'Already requested',
 } as const;
 
 export type Key = keyof typeof en;

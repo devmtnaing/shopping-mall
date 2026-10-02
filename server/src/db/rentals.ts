@@ -1,5 +1,6 @@
 // Rental applications (migrations/004_rentals.sql). Visitors apply for a vacant unit; the host
-// approves one per unit, which turns down everyone else still waiting for that unit.
+// approves or turns it down. Only one per unit waits at a time (migrations/007), so the first to
+// apply holds the unit; approving still turns down any other waiting one, for older data.
 import type { RentalApplication, RentalRequest, RentalStatus, ShopKind } from '@shopping-mall/shared/rentals';
 import type { Sql } from './db.ts';
 
@@ -37,13 +38,26 @@ export async function slotTaken(sql: Sql, slot: string): Promise<boolean> {
   return !!row;
 }
 
-export async function saveRental(sql: Sql, r: RentalRequest): Promise<RentalApplication> {
+/**
+ * Save an application, or return null if someone else's is already waiting for that unit. The
+ * unique index on waiting applications (migrations/007) decides races: of several sent at once,
+ * exactly one is saved.
+ */
+export async function saveRental(sql: Sql, r: RentalRequest): Promise<RentalApplication | null> {
   const [row] = await sql<
     Row[]
   >`insert into rental_applications (slot, name, email, phone, business, kind, about)
     values (${r.slot}, ${r.name}, ${r.email}, ${r.phone || null}, ${r.business}, ${r.kind}, ${r.about})
+    on conflict (slot) where status = 'pending' do nothing
     returning *`;
-  return toApplication(row as Row);
+  return row ? toApplication(row) : null;
+}
+
+/** Units with an application waiting for the host (no one else can apply for them meanwhile). */
+export async function requestedSlots(sql: Sql): Promise<string[]> {
+  const rows = await sql<{ slot: string }[]>`select slot from rental_applications
+    where status = 'pending' order by slot`;
+  return rows.map((r) => r.slot);
 }
 
 /** Every application: waiting ones first, then the newest. */

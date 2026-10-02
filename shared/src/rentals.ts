@@ -1,5 +1,5 @@
 // Rental applications: a visitor walks up to a vacant unit, presses E and asks to rent it. The
-// host sees every application in /admin and approves one per unit (the others are turned down).
+// host sees every application in /admin. The first to apply holds the unit until the host decides.
 import { z } from 'zod';
 import { SHOP_KINDS } from './shop-kinds.ts';
 

@@ -68,6 +68,11 @@ const readApplied = (): string[] => {
   }
 };
 export const appliedUnits = signal<string[]>(readApplied());
+/** Units someone already has an application waiting for (GET /api/rentals/requested). */
+export const requestedUnits = signal<string[]>([]);
+export function markRequested(slot: string) {
+  if (!requestedUnits.value.includes(slot)) requestedUnits.value = [...requestedUnits.value, slot];
+}
 export function markApplied(slot: string) {
   if (appliedUnits.value.includes(slot)) return;
   appliedUnits.value = [...appliedUnits.value, slot];

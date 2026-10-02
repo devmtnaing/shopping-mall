@@ -64,9 +64,9 @@ export function Rentals(props: {
         <h2 id="rentals-title">Rental applications</h2>
       </header>
       <p class="hint">
-        Visitors apply by pressing E at a vacant unit. Approve one per unit (the others waiting for it are
-        turned down), then create their shop and invite them as its owner: they get a link to set a password
-        and look after the shop themselves.
+        Visitors apply by pressing E at a vacant unit. The first to apply holds it until you decide; turning
+        them down opens it again. Approve one, then create their shop and invite them as its owner: they get a
+        link to set a password and look after the shop themselves.
       </p>
       {error.value && (
         <p class="banner error" role="alert">

@@ -17,7 +17,14 @@ import {
   setMallArt,
 } from '../db/content.ts';
 import type { Sql } from '../db/db.ts';
-import { decideRental, deleteRental, listRentals, saveRental, slotTaken } from '../db/rentals.ts';
+import {
+  decideRental,
+  deleteRental,
+  listRentals,
+  requestedSlots,
+  saveRental,
+  slotTaken,
+} from '../db/rentals.ts';
 import type { Mailer } from '../mail.ts';
 import type { Storage } from '../storage.ts';
 import { ownerApi } from './owner-api.ts';
@@ -136,9 +143,23 @@ export function contentApi(opts: ContentApiOptions) {
         throw new HttpError(429, 'Too many applications from here. Try again later.');
       // the honeypot was filled in: a bot. Say thanks and keep nothing.
       if (r.website) return json(res, 201, { ok: true });
-      if (await slotTaken(sql, r.slot)) throw new HttpError(409, 'Sorry, this unit has just been taken.');
-      onRental?.(await saveRental(sql, r));
+      // `reason` lets the form say which: a shop moved in, or someone else applied first
+      if (await slotTaken(sql, r.slot))
+        return json(res, 409, { error: 'Sorry, this unit has just been taken.', reason: 'taken' });
+      const saved = await saveRental(sql, r);
+      if (!saved)
+        return json(res, 409, {
+          error: 'Someone else has already applied for this unit.',
+          reason: 'requested',
+        });
+      onRental?.(saved);
       json(res, 201, { ok: true });
+      return;
+    }
+
+    // which vacant units already have an application waiting (no personal details)
+    if (path === '/api/rentals/requested' && method === 'GET') {
+      json(res, 200, { slots: await requestedSlots(sql) }, { 'Cache-Control': 'no-store' });
       return;
     }
 

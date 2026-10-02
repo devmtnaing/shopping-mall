@@ -76,20 +76,51 @@ describe.runIf(TEST_DB)('rental applications', () => {
   });
 
   it('limits applications per address', async () => {
-    for (let i = 0; i < 3; i++) expect((await post(apply())).status).toBe(201);
-    expect((await post(apply())).status).toBe(429);
-    expect((await post(apply(), '10.0.0.2')).status).toBe(201);
+    for (let i = 0; i < 3; i++) expect((await post(apply({ slot: `e${i + 3}` }))).status).toBe(201);
+    expect((await post(apply({ slot: 'e9' }))).status).toBe(429);
+    expect((await post(apply({ slot: 'e9' }), '10.0.0.2')).status).toBe(201);
   });
 
-  it('approving one turns down the others for the same unit only', async () => {
+  it('lets the first to apply hold a unit, and says so to everyone else', async () => {
+    const requested = async () =>
+      ((await (await fetch(`${base}/api/rentals/requested`)).json()) as { slots: string[] }).slots;
+    expect(await requested()).toEqual([]);
+    expect((await post(apply({ business: 'A' }), '10.0.0.1')).status).toBe(201);
+    const second = await post(apply({ business: 'B' }), '10.0.0.2');
+    expect(second.status).toBe(409);
+    expect(await second.json()).toMatchObject({ reason: 'requested' });
+    expect(await requested()).toEqual(['e3']);
+    // turned down: the unit opens again
+    const a = (await list())[0] as RentalApplication;
+    await fetch(`${base}/api/rentals/${a.id}/reject`, { method: 'POST', headers: host });
+    expect(await requested()).toEqual([]);
+    expect((await post(apply({ business: 'B' }), '10.0.0.2')).status).toBe(201);
+  });
+
+  it('keeps exactly one when several apply for the same unit at once', async () => {
+    const results = await Promise.all(
+      [1, 2, 3, 4, 5].map((i) => post(apply({ business: `Shop ${i}` }), `10.0.1.${i}`)),
+    );
+    const statuses = results.map((r) => r.status).sort();
+    expect(statuses).toEqual([201, 409, 409, 409, 409]);
+    for (const r of results.filter((x) => x.status === 409))
+      expect(await r.json()).toMatchObject({ reason: 'requested' });
+    expect(await list()).toHaveLength(1);
+  });
+
+  it('says a unit is taken, not requested, once a shop is in it', async () => {
+    const res = await post(apply({ slot: taken }));
+    expect(await res.json()).toMatchObject({ reason: 'taken' });
+  });
+
+  it('approving one leaves other units’ applications alone', async () => {
     await post(apply({ business: 'A' }), '10.0.0.1');
-    await post(apply({ business: 'B' }), '10.0.0.2');
     await post(apply({ business: 'C', slot: 'u-e0' }), '10.0.0.3');
     const a = (await list()).find((r) => r.business === 'A') as RentalApplication;
     const res = await fetch(`${base}/api/rentals/${a.id}/approve`, { method: 'POST', headers: host });
     expect(res.status).toBe(200);
     const by = Object.fromEntries((await list()).map((r) => [r.business, r.status]));
-    expect(by).toEqual({ A: 'approved', B: 'rejected', C: 'pending' });
+    expect(by).toEqual({ A: 'approved', C: 'pending' });
     // decided once
     expect(
       (await fetch(`${base}/api/rentals/${a.id}/reject`, { method: 'POST', headers: host })).status,
@@ -97,7 +128,7 @@ describe.runIf(TEST_DB)('rental applications', () => {
     expect((await fetch(`${base}/api/rentals/${a.id}`, { method: 'DELETE', headers: host })).status).toBe(
       200,
     );
-    expect((await list()).map((r) => r.business).sort()).toEqual(['B', 'C']);
+    expect((await list()).map((r) => r.business).sort()).toEqual(['C']);
     expect((await fetch(`${base}/api/rentals/999/approve`, { method: 'POST', headers: host })).status).toBe(
       404,
     );

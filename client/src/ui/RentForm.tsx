@@ -1,14 +1,17 @@
 // Apply to rent a vacant unit: a few details for the mall's host, who approves one application
-// per unit in /admin (shared/src/rentals.ts). Nothing is kept on this device.
+// per unit in /admin (shared/src/rentals.ts). The first to apply holds the unit until the host
+// decides, so if someone else got there first (even by a moment) the form says so instead.
 
 import { useSignal } from '@preact/signals';
 import type { RentalRequest } from '@shopping-mall/shared/rentals';
 import { SHOP_KINDS, type ShopKind } from '@shopping-mall/shared/shop-kinds';
+import { useEffect } from 'preact/hooks';
 import { content } from '../content';
 import { locale, t } from '../i18n';
 import { RENT_TABLES, type RentKey, rentEn } from '../i18n/rent';
+import { refreshRequested } from '../net/rentals';
 import { httpUrl } from '../net/socket';
-import { appliedUnits, mallMeta, markApplied, rentUnit } from '../state';
+import { appliedUnits, mallMeta, markApplied, markRequested, rentUnit, requestedUnits } from '../state';
 import { Dialog } from './Dialog';
 import { InteriorPlan } from './InteriorPlan';
 
@@ -26,6 +29,9 @@ const tr = (key: RentKey) => RENT_TABLES[locale.value]?.[key] ?? rentEn[key];
 
 const ERRORS: Record<number, RentKey> = { 400: 'rent.invalid', 409: 'rent.taken', 429: 'rent.tooMany' };
 
+/** Why a unit couldn't be applied for (the 409 body's `reason`). */
+type Refusal = { reason?: 'taken' | 'requested' };
+
 export function RentForm({ slot }: { slot: string }) {
   const values = useSignal<Record<Field, string>>({
     name: '',
@@ -42,6 +48,11 @@ export function RentForm({ slot }: { slot: string }) {
   const error = useSignal<RentKey | null>(null);
   const url = httpUrl('/api/rentals');
   const close = () => (rentUnit.value = null);
+  // someone else's application is waiting for this unit (this visitor's own shows as 'sent')
+  const held = state.value !== 'sent' && requestedUnits.value.includes(slot);
+  useEffect(() => {
+    void refreshRequested(true);
+  }, []);
   const set = (id: Field) => (e: Event) => {
     values.value = { ...values.value, [id]: (e.target as HTMLInputElement).value };
   };
@@ -74,6 +85,11 @@ export function RentForm({ slot }: { slot: string }) {
         state.value = 'sent';
         return;
       }
+      if (res.status === 409 && ((await res.json().catch(() => ({}))) as Refusal).reason === 'requested') {
+        markRequested(slot); // beaten to it: show who-got-there-first instead of an error
+        state.value = 'idle';
+        return;
+      }
       // 404: a server without a database has no /api
       error.value = res.status === 404 ? 'rent.offline' : (ERRORS[res.status] ?? 'rent.error');
     } catch {
@@ -88,6 +104,15 @@ export function RentForm({ slot }: { slot: string }) {
         <div class="rent">
           <p class="rent-done" role="status">
             {tr('rent.sent')}
+          </p>
+          <button type="button" class="cta cta-primary" onClick={close}>
+            {t('close')}
+          </button>
+        </div>
+      ) : held ? (
+        <div class="rent">
+          <p class="rent-done" role="status">
+            {tr('rent.requested')}
           </p>
           <button type="button" class="cta cta-primary" onClick={close}>
             {t('close')}

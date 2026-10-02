@@ -135,4 +135,5 @@ export const my: Partial<Record<Key, string>> = {
   'sign.available': 'ဆိုင်ခန်း ငှားရန် ရှိသည် · လာငှားပါ',
   'prompt.rent': 'ဒီဆိုင်ခန်း ငှားမယ်',
   'prompt.applied': 'လျှောက်လွှာ ပို့ပြီး',
+  'prompt.requested': 'လျှောက်ထားသူ ရှိပြီ',
 };

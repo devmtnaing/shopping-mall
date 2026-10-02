@@ -43,10 +43,12 @@ The visitor's browser fetches it when they open the shop, so the feed has to all
 
 Every empty unit's sign says **Coming soon · Unit available · Come and rent it**. A visitor who walks up to one and presses **E** (or taps **Rent this unit**) gets a short form: shop name, type of shop (café, books, fashion, home, games or something else), their name, email, an optional phone number and what they'd sell. Choosing a type shows a plan of how that unit would be furnished, drawn from the same layouts the mall uses. Nothing needs uploading; logos and products come later, when you create the shop.
 
-Applications arrive in **Rentals**, which shows a count of waiting ones (in the page title too, so you notice from another tab). It checks for new ones every 30 seconds. Several people can apply for the same unit:
+Applications arrive in **Rentals**, which shows a count of waiting ones (in the page title too, so you notice from another tab). It checks for new ones every 30 seconds.
 
-- **Approve** one and the others waiting for that unit are turned down. Then contact them by email (the mall doesn't email applicants), and **Create the shop** opens the editor with their unit, name, description and a category for their type of shop filled in, so the unit gets that type's furniture.
-- **Turn down** declines one application. **Delete** removes a decided one for good.
+The first visitor to apply holds the unit until you decide. Meanwhile its prompt says **Already requested** and the form tells others that someone has applied and the unit opens again if you turn them down. This holds even when several people send at the same moment: the database keeps exactly one application, and the others are told someone got there first.
+
+- **Approve** the application, then **Create the shop**: it opens the editor with their unit, name, description and a category for their type of shop filled in, so the unit gets that type's furniture. Then invite them as the shop's owner ([shop owners](#shop-owners)).
+- **Turn down** declines it, and the unit is open to apply for again. **Delete** removes a decided one for good.
 
 To hear about applications straight away, set `RENTAL_WEBHOOK` on the server ([configuration](./config)). Each application is POSTed there with a one-line summary in `text` and `content`, so a Slack or Discord incoming webhook shows it as a message. A visitor can send 3 applications, then one every 20 minutes.
 
