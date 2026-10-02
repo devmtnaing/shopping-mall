@@ -1,0 +1,80 @@
+# When the routes Cloudflare's rate-limiting rule should cover change (server/src/routes.ts), tell
+# the owner: a warning on the pull request, then an issue with the new expression once it's on main,
+# since the rule lives in Cloudflare's dashboard and nothing here can update it.
+# (The test in server/test/routes.test.ts is what fails CI for an undeclared route.)
+name: Cloudflare rule
+on:
+  push:
+    branches: [main]
+    paths: [server/src/routes.ts]
+  pull_request:
+    paths: [server/src/routes.ts]
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  rule:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Compare the rule with the one before
+        id: rule
+        env:
+          BEFORE: ${{ github.event_name == 'push' && github.event.before || github.event.pull_request.base.sha }}
+        run: |
+          node tools/cloudflare-rule.ts > "$RUNNER_TEMP/after.txt"
+          if git show "$BEFORE:server/src/routes.ts" > "$RUNNER_TEMP/routes-before.ts" 2>/dev/null; then
+            node tools/cloudflare-rule.ts "$RUNNER_TEMP/routes-before.ts" > "$RUNNER_TEMP/before.txt"
+          else
+            # routes.ts is new: the rule was set up by hand from docs/deploy.md, which the test checks
+            cp "$RUNNER_TEMP/after.txt" "$RUNNER_TEMP/before.txt"
+          fi
+          if cmp -s "$RUNNER_TEMP/before.txt" "$RUNNER_TEMP/after.txt"; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "Cloudflare's rate-limiting rule is unchanged." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+          {
+            echo "The routes Cloudflare's rate-limiting rule covers have changed. After this is on \`main\`, open"
+            echo "**dash.cloudflare.com → your domain → Security → Security rules**, edit the rate-limiting rule,"
+            echo "click **Edit expression**, and replace it with:"
+            echo
+            echo '```'
+            cat "$RUNNER_TEMP/after.txt"
+            echo '```'
+            echo
+            echo "Before:"
+            echo
+            echo '```'
+            cat "$RUNNER_TEMP/before.txt"
+            echo '```'
+            echo
+            echo "Keep the rest of the rule as it is (IP, 10 requests per 10 seconds, Block for 10 seconds). Steps: docs/deploy.md, \"Abuse and floods\"."
+          } > "$RUNNER_TEMP/body.md"
+          cat "$RUNNER_TEMP/body.md" >> "$GITHUB_STEP_SUMMARY"
+      - name: Warn on the pull request
+        if: github.event_name == 'pull_request' && steps.rule.outputs.changed == 'true'
+        run: echo "::warning title=Cloudflare rule::This changes the routes Cloudflare's rate-limiting rule covers. Update the rule in Cloudflare after merging (the job summary has the new expression)."
+      - name: Open an issue to update Cloudflare
+        if: github.event_name == 'push' && steps.rule.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TITLE: "Update Cloudflare's rate-limiting rule"
+        run: |
+          echo >> "$RUNNER_TEMP/body.md"
+          echo "From ${{ github.sha }}. Close this once the rule in Cloudflare matches." >> "$RUNNER_TEMP/body.md"
+          open=$(gh issue list --state open --search "\"$TITLE\" in:title" --json number --jq '.[0].number')
+          if [ -n "$open" ]; then
+            gh issue comment "$open" --body-file "$RUNNER_TEMP/body.md"
+          else
+            gh issue create --title "$TITLE" --assignee "${{ github.repository_owner }}" --body-file "$RUNNER_TEMP/body.md"
+          fi
