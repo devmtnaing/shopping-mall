@@ -6,6 +6,7 @@ import {
   type Fit,
   fitFor,
   garmentOf,
+  type Measure,
   type Measurements,
   type SizeRow,
 } from '@shopping-mall/shared/fit';
@@ -21,9 +22,11 @@ export type MyFit = {
   unit: 'cm' | 'in';
   /** They've been offered the fit check (and said yes or "not now"), so it isn't offered again. */
   asked: boolean;
+  /** Body measurements estimated from height rather than measured. */
+  estimated: Measure[];
 };
 
-const EMPTY: MyFit = { body: {}, top: {}, bottom: {}, unit: 'cm', asked: false };
+const EMPTY: MyFit = { body: {}, top: {}, bottom: {}, unit: 'cm', asked: false, estimated: [] };
 const KEY = 'fit';
 
 export const myFit = signal<MyFit>({ ...EMPTY, ...load<Partial<MyFit>>(KEY, {}) });
@@ -56,6 +59,22 @@ export function fitForMe(sizes: readonly SizeRow[], m: MyFit = myFit.value): Fit
     if (fit) return fit;
   }
   return null;
+}
+
+/**
+ * Body lengths as shares of height, for shoppers without a tape measure: shoulder breadth and arm
+ * length (shoulder to wrist) from Drillis & Contini's segment proportions (1966, as tabled in
+ * Winter, "Biomechanics and Motor Control of Human Movement"); inside leg from the tailors' rule
+ * of thumb of about 0.45. Chest, waist and hips vary too much with build to guess from height.
+ */
+export const FROM_HEIGHT: Partial<Record<Measure, number>> = { shoulder: 0.259, sleeve: 0.332, inseam: 0.45 };
+
+/** Lengths estimated from a height in cm, rounded to half a cm. */
+export function estimateFromHeight(height: number): Measurements {
+  if (!(height >= 120 && height <= 230)) return {};
+  return Object.fromEntries(
+    Object.entries(FROM_HEIGHT).map(([m, share]) => [m, Math.round(height * (share as number) * 2) / 2]),
+  );
 }
 
 /** cm ⇄ the shopper's unit, for showing and typing (rounded to half a cm or a tenth of an inch). */

@@ -1495,3 +1495,30 @@ kbd {
   outline: 2px solid var(--shop-accent);
   outline-offset: 2px;
 }
+.fit-tabs {
+  justify-self: start;
+}
+.fit-piece {
+  margin: 0;
+  padding: 10px 0 0;
+  border: 0;
+  border-top: 1px solid var(--line);
+}
+.fit-piece legend {
+  padding: 0 0 6px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.fit-estimate {
+  display: grid;
+  gap: 4px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+.fit-estimate-row {
+  display: flex;
+  gap: 8px;
+}
+.fit-height {
+  max-width: 10em;
+}

@@ -39,6 +39,17 @@ The arrows **reorder** shops, which sets their order in the directory. **Delete*
 
 The visitor's browser fetches it when they open the shop, so the feed has to allow cross-origin requests (`Access-Control-Allow-Origin: *`). Your shop system, or a small script, can keep it up to date.
 
+### Size charts: will it fit?
+
+In a fashion shop (any category that gets the fashion interior, such as "Fashion", "Clothing" or "Boutique"), each product has **Add a size chart**. Enter the garment's own measurements in each size, in cm: shoulder, chest, waist, hips, sleeve, inseam and length (tick the ones you use). Chest, waist and hips go all the way round. Up to 8 sizes.
+
+- **Paste a chart** takes rows copied from a spreadsheet or a supplier's website: the size first, then the measurements. A header row (Size, Chest, Waist…) picks the columns, and a range like `96-100` takes the middle.
+- **Inches → cm** converts everything, and **Measured flat? Double them** doubles chest, waist and hips when a chart was measured flat across.
+
+Shoppers aren't asked anything when they arrive. The first time they open a shop whose products have size charts, they're offered the fit check once. If they add their body measurements, or the measurements of a top and trousers they own that fit well, every product with a chart says which size should fit, or the closest one and where it would be tight or loose. Measurements stay on the shopper's device ([privacy](../privacy)). It's a guide: the comfort allowances are in `shared/src/fit.ts`.
+
+A JSON feed can include charts too: `"sizes": [{ "size": "M", "cm": { "chest": 104, "length": 70 } }]`.
+
 ## Renting out empty units
 
 Every empty unit's sign says **Coming soon · Unit available · Come and rent it**. A visitor who walks up to one and presses **E** (or taps **Rent this unit**) gets a short form: shop name, type of shop (café, books, fashion, home, games or something else), their name, email, an optional phone number and what they'd sell. Choosing a type shows a plan of how that unit would be furnished, drawn from the same layouts the mall uses. Nothing needs uploading; logos and products come later, when you create the shop.
