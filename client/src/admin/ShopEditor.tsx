@@ -11,9 +11,19 @@ import { InteriorPlan } from '../ui/InteriorPlan';
 import { layoutFor } from '../world/layouts';
 import { type ApiError, api, type FieldError, fileUrl } from './api';
 import { Area, Color, errorFor, Select, slug, Text } from './fields';
+import { SizeChart } from './SizeChart';
 import { shrink } from './shrink';
+import { type DraftSize, fromDraftSizes, toDraftSizes } from './sizes';
 
-type Product = { id: string; name: string; price: string; compareAt: string; image: string; url: string };
+type Product = {
+  id: string;
+  name: string;
+  price: string;
+  compareAt: string;
+  image: string;
+  url: string;
+  sizes: DraftSize[];
+};
 type Draft = {
   id: string;
   slot: string;
@@ -54,6 +64,7 @@ const toDraft = (s?: Shop): Draft => ({
           compareAt: p.compareAt !== undefined ? String(p.compareAt) : '',
           image: p.image ?? '',
           url: p.url ?? '',
+          sizes: toDraftSizes(p.sizes),
         }))
       : [],
 });
@@ -67,14 +78,18 @@ function toShop(d: Draft): Shop {
       : d.mode === 'list'
         ? {
             adapter: 'static' as const,
-            items: d.products.map((p, i) => ({
-              id: p.id || slug(p.name) || `item-${i + 1}`,
-              name: p.name.trim(),
-              price: Number(p.price),
-              ...(p.compareAt ? { compareAt: Number(p.compareAt) } : {}),
-              ...(opt(p.image) ? { image: p.image } : {}),
-              ...(opt(p.url) ? { url: p.url.trim() } : {}),
-            })),
+            items: d.products.map((p, i) => {
+              const sizes = fromDraftSizes(p.sizes);
+              return {
+                id: p.id || slug(p.name) || `item-${i + 1}`,
+                name: p.name.trim(),
+                price: Number(p.price),
+                ...(p.compareAt ? { compareAt: Number(p.compareAt) } : {}),
+                ...(opt(p.image) ? { image: p.image } : {}),
+                ...(opt(p.url) ? { url: p.url.trim() } : {}),
+                ...(sizes ? { sizes } : {}),
+              };
+            }),
           }
         : undefined;
   return {
@@ -225,6 +240,14 @@ export function ShopEditor(props: {
 
   const setProduct = (i: number, patch: Partial<Product>) =>
     set({ products: v.products.map((p, j) => (j === i ? { ...p, ...patch } : p)) });
+  // size charts are for clothes: offered in fashion shops, or wherever a product already has one
+  const fashion = layoutFor({ category: v.category.trim() || undefined }) === 'fashion';
+  const chartOpen = useSignal<Set<number>>(new Set());
+  const toggleChart = (i: number) => {
+    const next = new Set(chartOpen.value);
+    if (!next.delete(i)) next.add(i);
+    chartOpen.value = next;
+  };
 
   return (
     <form class="editor" onSubmit={save} aria-labelledby="editor-title">
@@ -422,36 +445,63 @@ export function ShopEditor(props: {
         {v.mode === 'list' && (
           <>
             {v.products.map((p, i) => (
-              <div class="product-row" key={i}>
-                {p.image ? <img src={fileUrl(p.image)} alt="" /> : <span class="thumb-empty" />}
-                <Text
-                  label="Product"
-                  value={p.name}
-                  error={err(`products.items.${i}.name`)}
-                  onInput={(name) => setProduct(i, { name })}
-                />
-                <Text
-                  label="Price"
-                  value={p.price}
-                  error={err(`products.items.${i}.price`)}
-                  onInput={(price) => setProduct(i, { price })}
-                />
-                <Text label="Was" value={p.compareAt} onInput={(compareAt) => setProduct(i, { compareAt })} />
-                <Text
-                  label="Link"
-                  value={p.url}
-                  placeholder="https://…"
-                  onInput={(url) => setProduct(i, { url })}
-                />
-                <Upload kind="product-image" label="Image" onDone={(image) => setProduct(i, { image })} />
-                <button
-                  type="button"
-                  class="btn small ghost"
-                  aria-label={`Remove ${p.name || `product ${i + 1}`}`}
-                  onClick={() => set({ products: v.products.filter((_, j) => j !== i) })}
-                >
-                  ✕
-                </button>
+              <div class="product-item" key={i}>
+                <div class="product-row">
+                  {p.image ? <img src={fileUrl(p.image)} alt="" /> : <span class="thumb-empty" />}
+                  <Text
+                    label="Product"
+                    value={p.name}
+                    error={err(`products.items.${i}.name`)}
+                    onInput={(name) => setProduct(i, { name })}
+                  />
+                  <Text
+                    label="Price"
+                    value={p.price}
+                    error={err(`products.items.${i}.price`)}
+                    onInput={(price) => setProduct(i, { price })}
+                  />
+                  <Text
+                    label="Was"
+                    value={p.compareAt}
+                    onInput={(compareAt) => setProduct(i, { compareAt })}
+                  />
+                  <Text
+                    label="Link"
+                    value={p.url}
+                    placeholder="https://…"
+                    onInput={(url) => setProduct(i, { url })}
+                  />
+                  <Upload kind="product-image" label="Image" onDone={(image) => setProduct(i, { image })} />
+                  <button
+                    type="button"
+                    class="btn small ghost"
+                    aria-label={`Remove ${p.name || `product ${i + 1}`}`}
+                    onClick={() => set({ products: v.products.filter((_, j) => j !== i) })}
+                  >
+                    ✕
+                  </button>
+                </div>
+                {(fashion || p.sizes.length > 0) && (
+                  <button
+                    type="button"
+                    class="btn small ghost size-toggle"
+                    aria-expanded={chartOpen.value.has(i)}
+                    onClick={() => toggleChart(i)}
+                  >
+                    {p.sizes.length
+                      ? `Size chart · ${p.sizes.filter((s) => s.size.trim()).length} sizes`
+                      : 'Add a size chart'}
+                  </button>
+                )}
+                {chartOpen.value.has(i) && (
+                  <SizeChart
+                    rows={p.sizes}
+                    name={p.name || `product ${i + 1}`}
+                    errors={errors.value}
+                    prefix={`products.items.${i}.sizes`}
+                    onChange={(sizes) => setProduct(i, { sizes })}
+                  />
+                )}
               </div>
             ))}
             {v.products.length < maxProducts ? (
@@ -462,7 +512,7 @@ export function ShopEditor(props: {
                   set({
                     products: [
                       ...v.products,
-                      { id: '', name: '', price: '', compareAt: '', image: '', url: '' },
+                      { id: '', name: '', price: '', compareAt: '', image: '', url: '', sizes: [] },
                     ],
                   })
                 }
