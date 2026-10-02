@@ -1,6 +1,7 @@
 // Reading and seeding mall content. The shape matches MallConfig (shared/src/config.ts), so the
 // client consumes the same thing whether it comes from the database or from mall.config.ts.
 import type { MallConfig, Shop } from '@shopping-mall/shared/config';
+import type { SizeRow } from '@shopping-mall/shared/fit';
 import type { TransactionSql } from 'postgres';
 import type { Sql } from './db.ts';
 
@@ -31,6 +32,7 @@ type ProductRow = {
   image_asset: string | null;
   image_url: string | null;
   url: string | null;
+  sizes: SizeRow[] | null;
 };
 
 /** If the database has no mall yet, import it from the config file. Returns true if it seeded. */
@@ -50,8 +52,8 @@ export async function seedIfEmpty(sql: Sql, config: MallConfig): Promise<boolean
                        ${tx.json(s.links)}, ${s.products?.adapter === 'json-url' ? s.products.url : null}, ${i})`;
       if (s.products?.adapter !== 'static') continue;
       for (const [j, p] of s.products.items.entries()) {
-        await tx`insert into products (shop_id, id, name, price, compare_at, image_url, url, sort)
-                 values (${s.id}, ${p.id}, ${p.name}, ${p.price}, ${p.compareAt ?? null}, ${p.image ?? null}, ${p.url ?? null}, ${j})`;
+        await tx`insert into products (shop_id, id, name, price, compare_at, image_url, url, sizes, sort)
+                 values (${s.id}, ${p.id}, ${p.name}, ${p.price}, ${p.compareAt ?? null}, ${p.image ?? null}, ${p.url ?? null}, ${p.sizes ? tx.json(p.sizes) : null}, ${j})`;
       }
     }
     return true;
@@ -101,6 +103,7 @@ export async function loadContent(
                     ? { image: p.image_url }
                     : {}),
                 ...(p.url ? { url: p.url } : {}),
+                ...(p.sizes?.length ? { sizes: p.sizes } : {}),
               })),
             },
           }
@@ -157,8 +160,8 @@ export async function saveShop(sql: Sql, s: Shop): Promise<number> {
     await tx`delete from products where shop_id = ${s.id}`;
     if (s.products?.adapter === 'static') {
       for (const [j, p] of s.products.items.entries()) {
-        await tx`insert into products (shop_id, id, name, price, compare_at, image_url, url, sort)
-                 values (${s.id}, ${p.id}, ${p.name}, ${p.price}, ${p.compareAt ?? null}, ${p.image ?? null}, ${p.url ?? null}, ${j})`;
+        await tx`insert into products (shop_id, id, name, price, compare_at, image_url, url, sizes, sort)
+                 values (${s.id}, ${p.id}, ${p.name}, ${p.price}, ${p.compareAt ?? null}, ${p.image ?? null}, ${p.url ?? null}, ${p.sizes ? tx.json(p.sizes) : null}, ${j})`;
       }
     }
     return bump(tx);

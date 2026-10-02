@@ -5,6 +5,7 @@
 // localStorage so the panel can still show something (clearly marked) when the store is offline.
 // We never show made-up demo products.
 import type { Shop } from '@shopping-mall/shared/config';
+import { cleanSizes, type SizeRow } from '@shopping-mall/shared/fit';
 
 export type Product = {
   id: string;
@@ -13,6 +14,8 @@ export type Product = {
   compareAt?: number;
   image?: string;
   url?: string;
+  /** Clothes: the garment's measurements per size, for the fit check (shared/src/fit.ts). */
+  sizes?: SizeRow[];
 };
 
 export type ProductsResult =
@@ -45,6 +48,7 @@ export function normalize(data: unknown): Product[] {
     const price = Number(p.price);
     if (typeof p.name !== 'string' || !p.name || !Number.isFinite(price) || price < 0) return;
     const compareAt = Number(p.compareAt);
+    const sizes = cleanSizes(p.sizes);
     out.push({
       id: typeof p.id === 'string' || typeof p.id === 'number' ? String(p.id) : String(i),
       name: p.name,
@@ -52,6 +56,7 @@ export function normalize(data: unknown): Product[] {
       compareAt: Number.isFinite(compareAt) && compareAt > price ? compareAt : undefined,
       image: typeof p.image === 'string' ? p.image : undefined,
       url: typeof p.url === 'string' ? p.url : undefined,
+      ...(sizes ? { sizes } : {}),
     });
   });
   return out;

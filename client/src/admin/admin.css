@@ -525,3 +525,66 @@ fieldset {
   clip-path: inset(50%);
   white-space: nowrap;
 }
+
+/* size charts (SizeChart.tsx) */
+.product-item {
+  display: grid;
+  gap: 8px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+.size-toggle {
+  justify-self: start;
+}
+.size-chart {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.size-chart .hint {
+  margin: 0;
+}
+.size-cols {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.size-table {
+  border-collapse: collapse;
+  width: 100%;
+  overflow-x: auto;
+  display: block;
+}
+.size-table th {
+  padding: 0 4px 4px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 500;
+  text-align: left;
+}
+.size-table td {
+  padding: 2px 4px;
+}
+.size-table input {
+  width: 6.5em;
+}
+.size-chart ul.error {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--danger);
+}

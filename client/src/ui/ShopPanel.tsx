@@ -10,6 +10,7 @@ import { linkUrl } from '../links';
 import { formatPrice, loadProducts, type Product, type ProductsResult } from '../shops/products';
 import { panel } from '../state';
 import { Dialog } from './Dialog';
+import { FitIntro, FitLine } from './Fit';
 import { IconShare } from './icons';
 import { share } from './share';
 
@@ -32,12 +33,17 @@ function ProductCard({ p, accent, shop }: { p: Product; accent: string; shop: st
       </div>
     </>
   );
-  return p.url ? (
-    <a class="product" href={p.url} {...external} onClick={() => track({ e: 'product', shop })}>
-      {body}
-    </a>
-  ) : (
-    <div class="product">{body}</div>
+  return (
+    <div class="product">
+      {p.url ? (
+        <a class="product-body" href={p.url} {...external} onClick={() => track({ e: 'product', shop })}>
+          {body}
+        </a>
+      ) : (
+        <div class="product-body">{body}</div>
+      )}
+      {p.sizes && <FitLine sizes={p.sizes} />}
+    </div>
   );
 }
 
@@ -65,6 +71,8 @@ function Products({ shop }: { shop: Shop }) {
   return (
     <>
       {result.stale && <p class="note">{t('shop.stale')}</p>}
+      {/* clothes with size charts: offer the fit check (once), or a way back to it */}
+      {result.items.some((p) => p.sizes) && <FitIntro />}
       <div class="products">
         {result.items.map((p) => (
           <ProductCard key={p.id} p={p} accent={shop.colors.accent} shop={shop.id} />
