@@ -92,6 +92,11 @@ const RANGES: Record<Basis, Record<Garment, Partial<Record<Measure, readonly [nu
 const TIGHT_WEIGHT = 2;
 /** Measurements that run along the body, so they're short or long rather than tight or loose. */
 const ALONG = new Set<Measure>(['sleeve', 'inseam', 'length']);
+/**
+ * A sleeve or leg under this share of yours is short by design (a T-shirt, shorts), not too short:
+ * against a body it isn't compared.
+ */
+const CUT_SHORT = 0.6;
 
 /** Tops have a chest or shoulders; trousers and skirts don't. */
 export function garmentOf(sizes: readonly SizeRow[]): Garment {
@@ -107,13 +112,16 @@ export function fitFor(sizes: readonly SizeRow[], you: Measurements, basis: Basi
   const garment = garmentOf(sizes);
   const ranges = RANGES[basis][garment];
   // a body has no "length" to compare a garment's length with
-  const based = MEASURES.filter(
+  const candidates = MEASURES.filter(
     (m) =>
       ranges[m] &&
       !(basis === 'body' && m === 'length') &&
       you[m] !== undefined &&
       sizes.some((r) => r.cm[m] !== undefined),
   );
+  const cutShort = (m: Measure, g: number) =>
+    basis === 'body' && (m === 'sleeve' || m === 'inseam') && g < CUT_SHORT * (you[m] as number);
+  const based = candidates.filter((m) => sizes.some((r) => r.cm[m] !== undefined && !cutShort(m, r.cm[m])));
   if (based.length === 0 || sizes.length === 0) return null;
 
   let best: { size: string; fits: boolean; score: number } | null = null;
@@ -124,7 +132,7 @@ export function fitFor(sizes: readonly SizeRow[], you: Measurements, basis: Basi
     for (const m of based) {
       const g = row.cm[m];
       const [lo, hi] = ranges[m] as readonly [number, number];
-      if (g === undefined) continue;
+      if (g === undefined || cutShort(m, g)) continue;
       const ease = g - (you[m] as number);
       const along = ALONG.has(m);
       const by = ease < lo ? lo - ease : ease > hi ? ease - hi : 0;

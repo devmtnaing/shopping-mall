@@ -54,6 +54,19 @@ describe('fitFor', () => {
     expect(fitFor(trousers, { waist: 82, hips: 99, inseam: 80 })).toMatchObject({ best: '32', fits: true });
   });
 
+  it('doesn’t call short sleeves or shorts too short', () => {
+    const shortSleeves = tee.map((r) => ({ ...r, cm: { ...r.cm, sleeve: 20 } }));
+    const fit = fitFor(shortSleeves, { shoulder: 45, chest: 98, sleeve: 60 });
+    expect(fit).toMatchObject({ based: ['shoulder', 'chest'], best: 'M', fits: true });
+    const longSleeves = tee.map((r) => ({ ...r, cm: { ...r.cm, sleeve: 55 } }));
+    expect(status(fitFor(longSleeves, { chest: 98, sleeve: 60 }), 'M')).toEqual({
+      chest: 'fits',
+      sleeve: 'short',
+    });
+    const shorts = trousers.map((r) => ({ ...r, cm: { ...r.cm, inseam: 20 } }));
+    expect(fitFor(shorts, { waist: 82, hips: 99, inseam: 80 })?.based).toEqual(['waist', 'hips']);
+  });
+
   it('compares only what both sides have', () => {
     expect(fitFor(tee, { waist: 80, inseam: 80 })).toBeNull();
     expect(fitFor(tee, { chest: 98 })?.based).toEqual(['chest']);
