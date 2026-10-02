@@ -179,18 +179,26 @@ export function ownerApi(opts: OwnerApiOptions) {
     const shop = OWNER_OF.exec(path)?.[1];
     if (!shop) return false;
     if (method === 'POST') {
-      needSecret();
       const { email } = parse(
         z.object({ email: z.email('That email address doesn’t look right.').max(120) }),
         await readJson(req, 4096),
       );
-      const token = await inviteOwner(sql, shop, email.trim());
-      json(res, 201, { token, ...(await emailInvite(req, token)) });
+      json(res, 201, await invite(req, shop, email.trim()));
     } else if (method === 'DELETE') {
       if (!(await removeOwner(sql, shop))) throw new HttpError(404, 'This shop has no owner.');
       json(res, 200, { removed: shop });
     } else throw new HttpError(405, 'Method not allowed.');
     return true;
+  }
+
+  /**
+   * Gives `email` a set-password link for `shop`, and emails it if a mailer is set up. Throws
+   * HttpError if the shop is gone or the email already looks after another shop.
+   */
+  async function invite(req: IncomingMessage, shop: string, email: string) {
+    needSecret();
+    const token = await inviteOwner(sql, shop, email);
+    return { token, ...(await emailInvite(req, token)) };
   }
 
   /** Emails a new set-password link to its owner, if a mailer is set up. Never throws. */
@@ -219,7 +227,7 @@ export function ownerApi(opts: OwnerApiOptions) {
     }
   }
 
-  return { ownerOf, publicRoute, ownerRoute, hostRoute };
+  return { ownerOf, publicRoute, ownerRoute, hostRoute, invite };
 }
 
 /**

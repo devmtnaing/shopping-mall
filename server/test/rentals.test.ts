@@ -1,10 +1,11 @@
-import { parseConfig } from '@shopping-mall/shared/config';
+import { parseConfig, type Shop } from '@shopping-mall/shared/config';
 import type { RentalApplication } from '@shopping-mall/shared/rentals';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import config from '../../mall.config';
 import { seedIfEmpty } from '../src/db/content';
 import type { Sql } from '../src/db/db';
 import { issueHostToken } from '../src/host';
+import type { Email } from '../src/mail';
 import { startServer } from '../src/server';
 import { freshSchema, TEST_DB } from './db';
 import { TestClient } from './helpers';
@@ -26,6 +27,8 @@ describe.runIf(TEST_DB)('rental applications', () => {
   let server: Awaited<ReturnType<typeof startServer>>;
   let base = '';
   const host = { Authorization: `Bearer ${issueHostToken(SECRET)}` };
+  /** What the server emailed. */
+  let mail: Email[] = [];
   const post = (body: unknown, ip = '10.0.0.1') =>
     fetch(`${base}/api/rentals`, {
       method: 'POST',
@@ -38,7 +41,14 @@ describe.runIf(TEST_DB)('rental applications', () => {
   beforeEach(async () => {
     db = await freshSchema();
     await seedIfEmpty(db.sql, parseConfig(config));
-    server = await startServer({ port: 0, db: db.sql, hostSecret: SECRET });
+    mail = [];
+    server = await startServer({
+      port: 0,
+      db: db.sql,
+      hostSecret: SECRET,
+      mailer: { name: 'test', send: async (email) => void mail.push(email) },
+      publicUrl: 'https://mall.example',
+    });
     base = `http://127.0.0.1:${server.port}`;
   });
   afterEach(async () => {
@@ -151,5 +161,62 @@ describe.runIf(TEST_DB)('rental applications', () => {
     expect((await fetch(`${base}/api/rentals/999/approve`, { method: 'POST', headers: host })).status).toBe(
       404,
     );
+  });
+
+  const approve = async (business: string) => {
+    const a = (await list()).find((r) => r.business === business) as RentalApplication;
+    const res = await fetch(`${base}/api/rentals/${a.id}/approve`, { method: 'POST', headers: host });
+    expect(res.status).toBe(200);
+    return (await res.json()) as RentalApplication & {
+      shop?: string;
+      invite?: { token: string; emailed?: boolean };
+      inviteError?: string;
+    };
+  };
+  const shops = async () =>
+    ((await (await fetch(`${base}/api/content`)).json()) as { config: { shops: Shop[] } }).config.shops;
+
+  it('approving opens the shop with what they sent, and emails them a link to look after it', async () => {
+    await post(apply());
+    const done = await approve('Golden Tea');
+    expect(done).toMatchObject({ status: 'approved', shop: 'golden-tea', invite: { emailed: true } });
+    expect((await shops()).find((s) => s.slot === 'e3')).toMatchObject({
+      id: 'golden-tea',
+      name: 'Golden Tea',
+      category: 'Food & drink',
+      description: 'Tea leaf salad and milk tea.',
+    });
+    expect(mail).toHaveLength(1);
+    expect(mail[0]).toMatchObject({ to: 'mya@example.com', subject: 'Set up Golden Tea in the mall' });
+    expect(mail[0]?.text).toContain(`https://mall.example/admin/?invite=${done.invite?.token}`);
+    const owners = (await (await fetch(`${base}/api/owners`, { headers: host })).json()) as unknown[];
+    expect(owners).toMatchObject([{ shop: 'golden-tea', email: 'mya@example.com', status: 'invited' }]);
+  });
+
+  it('gives a second shop with the same name its own id, and says when its email already has a shop', async () => {
+    await post(apply(), '10.0.0.1');
+    await approve('Golden Tea');
+    await post(apply({ slot: 'u-e0', business: 'Golden  Tea!' }), '10.0.0.2');
+    const second = await approve('Golden  Tea!');
+    expect(second.shop).toBe('golden-tea-2');
+    expect(second.invite).toBeUndefined();
+    expect(second.inviteError).toContain('already looks after "golden-tea"');
+    expect(mail).toHaveLength(1);
+  });
+
+  it('leaves a unit alone if the host has put a shop in it meanwhile', async () => {
+    await post(apply());
+    const theirs = { ...(config.shops[0] as Shop), id: 'pop-up', slot: 'e3' };
+    const put = await fetch(`${base}/api/shops/pop-up`, {
+      method: 'PUT',
+      headers: { ...host, 'Content-Type': 'application/json' },
+      body: JSON.stringify(theirs),
+    });
+    expect(put.status).toBe(200);
+    const done = await approve('Golden Tea');
+    expect(done.status).toBe('approved');
+    expect(done.shop).toBeUndefined();
+    expect((await shops()).filter((s) => s.slot === 'e3').map((s) => s.id)).toEqual(['pop-up']);
+    expect(mail).toEqual([]);
   });
 });

@@ -5,7 +5,7 @@
 import { useSignal } from '@preact/signals';
 import { OWNER_LIMITS, type OwnerInfo } from '@shopping-mall/shared/owners';
 import { useId } from 'preact/hooks';
-import { api } from './api';
+import { api, type Invite } from './api';
 
 const STATUS: Record<OwnerInfo['status'], string> = {
   invited: 'Invited: hasn’t set a password yet',
@@ -13,21 +13,25 @@ const STATUS: Record<OwnerInfo['status'], string> = {
   expired: 'The link ran out before it was used',
 };
 
+const inviteLink = (token: string) => `${location.origin}/admin/?invite=${token}`;
+
 export function OwnerAccess(props: {
   shop: string;
   owner?: OwnerInfo;
   /** The email from the approved rental application for this unit, if there is one. */
   suggestedEmail?: string;
+  /** A link made elsewhere just now (approving a rental invites its applicant), to show at first. */
+  invited?: Invite;
   onChanged: () => void;
 }) {
   const email = useSignal(props.owner?.email ?? props.suggestedEmail ?? '');
-  const link = useSignal('');
+  const link = useSignal(props.invited ? inviteLink(props.invited.token) : '');
   const error = useSignal('');
   const busy = useSignal(false);
   const copied = useSignal(false);
   const id = useId(); // several of these can be on one page (one per approved rental)
   /** Whether the server emailed the link, and why not if it tried. */
-  const sent = useSignal<{ emailed?: boolean; mailError?: string }>({});
+  const sent = useSignal<{ emailed?: boolean; mailError?: string }>(props.invited ?? {});
 
   const invite = async (e: Event) => {
     e.preventDefault();
@@ -40,7 +44,7 @@ export function OwnerAccess(props: {
     error.value = '';
     try {
       const { token, emailed, mailError } = await api.inviteOwner(props.shop, email.value.trim());
-      link.value = `${location.origin}/admin/?invite=${token}`;
+      link.value = inviteLink(token);
       sent.value = { emailed, mailError };
       copied.value = false;
       props.onChanged();

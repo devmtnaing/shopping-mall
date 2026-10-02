@@ -8,6 +8,7 @@ import { loadArt, replaceMallArt } from '../art.ts';
 import { deleteAsset, KINDS, listAssets, storeAsset } from '../assets.ts';
 import {
   type AssetUrl,
+  addShop,
   contentVersion,
   deleteShop,
   loadContent,
@@ -26,6 +27,7 @@ import {
   slotTaken,
 } from '../db/rentals.ts';
 import type { Mailer } from '../mail.ts';
+import { shopFromApplication } from '../rentals.ts';
 import type { Storage } from '../storage.ts';
 import { ownerApi } from './owner-api.ts';
 import { bearer, CORS, HttpError, json, readBody, readJson } from './util.ts';
@@ -119,6 +121,32 @@ export function contentApi(opts: ContentApiOptions) {
       console.warn('rentals: couldn’t list requested units:', (e as Error).message);
     }
   };
+
+  /**
+   * An approved application's shop: made from what they sent, with the applicant invited as its
+   * owner to fill in the rest. Nothing is made if the unit already has a shop. The approval stands
+   * whatever happens here; the host can still make the shop or invite them from /admin.
+   */
+  async function openShop(req: IncomingMessage, a: RentalApplication) {
+    let added: { id: string; version: number } | null;
+    try {
+      added = await addShop(sql, shopFromApplication(a));
+    } catch (e) {
+      console.error('rentals: couldn’t make the shop:', e);
+      return { shopError: 'Approved, but the shop couldn’t be made. Use “Create the shop”.' };
+    }
+    if (!added) return {};
+    onChange(added.version);
+    try {
+      return { shop: added.id, invite: await owners.invite(req, added.id, a.email) };
+    } catch (e) {
+      if (!(e instanceof HttpError)) console.error('rentals: couldn’t invite the owner:', e);
+      return {
+        shop: added.id,
+        inviteError: e instanceof HttpError ? e.message : 'Couldn’t invite the owner.',
+      };
+    }
+  }
 
   async function route(req: IncomingMessage, res: ServerResponse) {
     const path = (req.url ?? '').split('?')[0] ?? '';
@@ -220,7 +248,8 @@ export function contentApi(opts: ContentApiOptions) {
       return;
     }
 
-    // rental applications: list, approve or turn down, delete. They aren't mall content, so no version bump.
+    // rental applications: list, approve or turn down, delete. They aren't mall content, so no version
+    // bump, except for the shop approving one makes (openShop announces that itself).
     if (path === '/api/rentals' && method === 'GET') {
       json(res, 200, await listRentals(sql));
       return;
@@ -233,7 +262,7 @@ export function contentApi(opts: ContentApiOptions) {
         const done = await decideRental(sql, id, action === 'approve' ? 'approved' : 'rejected');
         if (!done) throw new HttpError(404, 'No such application.');
         if (done === 'decided') throw new HttpError(409, 'This application has already been decided.');
-        json(res, 200, done);
+        json(res, 200, done.status === 'approved' ? { ...done, ...(await openShop(req, done)) } : done);
       } else if (!action && method === 'DELETE') {
         if (!(await deleteRental(sql, id))) throw new HttpError(404, 'No such application.');
         json(res, 200, { deleted: id });

@@ -19,6 +19,8 @@ export function signOut() {
 }
 
 export type FieldError = { path: string; message: string };
+/** A new set-password link for a shop's owner, and whether the server emailed it (and why not). */
+export type Invite = { token: string; emailed?: boolean; mailError?: string };
 export class ApiError extends Error {
   readonly status: number;
   readonly fields: FieldError[];
@@ -101,10 +103,7 @@ export const api = {
       '/api/owner/me',
     ),
   owners: () => call<OwnerInfo[]>('GET', '/api/owners'),
-  inviteOwner: (shop: string, email: string) =>
-    call<{ token: string; emailed?: boolean; mailError?: string }>('POST', `/api/shops/${shop}/owner`, {
-      email,
-    }),
+  inviteOwner: (shop: string, email: string) => call<Invite>('POST', `/api/shops/${shop}/owner`, { email }),
   removeOwner: (shop: string) => call<{ removed: string }>('DELETE', `/api/shops/${shop}/owner`),
   content: () => call<{ version: number; config: MallConfig; art?: MallArt | null }>('GET', '/api/content'),
   saveMall: (m: MallConfig['mall']) => call<{ version: number }>('PUT', '/api/mall', m),
@@ -119,7 +118,11 @@ export const api = {
     call<{ version: number }>('PUT', '/api/art/mall', ids),
   resetArt: () => call<{ version: number }>('DELETE', '/api/art/mall'),
   rentals: () => call<RentalApplication[]>('GET', '/api/rentals'),
+  /** Approving also makes their shop and invites them as its owner, and says how that went. */
   decideRental: (id: number, action: 'approve' | 'reject') =>
-    call<RentalApplication>('POST', `/api/rentals/${id}/${action}`),
+    call<RentalApplication & { shop?: string; invite?: Invite; inviteError?: string; shopError?: string }>(
+      'POST',
+      `/api/rentals/${id}/${action}`,
+    ),
   deleteRental: (id: number) => call<{ deleted: number }>('DELETE', `/api/rentals/${id}`),
 };

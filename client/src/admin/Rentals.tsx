@@ -1,6 +1,7 @@
 // Rental applications from visitors who pressed E at a vacant unit. Approving one turns down the
-// others waiting for that unit; then "Create the shop" opens the editor with their details filled in,
-// and once the shop exists its card offers to invite the applicant as the shop's owner.
+// others waiting for that unit, opens a shop with what they sent, and invites the applicant as its
+// owner to fill in the rest. Its card then shows the owner's access. "Create the shop" is there for
+// approvals whose shop wasn't made (older ones, or a unit taken meanwhile).
 
 import { useSignal } from '@preact/signals';
 import type { Shop } from '@shopping-mall/shared/config';
@@ -8,7 +9,7 @@ import type { Slot } from '@shopping-mall/shared/meta';
 import type { OwnerInfo } from '@shopping-mall/shared/owners';
 import type { RentalApplication } from '@shopping-mall/shared/rentals';
 import { rentEn } from '../i18n/rent';
-import { api } from './api';
+import { api, type Invite } from './api';
 import { OwnerAccess } from './OwnerAccess';
 import { slotLabel } from './ShopEditor';
 
@@ -22,10 +23,13 @@ export function Rentals(props: {
   owners: OwnerInfo[];
   onChanged: () => void;
   onOwnersChanged: () => void;
+  onShopsChanged: () => void;
   onCreateShop: (a: RentalApplication) => void;
 }) {
   const busy = useSignal<number | null>(null);
   const error = useSignal('');
+  /** What approving did about the shop and its owner, by application id, to show on its card. */
+  const opened = useSignal<Record<number, { invite?: Invite; note?: string }>>({});
   const unit = (id: string) => {
     const s = props.slots.find((x) => x.id === id);
     return s ? slotLabel(s) : `Unit ${id}`;
@@ -41,7 +45,12 @@ export function Rentals(props: {
         others > 0
           ? ` The ${others} other application${others > 1 ? 's' : ''} for this unit will be turned down.`
           : '';
-      if (!confirm(`Approve ${a.business} for ${unit(a.slot)}?${extra}`)) return;
+      if (
+        !confirm(
+          `Approve ${a.business} for ${unit(a.slot)}? Their shop opens with what they sent, and ${a.email} gets a link to look after it.${extra}`,
+        )
+      )
+        return;
     }
     if (action === 'delete' && !confirm(`Delete the application from ${a.business}? This can't be undone.`))
       return;
@@ -49,7 +58,17 @@ export function Rentals(props: {
     error.value = '';
     try {
       if (action === 'delete') await api.deleteRental(a.id);
-      else await api.decideRental(a.id, action);
+      else {
+        const done = await api.decideRental(a.id, action);
+        if (done.shop || done.shopError) {
+          opened.value = {
+            ...opened.value,
+            [a.id]: { invite: done.invite, note: done.shopError ?? done.inviteError },
+          };
+          props.onShopsChanged();
+          props.onOwnersChanged();
+        }
+      }
       props.onChanged();
     } catch (e) {
       error.value = (e as Error).message;
@@ -65,8 +84,8 @@ export function Rentals(props: {
       </header>
       <p class="hint">
         Visitors apply by pressing E at a vacant unit. The first to apply holds it until you decide; turning
-        them down opens it again. Approve one, then create their shop and invite them as its owner: they get a
-        link to set a password and look after the shop themselves.
+        them down opens it again. Approving one opens their shop with what they sent and emails them a link to
+        set a password, so they can add their logo, tagline, links and products themselves.
       </p>
       {error.value && (
         <p class="banner error" role="alert">
@@ -77,6 +96,7 @@ export function Rentals(props: {
       <ol class="rental-list">
         {props.rentals.map((a) => {
           const taken = shopIn(a.slot);
+          const now = opened.value[a.id];
           return (
             <li key={a.id} class={`rental ${a.status}`}>
               <header class="rental-head">
@@ -101,11 +121,17 @@ export function Rentals(props: {
                 )}
               </p>
               {taken && a.status !== 'rejected' && <p class="hint">This unit is now {taken.name}.</p>}
+              {now?.note && (
+                <p class="error" role="alert">
+                  {now.note}
+                </p>
+              )}
               {taken && a.status === 'approved' && (
                 <OwnerAccess
                   shop={taken.id}
                   owner={props.owners.find((o) => o.shop === taken.id)}
                   suggestedEmail={a.email}
+                  invited={now?.invite}
                   onChanged={props.onOwnersChanged}
                 />
               )}

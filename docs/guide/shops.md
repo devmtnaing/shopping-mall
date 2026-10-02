@@ -41,20 +41,20 @@ The visitor's browser fetches it when they open the shop, so the feed has to all
 
 ## Renting out empty units
 
-Every empty unit's sign says **Coming soon · Unit available · Come and rent it**. A visitor who walks up to one and presses **E** (or taps **Rent this unit**) gets a short form: shop name, type of shop (café, books, fashion, home, games or something else), their name, email, an optional phone number and what they'd sell. Choosing a type shows a plan of how that unit would be furnished, drawn from the same layouts the mall uses. Nothing needs uploading; logos and products come later, when you create the shop.
+Every empty unit's sign says **Coming soon · Unit available · Come and rent it**. A visitor who walks up to one and presses **E** (or taps **Rent this unit**) gets a short form: shop name, type of shop (café, books, fashion, home, games or something else), their name, email, an optional phone number and what they'd sell. Choosing a type shows a plan of how that unit would be furnished, drawn from the same layouts the mall uses. Nothing needs uploading; logos and products come later, from the tenant once their shop is open.
 
 Applications arrive in **Rentals**, which shows a count of waiting ones (in the page title too, so you notice from another tab). It checks for new ones every 30 seconds.
 
 The first visitor to apply holds the unit until you decide. Meanwhile its sign says **Unit requested · Application under review** (for everyone in the mall, as soon as it happens), its prompt says **Already requested** and the form tells others that someone has applied and the unit opens again if you turn them down. This holds even when several people send at the same moment: the database keeps exactly one application, and the others are told someone got there first.
 
-- **Approve** the application, then **Create the shop**: it opens the editor with their unit, name, description and a category for their type of shop filled in, so the unit gets that type's furniture. Then invite them as the shop's owner ([shop owners](#shop-owners)).
+- **Approve** opens their shop straight away, with their name, description and a category for their type of shop (so the unit gets that type's furniture), and invites them as its owner ([shop owners](#shop-owners)): they add the logo, tagline, colours, links and products themselves. The shop's id comes from its name, with `-2`, `-3`… added if another shop already uses it. If you'd put a shop in that unit yourself meanwhile, approving leaves it alone, and **Create the shop** opens the editor with their details filled in instead.
 - **Turn down** declines it, and the unit is open to apply for again. **Delete** removes a decided one for good.
 
 To hear about applications straight away, set `RENTAL_WEBHOOK` on the server ([configuration](./config)). Each application is POSTed there with a one-line summary in `text` and `content`, so a Slack or Discord incoming webhook shows it as a message. A visitor can send 3 applications, then one every 20 minutes.
 
 ## Shop owners
 
-A tenant can look after their own shop. Once you've created the shop for an approved rental application, its card in **Rentals** has a **Shop owner** box with their email filled in; press **Invite owner**. (It's also at the bottom of **Shops → Edit**.) With [email set up](./config#email) the mall emails them a set-password link; otherwise `/admin` shows the link for you to send by email or WhatsApp. It works once, for 7 days.
+A tenant can look after their own shop. Approving their rental application invites them; for any other shop, use the **Shop owner** box at the bottom of **Shops → Edit** (it's also on an approved application's card in **Rentals**, for sending a fresh link) and press **Invite owner**. With [email set up](./config#email) the mall emails them a set-password link; otherwise `/admin` shows the link for you to send by email or WhatsApp. It works once, for 7 days. One email looks after one shop, so if theirs already has one, the card says so and you invite them with another address.
 
 The link opens a page where they choose a password (8 characters or more). After that they sign in at `/admin/` with **I look after a shop**, their email and that password. Like your own sign-in, it lasts while the tab is open.
 

@@ -145,24 +145,49 @@ export async function saveMall(sql: Sql, m: MallConfig['mall']): Promise<number>
 /** Create or replace a shop and its product list. Throws a unique violation if the slot is taken. */
 export async function saveShop(sql: Sql, s: Shop): Promise<number> {
   return sql.begin(async (tx) => {
-    const jsonUrl = s.products?.adapter === 'json-url' ? s.products.url : null;
-    await tx`insert into shops (id, slot, name, tagline, category, bg, accent, logo_url, description, features, links, products_url, sort)
-             values (${s.id}, ${s.slot}, ${s.name}, ${s.tagline ?? null}, ${s.category ?? null}, ${s.colors.bg},
-                     ${s.colors.accent}, ${s.logo ?? null}, ${s.description ?? null}, ${s.features}, ${tx.json(s.links)},
-                     ${jsonUrl}, (select coalesce(max(sort) + 1, 0) from shops))
-             on conflict (id) do update set slot = excluded.slot, name = excluded.name, tagline = excluded.tagline,
-               category = excluded.category, bg = excluded.bg, accent = excluded.accent, logo_url = excluded.logo_url,
-               description = excluded.description, features = excluded.features, links = excluded.links,
-               products_url = excluded.products_url, updated_at = now()`;
-    await tx`delete from products where shop_id = ${s.id}`;
-    if (s.products?.adapter === 'static') {
-      for (const [j, p] of s.products.items.entries()) {
-        await tx`insert into products (shop_id, id, name, price, compare_at, image_url, url, sort)
-                 values (${s.id}, ${p.id}, ${p.name}, ${p.price}, ${p.compareAt ?? null}, ${p.image ?? null}, ${p.url ?? null}, ${j})`;
-      }
-    }
+    await writeShop(tx, s);
     return bump(tx);
   });
+}
+
+/**
+ * Add a new shop to a vacant unit, never replacing one: under `s.id`, or `s.id`-2, -3… if that id
+ * is in use. Returns the id it got and the new version, or null if a shop is already in the unit.
+ */
+export async function addShop(sql: Sql, s: Shop): Promise<{ id: string; version: number } | null> {
+  return sql.begin(async (tx) => {
+    await tx`lock table shops in share row exclusive mode`; // ids and units can't change meanwhile
+    const [occupied] = await tx`select 1 from shops where slot = ${s.slot}`;
+    if (occupied) return null;
+    const rows = await tx<
+      { id: string }[]
+    >`select id from shops where id = ${s.id} or id like ${`${s.id}-%`}`;
+    const used = new Set(rows.map((r) => r.id));
+    let id = s.id;
+    for (let n = 2; used.has(id); n++) id = `${s.id}-${n}`;
+    await writeShop(tx, { ...s, id });
+    return { id, version: await bump(tx) };
+  });
+}
+
+/** Insert or replace a shop and its product list, inside a transaction. */
+async function writeShop(tx: Tx, s: Shop) {
+  const jsonUrl = s.products?.adapter === 'json-url' ? s.products.url : null;
+  await tx`insert into shops (id, slot, name, tagline, category, bg, accent, logo_url, description, features, links, products_url, sort)
+           values (${s.id}, ${s.slot}, ${s.name}, ${s.tagline ?? null}, ${s.category ?? null}, ${s.colors.bg},
+                   ${s.colors.accent}, ${s.logo ?? null}, ${s.description ?? null}, ${s.features}, ${tx.json(s.links)},
+                   ${jsonUrl}, (select coalesce(max(sort) + 1, 0) from shops))
+           on conflict (id) do update set slot = excluded.slot, name = excluded.name, tagline = excluded.tagline,
+             category = excluded.category, bg = excluded.bg, accent = excluded.accent, logo_url = excluded.logo_url,
+             description = excluded.description, features = excluded.features, links = excluded.links,
+             products_url = excluded.products_url, updated_at = now()`;
+  await tx`delete from products where shop_id = ${s.id}`;
+  if (s.products?.adapter === 'static') {
+    for (const [j, p] of s.products.items.entries()) {
+      await tx`insert into products (shop_id, id, name, price, compare_at, image_url, url, sort)
+               values (${s.id}, ${p.id}, ${p.name}, ${p.price}, ${p.compareAt ?? null}, ${p.image ?? null}, ${p.url ?? null}, ${j})`;
+    }
+  }
 }
 
 /** Delete a shop (its products go with it). Returns the new version, or null if there was no such shop. */
