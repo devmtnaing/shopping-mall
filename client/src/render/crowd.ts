@@ -3,7 +3,7 @@
 // The server sends at most the nearest 40 people, so that's at most 40 skinned meshes; the ones far
 // away (by quality tier) animate at a third of the rate.
 import { PLAYER } from '@shopping-mall/shared/constants';
-import { ANIM, animSpeed, animState, FLAG_HOLDING } from '@shopping-mall/shared/protocol';
+import { ANIM, animSpeed, animState, FLAG_HOLDING, FLAG_PICKING } from '@shopping-mall/shared/protocol';
 import {
   BoxGeometry,
   type Camera,
@@ -152,6 +152,7 @@ export class Crowd {
         avatar.setState(state, speed);
         const holds = (p.flags & FLAG_HOLDING) !== 0;
         if (holds !== avatar.holding) avatar.hold(holds ? handApple() : null);
+        avatar.reach((p.flags & FLAG_PICKING) !== 0);
         // beyond the tier's distance, animate every third frame
         const far =
           camera.position.distanceToSquared(avatar.object.position) > TIERS[tier.value].animateWithin ** 2;

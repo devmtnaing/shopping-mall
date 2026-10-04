@@ -22,6 +22,8 @@ export const ANIM = { idle: 0, walk: 1, run: 2, jump: 3, fall: 4, sit: 5 } as co
 export const FLAG_GROUNDED = 1;
 /** Holding an apple (T-507): everyone sees it in their hand until they throw it. */
 export const FLAG_HOLDING = 2;
+/** Reaching into a fruit stand for an apple: everyone sees the reach. */
+export const FLAG_PICKING = 4;
 
 const TAU = Math.PI * 2;
 const cm = (m: number) => Math.max(-32768, Math.min(32767, Math.round(m * 100)));

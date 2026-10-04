@@ -77,6 +77,7 @@ export class Avatar {
   private readonly sitForward: number;
   /** What's in the right hand (an apple), and where the hand is on its bone. */
   private held: Object3D | null = null;
+  private reaching = false;
   private readonly hand: Hand | null;
 
   constructor(id: AvatarId, object: Object3D, clips: AnimationClip[]) {
@@ -165,6 +166,12 @@ export class Avatar {
   }
 
   /** Whether something is in the right hand. */
+  /** Reach for an apple (another player, from their movement): the reach plays once, as it starts. */
+  reach(on: boolean) {
+    if (on && !this.reaching) this.gesture('interact-right', 0, true);
+    this.reaching = on;
+  }
+
   get holding() {
     return this.held !== null;
   }

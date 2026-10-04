@@ -239,6 +239,7 @@ const multi = createMultiplayer({
   // others see you a moment late (net/interp.ts), and see your throw as soon as it's sent: let the
   // apple go from your hand that moment early for them, so it leaves the hand as it starts to fly
   holding: () => holding && !(throwing > 0 && throwing < INTERP_DELAY / 1000),
+  picking: () => picking > 0,
   seats: spots,
   // someone hugged you: turn to face them, if you're standing still
   onThrow: (o, v) => apples.throw(o, v),
