@@ -125,7 +125,8 @@ export const PROPS: Record<string, PropSpec> = {
     turn: 0,
     footprint: [1, 0.75, 1],
   },
-  chair: { pack: 'court', src: `${F}/chair.glb`, axis: 'y', size: 0.95, turn: 0, footprint: null },
+  /** The source chair faces +Z (its backrest is on −Z). */
+  chair: { pack: 'court', src: `${F}/chair.glb`, axis: 'y', size: 0.95, turn: Math.PI, footprint: null },
   'coffee-bar': {
     pack: 'shop-cafe',
     src: `${H}/coffee-bar.glb`,
