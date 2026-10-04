@@ -35,3 +35,12 @@ Batch 2 of #4 (the atrium), 2026-09-29: 15 credits.
 Batch 3 of #4 (shop interiors), 2026-09-29: 25 credits.
 
 (The bench came out with a backrest despite the prompt, and the island as a split, spiralling ring. Both look right in the mall, so they stay.)
+
+| File | face_limit | Prompt |
+|---|---|---|
+| `stall.glb` | 2000 | A single public restroom toilet cubicle for a shopping mall: light grey laminate partition walls on both sides and a closed front door with a small chrome handle and an occupancy indicator, a gap under the walls showing slim steel legs, box-shaped, flat back so it stands against a wall, clean modern design, stylized low-poly game asset, flat colors, isolated |
+| `vanity.glb` | 2000 | A restroom washbasin counter for a shopping mall: a long white stone countertop with two round white sinks and chrome taps on a light oak cabinet, a wide rectangular mirror above it on the same back panel, flat back so it stands against a wall, clean modern design, stylized low-poly game asset, flat colors, isolated |
+| `urinal.glb` | 2000 | Two white wall-mounted ceramic urinals for a shopping mall restroom with a frosted glass privacy divider between them, mounted on one light grey tiled back panel, flat back so it stands against a wall, clean modern design, stylized low-poly game asset, flat colors, isolated |
+| `restroom-sign.glb` | 2000 | A freestanding restroom direction sign for a shopping mall: a slim upright navy blue rectangular totem on a low base with large white man and woman toilet pictograms on its front, flat panel, clean modern design, stylized low-poly game asset, flat colors, isolated |
+
+The restrooms, 2026-10-04: 20 credits. (The vanity came without its mirror; the greybox puts one on the wall above it.)

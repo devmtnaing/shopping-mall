@@ -102,7 +102,7 @@ Furniture and decoration come in **props packs** by area, `client/public/assets/
 
 | Kind | Source |
 |---|---|
-| `bench`, `fountain`, `tree`, `kiosk`, `welcome`, `palm`, `lanterns`, `recycling`, `island`, `coffee-bar`, `bookshelf`, `sneakers`, `plant-stand`, `arcade` | Generated with Higgsfield (prompts in `assets-src/props/higgsfield/prompts.md`) |
+| `bench`, `fountain`, `tree`, `kiosk`, `welcome`, `palm`, `lanterns`, `recycling`, `island`, `coffee-bar`, `bookshelf`, `sneakers`, `plant-stand`, `arcade`, `stall`, `vanity`, `urinal`, `restroom-sign` | Generated with Higgsfield (prompts in `assets-src/props/higgsfield/prompts.md`) |
 | `plant`, `lamp`, `sofa`, `table`, `chair` | Kenney Furniture Kit (CC0) |
 | `shelf`, `shelf-bags`, `register`, `cart`, `fruit` | Kenney Mini Market (CC0), for shop interiors |
 
@@ -113,6 +113,7 @@ Furniture and decoration come in **props packs** by area, `client/public/assets/
 | `atrium` | `lanterns`, `island` | 75 KB |
 | `court` | `fountain`, `table`, `chair` | 60 KB |
 | `shops` | `shelf`, `register`, `cart`, `fruit` (the general store and every shop's till) | 33 KB |
+| `restrooms` | `stall`, `vanity`, `urinal`, `restroom-sign` (the restrooms beside the lobby) | 136 KB |
 | `shop-cafe`, `shop-books`, `shop-fashion`, `shop-home`, `shop-games` | `coffee-bar`; `bookshelf`; `sneakers`, `shelf-bags`; `plant-stand`; `arcade` | 47 to 74 KB each |
 
 `props/index.json` says which pack holds which kinds. Right after the mall, the client loads the packs with something placed within 35 m of the spawn. It loads the rest one at a time while the browser is idle, nearest first, and walking towards one moves it to the front of the queue. So new props add to what loads in the background, not to what visitors wait for, and nobody downloads a pack that nothing uses. Put new props in the pack for the area they furnish, or in a new pack (add it to `PACKS`).

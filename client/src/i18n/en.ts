@@ -94,6 +94,8 @@ export const en = {
   'zone.sky-court': 'Sky court',
   'zone.sky-bridge': 'Sky bridge',
   'zone.vacant': 'Vacant unit',
+  'zone.restroom-women': "Women's restroom",
+  'zone.restroom-men': "Men's restroom",
   'net.online': '{n} online',
   'net.reconnecting': 'Reconnecting…',
   'net.offline': 'Offline · exploring on your own',

@@ -17,6 +17,7 @@ export const PACKS = [
   'shop-fashion',
   'shop-home',
   'shop-games',
+  'restrooms',
 ] as const;
 export type Pack = (typeof PACKS)[number];
 
@@ -192,6 +193,42 @@ export const PROPS: Record<string, PropSpec> = {
     footprint: [1.6, 1.1, 1.6],
   },
   cart: { pack: 'shops', src: `${M}/shopping-cart.glb`, axis: 'y', size: 1, turn: 0, footprint: null },
+  /** A toilet cubicle: partitions and a closed door, standing against the wall behind it. */
+  stall: {
+    pack: 'restrooms',
+    src: `${H}/stall.glb`,
+    axis: 'y',
+    size: 2.1,
+    turn: Math.PI / 2,
+    footprint: [1.26, 2.1, 2],
+  },
+  /** Two basins on a cabinet; the mirror above it is the greybox's. */
+  vanity: {
+    pack: 'restrooms',
+    src: `${H}/vanity.glb`,
+    axis: 'y',
+    size: 0.95,
+    turn: Math.PI / 2,
+    footprint: [1.98, 0.95, 0.87],
+  },
+  /** Two wall urinals with a divider between them. */
+  urinal: {
+    pack: 'restrooms',
+    src: `${H}/urinal.glb`,
+    axis: 'y',
+    size: 1.3,
+    turn: Math.PI / 2,
+    footprint: [1.51, 1.3, 0.7],
+  },
+  /** Stands in the concourse beside each restroom's doorway. */
+  'restroom-sign': {
+    pack: 'restrooms',
+    src: `${H}/restroom-sign.glb`,
+    axis: 'y',
+    size: 1.6,
+    turn: Math.PI / 2,
+    footprint: [1, 1.6, 0.35],
+  },
   fruit: {
     pack: 'shops',
     src: `${M}/display-fruit.glb`,

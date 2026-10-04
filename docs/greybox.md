@@ -33,7 +33,7 @@ The greybox is the mall made of plain boxes. It came first, to tune movement, th
        │   w1      │            │  esc A ↑ (to −33)│            │      e1       │
        │   w0      │            │                  │            │      e0       │
  z=−6  ├───────────┤            │                  │            ├───────────────┤
-       │ (closed)  │  planter   │   spawn ↑        │            │   (closed)    │
+       │ women's WC▯  planter   │   spawn ↑        │            ▯   men's WC    │
  z=0   └───────────┴────────────┴── glass doors ───┴────────────┴───────────────┘
       x=−22      x=−10        x=−6               x=6          x=10           x=22
 ```
@@ -49,11 +49,12 @@ The greybox is the mall made of plain boxes. It came first, to tune movement, th
 | Flagship | z ∈ [−80, −68], stage 0.6 m high (x ±8, from z −77) reached by 0.2 m steps | doorway 14 × 4.8 m |
 | Benches and sofas | Benches on the ground floor at x = ±8.6, z −16, −26, −46 and −56, facing the concourse. Upstairs, with their backs to the parapet and facing the shops, benches at x = ±6.9, z −16 and −56, and sofas at z −26 and −46. All are seats. | Benches are 0.45 m high: too high to step onto, so you'd have to jump |
 | Spawn | (0, 0, −6), facing into the mall | |
+| Restrooms | ground floor, the corners beside the lobby: women's at x ∈ [−22, −10], men's at x ∈ [10, 22], z ∈ [−6, 0]. A doorway off the concourse at z ∈ [−4.4, −2.8] (▯), with a sign beside it | doorway 1.6 × 2.6 m. Cubicles (1.26 × 2 m) along the back wall, 7 in the women's, 3 and two pairs of urinals in the men's; two basin counters under a mirror on the front wall |
 | Planters | (−4.5, −5) by the entrance, (±6.5, −21), (6.5, −50); a seating island at (−6.5, −50) | 2 × 2 × 0.6 m |
 
 ## Zones
 
-`Entrance`, `Main hall`, `Fountain court`, `Upper gallery`, `Sky court`, `Sky bridge`, and one per shop unit (priority 10).
+`Entrance`, `Main hall`, `Fountain court`, `Upper gallery`, `Sky court`, `Sky bridge`, `Women's restroom` and `Men's restroom` (priority 10), and one per shop unit (priority 10).
 The client shows the name of the highest-priority zone you're in. A shop's zone takes the shop's name.
 
 ## Movement tests built into the layout

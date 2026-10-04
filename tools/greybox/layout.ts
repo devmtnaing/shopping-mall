@@ -32,6 +32,8 @@ const RAIL_H = 1.1;
 const GUARD_H = 1.6;
 const ENTRANCE = 5; // half-width of the glass entrance
 const FLAG_DOOR = 7; // half-width of the flagship's doorway
+/** The restrooms in the corners beside the lobby (women's west, men's east): their doorway off the concourse. */
+const RESTROOM_DOOR = { z0: -4.4, z1: -2.8, h: 2.6 };
 /** Escalator A (west, up to the bridge's south edge) and B (east, down from its north edge): centre x, width. */
 const ESC = { a: -3, b: 3, w: ESCALATOR.width + 0.5 }; // w: overall, balustrades included
 /** Escalators rise at 30°, like real ones: this much run for the climb to the upper floor. */
@@ -76,9 +78,13 @@ function shell(g: Geo) {
   g.box('wall', [-X_OUT, 0, Z_END - T], [X_OUT, ROOF, Z_END]);
   g.box('wall', [-X_OUT - T, 0, Z_END - T], [-X_OUT, ROOF, T]);
   g.box('wall', [X_OUT, 0, Z_END - T], [X_OUT + T, ROOF, T]);
-  // close off the dead corners beside the lobby and beside the flagship, both floors
+  // close off the corners beside the lobby (the restrooms, with a doorway on the ground floor) and
+  // beside the flagship, both floors
   for (const s of [-1, 1]) {
-    g.box('wall', xs(s, X_CON, X_CON + T, 0, SLOT_Z0), xs(s, X_CON, X_CON + T, ROOF, 0, true));
+    const { z0, z1, h } = RESTROOM_DOOR;
+    g.box('wall', xs(s, X_CON, X_CON + T, 0, SLOT_Z0), xs(s, X_CON, X_CON + T, ROOF, z0, true));
+    g.box('wall', xs(s, X_CON, X_CON + T, 0, z1), xs(s, X_CON, X_CON + T, ROOF, 0, true));
+    g.box('wall', xs(s, X_CON, X_CON + T, h, z0), xs(s, X_CON, X_CON + T, ROOF, z1, true));
     g.box('wall', xs(s, X_CON, X_CON + T, 0, Z_FLAG), xs(s, X_CON, X_CON + T, ROOF, Z_SHOPS_END, true));
   }
   // roof, open over the atrium, where a skylight sits instead
@@ -530,6 +536,36 @@ function props(g: Geo, meta: MallMeta) {
   // fruit stands under the bridge, between the escalators: pick an apple (F) and throw it (T-507)
   const under = (BRIDGE.z0 + BRIDGE.z1) / 2;
   for (const x of [-2.5, 2.5]) place('fruit', x, 0, under, inward(x));
+
+  restrooms(g, place);
+}
+
+/**
+ * The restrooms in the ground-floor corners beside the lobby: women's on the west, men's on the
+ * east. In through a doorway off the concourse, cubicles along the back wall (with urinals after
+ * them in the men's), basins under a mirror along the front wall, and a sign outside.
+ */
+function restrooms(g: Geo, place: (kind: string, x: number, y: number, z: number, yaw?: number) => void) {
+  const back = SLOT_Z0 + 0.15; // the face of the divider behind the first shop unit
+  for (const s of [-1, 1] as const) {
+    /** x, `u` metres in from the restroom's concourse wall. */
+    const at = (u: number) => s * (X_CON + T + u);
+    const stalls = s < 0 ? 7 : 3;
+    const pitch = PROPS.stall?.footprint?.[0] ?? 1.26;
+    const depth = PROPS.stall?.footprint?.[2] ?? 2;
+    for (let i = 0; i < stalls; i++) place('stall', at(2.6 + pitch * (i + 0.5)), 0, back + depth / 2, PI);
+    if (s > 0) for (const u of [7.96, 9.6]) place('urinal', at(u), 0, back + 0.35, PI);
+    for (const u of [5, 7.1]) place('vanity', at(u), 0, -0.45);
+    g.box(
+      'mirror',
+      xs(s, X_CON + T + 4, X_CON + T + 8.1, 1.2, -0.02),
+      xs(s, X_CON + T + 4, X_CON + T + 8.1, 2.1, 0, true),
+      false,
+    );
+    // outside, beside the doorway, facing the concourse
+    const x = s * (X_CON - 0.6);
+    place('restroom-sign', x, 0, RESTROOM_DOOR.z0 - 0.9, x > 0 ? PI / 2 : -PI / 2);
+  }
 }
 
 function zones(meta: MallMeta) {
@@ -577,6 +613,14 @@ function zones(meta: MallMeta) {
     min: [-VOID.x, CEIL, BRIDGE.z1],
     max: [VOID.x, ROOF, BRIDGE.z0],
   });
+  for (const s of [-1, 1] as const)
+    zs.push({
+      id: s < 0 ? 'restroom-women' : 'restroom-men',
+      name: s < 0 ? "Women's restroom" : "Men's restroom",
+      priority: 10,
+      min: xs(s, X_CON, X_OUT, 0, SLOT_Z0),
+      max: xs(s, X_CON, X_OUT, CEIL, 0, true),
+    });
   for (const slot of meta.slots)
     zs.push({ id: `shop-${slot.id}`, name: 'Vacant unit', priority: 10, slot: slot.id, ...slot.interior });
 }

@@ -20,6 +20,7 @@ const MATERIALS: Record<string, [string, number, number, number?, boolean?]> = {
   panel: ['#b9bcbf', 0.35, 0.8], // escalator truss and skirts: stainless steel
   rubber: ['#1d1d1f', 0.6, 0], // escalator handrails
   glass: ['#a9c4cf', 0.05, 0, 0.25],
+  mirror: ['#c9d3d6', 0.05, 0.6], // the restrooms' mirrors
   escalator: ['#1f2022', 0.5, 0.3], // comb plates: dark like the steps
   comb: ['#e2b43a', 0.6, 0], // their yellow edge
   wood: ['#9a6a3f', 0.7, 0],

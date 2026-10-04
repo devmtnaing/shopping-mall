@@ -42,6 +42,7 @@ VOID_X, VOID_Z0, VOID_Z1 = 6.0, -10.0, SLOT_Z0 - SLOTS * SLOT_LEN
 BRIDGE_Z0, BRIDGE_Z1 = -33.0, -41.0
 ESC_A, ESC_B, ESC_W = -3.0, 3.0, 1.9  # overall width, balustrades included
 Z_FLAG = -68.0
+RESTROOM_DOOR = (-4.4, -2.8, 2.6)  # z0, z1, height: off the concourse into each lobby corner
 
 
 def log(*a):
@@ -135,6 +136,7 @@ LOOK = {
     'comb': ('#e2b43a', 0.6, 0.0, 0),  # their yellow edge
     'planter': ('#e9e2d6', 0.8, 0.0, 0),
     'glass': ('#bcd4dc', 0.05, 0.0, 0),
+    'mirror': ('#c9d3d6', 0.05, 0.0, 0),  # the restrooms'
     'skylight': ('#fff8ea', 1.0, 0.0, 6),
     'lightpanel': ('#fffaf0', 1.0, 0.0, 10),
     'frame': ('#3b3129', 0.4, 0.7, 0),  # door frames: dark bronze
@@ -326,6 +328,12 @@ for y in (CEIL, ROOF):
             lo = (x - PANEL_W / 2, y - 0.04, z - PANEL_L / 2)
             hi = (x + PANEL_W / 2, y - 0.01, z + PANEL_L / 2)
             panels.append(box('lightpanel', 'lightpanel', lo, hi))
+# two panels in each restroom (the lobby corners), down the middle of the room
+for s in (-1, 1):
+    for u in (3.5, 8.2):  # in from the concourse wall
+        x, z = s * (X_CON + T + u), SLOT_Z0 / 2
+        panels.append(box('lightpanel', 'lightpanel', (x - PANEL_W / 2, CEIL - 0.04, z - PANEL_L / 2),
+                          (x + PANEL_W / 2, CEIL - 0.01, z + PANEL_L / 2)))
 
 # ---- architectural detail (issue #2) ----------------------------------------------------------
 PILLAR = (SLOT_LEN - DOOR_W) / 2
@@ -352,6 +360,11 @@ for s in (-1, 1):
             # skirting along the storefront pillars
             side_box('skirting', s, X_CON - 0.025, X_CON + 0.01, y0, y0 + 0.14, zb, d0 - 0.06)
             side_box('skirting', s, X_CON - 0.025, X_CON + 0.01, y0, y0 + 0.14, d1 + 0.06, za)
+        if not upper:  # the restroom's doorway, beside the lobby
+            z0, z1, h = RESTROOM_DOOR
+            for e in (z0, z1):
+                side_box('frame', s, X_CON - 0.05, X_CON + T + 0.02, 0.0, h - 0.08, e - 0.06, e + 0.06)
+            side_box('frame', s, X_CON - 0.05, X_CON + T + 0.02, h - 0.08, h + 0.04, z0 - 0.06, z1 + 0.06)
         # a cornice band along the whole row, just under the ceiling
         side_box('cornice', s, X_CON - 0.1, X_CON + 0.01, top - 0.42, top - 0.22, VOID_Z1, SLOT_Z0)
 
