@@ -65,6 +65,10 @@ export function createMultiplayer(opts: {
   onHugFrom?: (x: number, z: number) => void;
   /** Someone threw an apple (fly it here too). */
   onThrow?: (o: [number, number, number], v: [number, number, number]) => void;
+  /** A door opened or closed (`by` you, someone else, or nobody when it's open). */
+  onDoor?: (door: string, open: boolean, by: 'me' | 'other' | null) => void;
+  /** On joining: these doors are closed, and every other is open. */
+  onDoors?: (closed: { door: string; by: 'me' | 'other' }[]) => void;
 }) {
   const { scene, player, travel, floorAt, onSelfEmote, seated, holding, picking, onHugFrom, onThrow } = opts;
   const room = new URLSearchParams(location.search).get('room') ?? 'main';
@@ -112,6 +116,10 @@ export function createMultiplayer(opts: {
         crowd.gesture(m.id, 'throw', THROW_RELEASE);
         return onThrow?.(m.o, m.v);
       }
+      if (m.t === 'door') {
+        const by = m.by === undefined ? null : m.by === net.selfId ? 'me' : 'other';
+        return opts.onDoor?.(m.door, m.open, by);
+      }
       if (m.t === 'error' && m.code === 'rate') return toast(t('chat.slowDown'));
       if (m.t === 'error' && m.code === 'bad-token') {
         hostToken.value = null; // expired: carry on as a regular visitor
@@ -130,6 +138,12 @@ export function createMultiplayer(opts: {
       }
       if (m.t === 'welcome') {
         remotes.welcome(m.id, m.players);
+        opts.onDoors?.(
+          (m.doors ?? []).map((d) => ({
+            door: d.door,
+            by: d.by === m.id ? ('me' as const) : ('other' as const),
+          })),
+        );
         // someone in the room already had your name, so the server added a number: say so, once
         if (m.name !== profile.value.name && m.name !== renamedTo) {
           renamedTo = m.name;
@@ -238,6 +252,12 @@ export function createMultiplayer(opts: {
     },
     throwApple(o: [number, number, number], v: [number, number, number]) {
       if (net.online) net.send({ t: 'throw', o, v });
+    },
+    /** Open or close a door: false when offline (then it's yours to change on your own). */
+    door(id: string, open: boolean): boolean {
+      if (!net.online) return false;
+      net.send({ t: 'door', id, open });
+      return true;
     },
     remotes,
     /** Is anyone else in view walking or running? (Keeps the frame rate up while they do.) */

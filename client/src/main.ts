@@ -2,7 +2,7 @@ import { effect } from '@preact/signals';
 import { THROW_RELEASE } from '@shopping-mall/shared/avatars';
 import { PLAYER } from '@shopping-mall/shared/constants';
 import { APPLE, EMOTES } from '@shopping-mall/shared/protocol';
-import { Color, DirectionalLight, Fog, HemisphereLight, Ray, Scene, Vector3 } from 'three';
+import { type Box3, Color, DirectionalLight, Fog, HemisphereLight, Ray, Scene, Vector3 } from 'three';
 import { track } from './analytics';
 import { type Sound, soundOnFirstInteraction, toggleSound } from './audio';
 import type { Avatar } from './avatars/kit';
@@ -35,6 +35,7 @@ import { createRenderer } from './render/renderer';
 import { DynamicResolution } from './render/resolution';
 import {
   applePrompt,
+  doorPrompt,
   mallMeta,
   nearbyShop,
   nearbyUnit,
@@ -159,6 +160,31 @@ scene.add(walkTo.marker);
 // your hand, then turn back); with one in hand, F throws it straight ahead. You stand still for the
 // reach and the wind-up, so the animation always plays.
 const apples = new Apples(mall.collider);
+// the restroom cubicles' doors: solid while closed, along with the shops' furniture. They load
+// after the start (nobody begins at one); news of them from the server waits until then.
+type DoorBy = 'me' | 'other' | null;
+let doors: import('./world/doors').Doors | null = null;
+const doorNews = new Map<string, { open: boolean; by: DoorBy }>();
+let furniture: Box3[] = [];
+const solidify = () => {
+  player.obstacles = doors ? [...furniture, ...doors.obstacles()] : furniture;
+};
+const setDoor = (id: string, open: boolean, by: DoorBy) => {
+  if (doors) doors.set(id, open, by);
+  else doorNews.set(id, { open, by });
+};
+if (mall.meta.doors?.length)
+  import('./world/doors')
+    .then(({ Doors }) => {
+      const loaded = new Doors(mall.meta.doors ?? []);
+      for (const [id, { open, by }] of doorNews) loaded.set(id, open, by);
+      doorNews.clear();
+      loaded.onChange = solidify;
+      doors = loaded;
+      scene.add(loaded.group);
+      solidify();
+    })
+    .catch((e) => console.warn('doors:', e));
 scene.add(apples.group);
 const stands = (mall.meta.props ?? []).filter((p) => p.kind === 'fruit').map((p) => p.pos);
 let holding = false;
@@ -211,6 +237,17 @@ const spots = seatSpots(mall.meta);
 let seated: SeatSpot | null = null;
 /** Someone (another player, or one of the shoppers) is sitting in this spot already. */
 const spotIsTaken = (s: SeatSpot) => spotTaken(s, multi.sitters()) || spotTaken(s, shoppers?.sitters() ?? []);
+/** Close the cubicle door you're at, or open it again (not someone else's: it's engaged). */
+function toggleDoor() {
+  const d = doors?.nearest(player.pos);
+  if (!doors || !d) return;
+  if (!d.open && d.by === 'other') return toast(t('toast.doorEngaged'));
+  // straight away: the server sets it right if someone else closed it first
+  const open = !d.open;
+  doors.set(d.def.id, open, 'me');
+  multi.door(d.def.id, open);
+}
+
 function toggleSeat() {
   if (seated) {
     const up = standSpot(seated);
@@ -243,6 +280,12 @@ const multi = createMultiplayer({
   seats: spots,
   // someone hugged you: turn to face them, if you're standing still
   onThrow: (o, v) => apples.throw(o, v),
+  onDoor: setDoor,
+  onDoors: (closed) => {
+    doors?.openAll();
+    doorNews.clear();
+    for (const d of closed) setDoor(d.door, false, d.by);
+  },
   onHugFrom: (x, z) => {
     if (seated || player.speed > 0.2) return;
     player.facing = Math.atan2(-(x - player.pos.x), -(z - player.pos.z));
@@ -288,6 +331,7 @@ installCommands({
   report: (id) => multi.report(id),
   toggleSeat,
   apple,
+  toggleDoor,
   walkTo: (x, z, floor) => {
     const y = mall.meta.floors[floor]?.y ?? 0;
     if (!walkTo.walkToPoint({ x, y, z }, player)) toast(t('toast.cantWalk'));
@@ -377,7 +421,8 @@ const furnishShops = (shops: typeof content.value.shops) => {
       interiors?.dispose();
       interiors = propLayer(lib, placements, player.pos);
       scene.add(interiors.group);
-      player.obstacles = obstacles;
+      furniture = obstacles;
+      solidify();
     })
     .catch((e) => console.warn('interiors:', e));
 };
@@ -435,6 +480,7 @@ if (debugMode || perfMode) {
       avatar: () => avatar,
       multi,
       shoppers: () => shoppers,
+      doors: () => doors,
     },
   });
 }
@@ -493,15 +539,19 @@ startLoop({
     const pick = atStand() ? 'pick' : holding && throwing <= 0 ? 'throw' : null;
     if (pick !== (applePrompt.value?.mode ?? null)) applePrompt.value = pick ? { mode: pick } : null;
     const visit = input.keys.consume('KeyE'); // always consume, so a stray press can't fire later
+    const door = !near && !unit && !seated ? (doors?.nearest(player.pos) ?? null) : null;
+    const doorMode = door ? (door.open ? 'close' : door.by === 'other' ? 'engaged' : 'open') : null;
+    if (doorMode !== doorPrompt.value) doorPrompt.value = doorMode;
     const seat = seated
       ? 'stand'
-      : !near && !unit && nearestSpot(spots, player.pos, spotIsTaken)
+      : !near && !unit && !door && nearestSpot(spots, player.pos, spotIsTaken)
         ? 'sit'
         : null;
     if (seat !== seatPrompt.value) seatPrompt.value = seat;
     if (visit && !uiHasFocus.value) {
       if (near && !seated) openShop(near);
       else if (unit && !seated) rentUnit.value = unit;
+      else if (door) toggleDoor();
       else if (seat) toggleSeat();
     }
     if (zones.update(dt, player.pos)) showZone();
@@ -526,6 +576,7 @@ startLoop({
     mirror?.update(over.t === 0); // from above it would only mirror the sky
     water?.update(dt);
     steps.update(dt);
+    doors?.update(dt);
 
     const tap = input.takeTap();
     if (tap && phase.value === 'playing' && !walkTo.tap(tap.x, tap.y, player, canvas, over.clipY))

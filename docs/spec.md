@@ -90,6 +90,7 @@ Priority: **P0** = MVP, **P1** = v1.0, **P2** = later.
 | Visit shop | E | Tap shop / prompt |
 | Chat | Enter | Chat button |
 | Emoji (7 dances, 8 hugs) | 1 to 8 | Emoji bar |
+| Close or open a cubicle door | E | The door prompt |
 | Pick or throw an apple | F | The apple prompt at a fruit stand, or while you hold one |
 | Mute | N | Speaker button |
 | Change character | Character (dock) | Character (dock) |

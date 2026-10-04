@@ -38,6 +38,17 @@ describe('greybox', () => {
     }
   });
 
+  it('gives each restroom cubicle a door, hinged at floor level and swinging a quarter turn', () => {
+    const doors = meta.doors ?? [];
+    expect(doors.map((d) => d.id.split('-')[0])).toEqual([...Array(6).fill('w'), ...Array(3).fill('m')]);
+    expect(new Set(doors.map((d) => d.id)).size).toBe(doors.length);
+    for (const d of doors) {
+      expect(d.hinge[1]).toBe(0);
+      expect(Math.abs(d.swing)).toBeCloseTo(Math.PI / 2);
+      expect(d.width).toBeGreaterThan(0.7); // wide enough to walk through (the body is 0.6 m)
+    }
+  });
+
   it('builds a closed collision mesh of triangles', () => {
     expect(geo.collision.length % 9).toBe(0);
     expect(geo.collision.length / 9).toBeLessThan(5000); // budget: ≤ 5k collision tris

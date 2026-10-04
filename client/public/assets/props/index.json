@@ -10,7 +10,8 @@
     "shop-fashion": ["sneakers", "shelf-bags"],
     "shop-home": ["plant-stand"],
     "shop-games": ["arcade"],
-    "restrooms": ["stall", "vanity", "urinal", "restroom-sign"]
+    "restrooms": ["toilet", "vanity", "urinal", "sign-women", "sign-men"],
+    "restroom-women": ["sanitary-bin", "baby-changing", "powder-table"]
   },
   "footprints": {
     "bench": [1.9, 0.45, 0.7],
@@ -36,10 +37,14 @@
     "shelf-bags": [1.7, 1.8, 1.5],
     "register": [1.6, 1.1, 1.6],
     "cart": null,
-    "stall": [1.26, 2.1, 2],
+    "toilet": [0.4, 0.45, 0.66],
+    "sanitary-bin": null,
     "vanity": [1.98, 0.95, 0.87],
     "urinal": [1.51, 1.3, 0.7],
-    "restroom-sign": [1, 1.6, 0.35],
+    "baby-changing": [0.9, 0.54, 0.63],
+    "powder-table": [0.96, 0.8, 0.9],
+    "sign-women": [0.95, 1.6, 0.3],
+    "sign-men": [0.72, 1.6, 0.3],
     "fruit": [1.2, 1, 1.2]
   }
 }

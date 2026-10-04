@@ -140,7 +140,12 @@ export type ClientMessage =
   /** You changed character or colour mid-visit. */
   | { t: 'look'; look: Look }
   /** An apple thrown from `o` at velocity `v` (m/s); every client flies it the same way. */
-  | { t: 'throw'; o: [number, number, number]; v: [number, number, number] };
+  | { t: 'throw'; o: [number, number, number]; v: [number, number, number] }
+  /** Open or close a door (a restroom cubicle's, meta.doors). */
+  | { t: 'door'; id: string; open: boolean };
+
+/** A closed door, and who closed it: only they can open it again. */
+export type ClosedDoor = { door: string; by: number };
 
 export type ServerMessage =
   /** `chat`: the room's last few messages, oldest first, so a newcomer sees what's being said. */
@@ -153,11 +158,15 @@ export type ServerMessage =
       resume: string;
       players: PlayerInfo[];
       chat?: ChatHistoryLine[];
+      /** The doors that are closed right now (all others are open). */
+      doors?: ClosedDoor[];
     }
   | { t: 'presence'; joined: PlayerInfo[]; left: number[] }
   | { t: 'chat'; id: number; name: string; text: string; at: number; host?: boolean }
   | { t: 'emote'; id: number; e: string }
   | { t: 'throw'; id: number; o: [number, number, number]; v: [number, number, number] }
+  /** A door opened, or closed (`by` who: only they can open it again). */
+  | { t: 'door'; door: string; open: boolean; by?: number }
   /** Someone in the room changed character or colour. */
   | { t: 'look'; id: number; look: Look }
   /** Someone's tab went to the background a while ago (away), or they're back. */

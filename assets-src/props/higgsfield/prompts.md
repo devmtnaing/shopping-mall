@@ -38,9 +38,18 @@ Batch 3 of #4 (shop interiors), 2026-09-29: 25 credits.
 
 | File | face_limit | Prompt |
 |---|---|---|
-| `stall.glb` | 2000 | A single public restroom toilet cubicle for a shopping mall: light grey laminate partition walls on both sides and a closed front door with a small chrome handle and an occupancy indicator, a gap under the walls showing slim steel legs, box-shaped, flat back so it stands against a wall, clean modern design, stylized low-poly game asset, flat colors, isolated |
 | `vanity.glb` | 2000 | A restroom washbasin counter for a shopping mall: a long white stone countertop with two round white sinks and chrome taps on a light oak cabinet, a wide rectangular mirror above it on the same back panel, flat back so it stands against a wall, clean modern design, stylized low-poly game asset, flat colors, isolated |
 | `urinal.glb` | 2000 | Two white wall-mounted ceramic urinals for a shopping mall restroom with a frosted glass privacy divider between them, mounted on one light grey tiled back panel, flat back so it stands against a wall, clean modern design, stylized low-poly game asset, flat colors, isolated |
-| `restroom-sign.glb` | 2000 | A freestanding restroom direction sign for a shopping mall: a slim upright navy blue rectangular totem on a low base with large white man and woman toilet pictograms on its front, flat panel, clean modern design, stylized low-poly game asset, flat colors, isolated |
 
-The restrooms, 2026-10-04: 20 credits. (The vanity came without its mirror; the greybox puts one on the wall above it.)
+The restrooms, 2026-10-04: 20 credits. (The vanity came without its mirror; the greybox puts one on the wall above it. A closed `stall` and a shared `restroom-sign` from this batch were replaced by the cubicles and the signs below.)
+
+| File | face_limit | Prompt |
+|---|---|---|
+| `toilet.glb` | 2000 | A white ceramic toilet for a public restroom: a floor-standing bowl with a closed white seat and lid and a slim white cistern behind it, chrome flush button on top, front view facing forward, clean modern design, stylized low-poly game asset, flat colors, isolated |
+| `baby-changing.glb` | 2000 | A wall-mounted fold-down baby changing table for a shopping mall restroom, opened flat, white and soft pastel pink plastic with a padded changing surface and a small baby pictogram, flat back so it mounts against a wall, clean modern design, stylized low-poly game asset, flat colors, isolated |
+| `powder-table.glb` | 2000 | A powder room makeup table for a shopping mall ladies' restroom: a slim light oak console counter with a round mirror ringed with warm bulbs on its back panel, a small vase of pink flowers, and a round blush pink upholstered stool in front, flat back so it stands against a wall, clean modern design, stylized low-poly game asset, flat colors, isolated |
+| `sanitary-bin.glb` | 2000 | A small slim white pedal bin for a restroom cubicle, rounded rectangular with a closed lid and a soft pink accent band, clean modern design, stylized low-poly game asset, flat colors, isolated |
+| `sign-women.glb` | 2000 | A freestanding restroom sign for a shopping mall women's restroom: a slim upright rose pink rectangular totem on a low base with one large white woman toilet pictogram on its front, flat panel, clean modern design, stylized low-poly game asset, flat colors, isolated |
+| `sign-men.glb` | 2000 | A freestanding restroom sign for a shopping mall men's restroom: a slim upright navy blue rectangular totem on a low base with one large white man toilet pictogram on its front, flat panel, clean modern design, stylized low-poly game asset, flat colors, isolated |
+
+Restroom cubicles and the women's restroom, 2026-10-04: 30 credits.

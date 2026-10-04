@@ -18,6 +18,7 @@ export const PACKS = [
   'shop-home',
   'shop-games',
   'restrooms',
+  'restroom-women',
 ] as const;
 export type Pack = (typeof PACKS)[number];
 
@@ -193,14 +194,23 @@ export const PROPS: Record<string, PropSpec> = {
     footprint: [1.6, 1.1, 1.6],
   },
   cart: { pack: 'shops', src: `${M}/shopping-cart.glb`, axis: 'y', size: 1, turn: 0, footprint: null },
-  /** A toilet cubicle: partitions and a closed door, standing against the wall behind it. */
-  stall: {
+  /** In each restroom cubicle (the cubicles themselves are the greybox's, their doors the client's). */
+  toilet: {
     pack: 'restrooms',
-    src: `${H}/stall.glb`,
+    src: `${H}/toilet.glb`,
     axis: 'y',
-    size: 2.1,
+    size: 0.8,
     turn: Math.PI / 2,
-    footprint: [1.26, 2.1, 2],
+    footprint: [0.4, 0.45, 0.66],
+  },
+  /** A small pedal bin, in each cubicle of the women's restroom. */
+  'sanitary-bin': {
+    pack: 'restroom-women',
+    src: `${H}/sanitary-bin.glb`,
+    axis: 'y',
+    size: 0.4,
+    turn: Math.PI / 2,
+    footprint: null,
   },
   /** Two basins on a cabinet; the mirror above it is the greybox's. */
   vanity: {
@@ -211,7 +221,7 @@ export const PROPS: Record<string, PropSpec> = {
     turn: Math.PI / 2,
     footprint: [1.98, 0.95, 0.87],
   },
-  /** Two wall urinals with a divider between them. */
+  /** Two wall urinals with a divider between them (the men's restroom). */
   urinal: {
     pack: 'restrooms',
     src: `${H}/urinal.glb`,
@@ -220,14 +230,40 @@ export const PROPS: Record<string, PropSpec> = {
     turn: Math.PI / 2,
     footprint: [1.51, 1.3, 0.7],
   },
-  /** Stands in the concourse beside each restroom's doorway. */
-  'restroom-sign': {
-    pack: 'restrooms',
-    src: `${H}/restroom-sign.glb`,
+  /** A fold-down baby changing table, on the wall: placed by its lowest point. */
+  'baby-changing': {
+    pack: 'restroom-women',
+    src: `${H}/baby-changing.glb`,
+    axis: 'x',
+    size: 0.9,
+    turn: Math.PI / 2,
+    footprint: [0.9, 0.54, 0.63],
+  },
+  /** A make-up table with a lit round mirror, and a stool (the women's restroom). */
+  'powder-table': {
+    pack: 'restroom-women',
+    src: `${H}/powder-table.glb`,
     axis: 'y',
     size: 1.6,
     turn: Math.PI / 2,
-    footprint: [1, 1.6, 0.35],
+    footprint: [0.96, 0.8, 0.9],
+  },
+  /** Stand in the concourse beside each restroom's doorway. */
+  'sign-women': {
+    pack: 'restrooms',
+    src: `${H}/sign-women.glb`,
+    axis: 'y',
+    size: 1.6,
+    turn: Math.PI / 2,
+    footprint: [0.95, 1.6, 0.3],
+  },
+  'sign-men': {
+    pack: 'restrooms',
+    src: `${H}/sign-men.glb`,
+    axis: 'y',
+    size: 1.6,
+    turn: Math.PI / 2,
+    footprint: [0.72, 1.6, 0.3],
   },
   fruit: {
     pack: 'shops',

@@ -278,6 +278,56 @@ describe('apples', () => {
   });
 });
 
+describe('doors', () => {
+  it('close for everyone, open only for whoever closed them, and open when they leave', async () => {
+    const a = client();
+    const wa = await a.join('Aye');
+    const b = client();
+    await b.join('Bo');
+    a.ws.send(encodeInput(0, at(0, 0)));
+    b.ws.send(encodeInput(0, at(1, 0)));
+    await sleep(100);
+    a.send({ t: 'door', id: 'w-stall-0', open: false });
+    expect(await b.waitFor((m) => m.t === 'door')).toEqual({
+      t: 'door',
+      door: 'w-stall-0',
+      open: false,
+      by: wa.id,
+    });
+    // Bo can't open it: he's told it's still closed, and Aye hears nothing
+    b.send({ t: 'door', id: 'w-stall-0', open: true });
+    expect(
+      await b.waitFor(
+        (m) => m.t === 'door' && m.open === false && b.messages.filter((x) => x.t === 'door').length === 2,
+      ),
+    ).toMatchObject({ by: wa.id });
+    // a newcomer sees it closed
+    const c = client();
+    expect((await c.join('Cho')).doors).toEqual([{ door: 'w-stall-0', by: wa.id }]);
+    // Aye leaves: it opens
+    a.close();
+    expect(await b.waitFor((m) => m.t === 'door' && m.open)).toMatchObject({ door: 'w-stall-0' });
+  });
+
+  it('hold one at a time: closing another opens the first', async () => {
+    const a = client();
+    await a.join('Aye');
+    const b = client();
+    await b.join('Bo');
+    a.ws.send(encodeInput(0, at(0, 0)));
+    await sleep(100);
+    a.send({ t: 'door', id: 'm-stall-0', open: false });
+    a.send({ t: 'door', id: 'm-stall-1', open: false });
+    await until(() => b.messages.filter((m) => m.t === 'door').length >= 3);
+    const doors = b.messages.filter((m) => m.t === 'door');
+    expect(doors.map((m) => m.t === 'door' && [m.door, m.open])).toEqual([
+      ['m-stall-0', false],
+      ['m-stall-0', true],
+      ['m-stall-1', false],
+    ]);
+  });
+});
+
 describe('changing character', () => {
   it('tells the room your new look, remembers it for newcomers, and drops one that is not allowed', async () => {
     const a = client();

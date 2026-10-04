@@ -477,6 +477,7 @@ export async function startServer(opts: ServerOptions = {}) {
         resume: token,
         players: others,
         chat,
+        doors: s.room.doors.size ? [...s.room.doors].map(([door, by]) => ({ door, by })) : undefined,
       } satisfies ServerMessage);
       // which vacant units are applied for, so their signs are right from the start
       if (db) {
@@ -538,7 +539,8 @@ export async function startServer(opts: ServerOptions = {}) {
 
   function handle(msg: ClientMessage, player: Player, room: Room) {
     // saying or doing anything counts as being here
-    if (msg.t === 'chat' || msg.t === 'emote' || msg.t === 'throw' || msg.t === 'look') player.active();
+    if (msg.t === 'chat' || msg.t === 'emote' || msg.t === 'throw' || msg.t === 'look' || msg.t === 'door')
+      player.active();
     if (msg.t === 'chat') {
       const text = maskBlocked(blocklist, cleanChat(msg.text));
       if (!text) return;
@@ -597,6 +599,12 @@ export async function startServer(opts: ServerOptions = {}) {
       const near = Math.hypot(ox - p.x, oy - p.y, oz - p.z) <= APPLE.reach;
       if (player.placed && near && Math.hypot(...msg.v) <= APPLE.maxSpeed && player.throwLimit.take())
         room.nearby(player, EMOTE_RADIUS, { t: 'throw', id: player.id, o: msg.o, v: msg.v });
+    } else if (msg.t === 'door') {
+      // someone else's door (or too many in a row): tell them how it really is
+      if (!player.placed || !player.doorLimit.take() || !room.setDoor(msg.id, msg.open, player.id)) {
+        const by = room.doors.get(msg.id);
+        player.send({ t: 'door', door: msg.id, open: by === undefined, by } satisfies ServerMessage);
+      }
     }
   }
 

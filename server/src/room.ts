@@ -18,6 +18,8 @@ export class Room {
   tick = 0;
   /** Recent chat: what newcomers see when there's no database, and the context sent with reports. */
   readonly recentChat: ChatHistoryLine[] = [];
+  /** Closed doors (meta.doors), and who closed each: only they open it again, and they hold one at a time. */
+  readonly doors = new Map<string, number>();
   private joined = new Map<number, PlayerInfo>();
   private left = new Set<number>();
 
@@ -41,6 +43,34 @@ export class Room {
     this.players.delete(id);
     // joined and left within one batch: nobody needs to hear about it
     if (!this.joined.delete(id)) this.left.add(id);
+    this.releaseDoors(id);
+  }
+
+  /**
+   * Open or close a door for player `by`. A closed door is theirs: nobody else can open it, and it
+   * opens again when they close another or leave. Returns false when it isn't theirs to change.
+   */
+  setDoor(door: string, open: boolean, by: number): boolean {
+    const holder = this.doors.get(door);
+    if (open) {
+      if (holder !== by) return false;
+      this.doors.delete(door);
+      this.broadcast({ t: 'door', door, open: true });
+      return true;
+    }
+    if (holder !== undefined) return holder === by;
+    this.releaseDoors(by);
+    this.doors.set(door, by);
+    this.broadcast({ t: 'door', door, open: false, by });
+    return true;
+  }
+
+  private releaseDoors(by: number) {
+    for (const [door, holder] of this.doors)
+      if (holder === by) {
+        this.doors.delete(door);
+        this.broadcast({ t: 'door', door, open: true });
+      }
   }
 
   broadcast(msg: ServerMessage, except?: number) {

@@ -137,6 +137,8 @@ LOOK = {
     'planter': ('#e9e2d6', 0.8, 0.0, 0),
     'glass': ('#bcd4dc', 0.05, 0.0, 0),
     'mirror': ('#c9d3d6', 0.05, 0.0, 0),  # the restrooms'
+    'partition': ('#a3abb0', 0.5, 0.0, 0),  # the men's restroom cubicles
+    'blush': ('#e8c3be', 0.55, 0.0, 0),  # the women's
     'skylight': ('#fff8ea', 1.0, 0.0, 6),
     'lightpanel': ('#fffaf0', 1.0, 0.0, 10),
     'frame': ('#3b3129', 0.4, 0.7, 0),  # door frames: dark bronze

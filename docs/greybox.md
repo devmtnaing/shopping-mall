@@ -49,7 +49,7 @@ The greybox is the mall made of plain boxes. It came first, to tune movement, th
 | Flagship | z ∈ [−80, −68], stage 0.6 m high (x ±8, from z −77) reached by 0.2 m steps | doorway 14 × 4.8 m |
 | Benches and sofas | Benches on the ground floor at x = ±8.6, z −16, −26, −46 and −56, facing the concourse. Upstairs, with their backs to the parapet and facing the shops, benches at x = ±6.9, z −16 and −56, and sofas at z −26 and −46. All are seats. | Benches are 0.45 m high: too high to step onto, so you'd have to jump |
 | Spawn | (0, 0, −6), facing into the mall | |
-| Restrooms | ground floor, the corners beside the lobby: women's at x ∈ [−22, −10], men's at x ∈ [10, 22], z ∈ [−6, 0]. A doorway off the concourse at z ∈ [−4.4, −2.8] (▯), with a sign beside it | doorway 1.6 × 2.6 m. Cubicles (1.26 × 2 m) along the back wall, 7 in the women's, 3 and two pairs of urinals in the men's; two basin counters under a mirror on the front wall |
+| Restrooms | ground floor, the corners beside the lobby: women's at x ∈ [−22, −10], men's at x ∈ [10, 22], z ∈ [−6, 0]. A doorway off the concourse at z ∈ [−4.4, −2.8] (▯), with a sign beside it | doorway 1.6 × 2.6 m. Cubicles (1.4 × 1.7 m, partitions 2 m high on 15 cm feet) along the back wall, each with a toilet and a door that opens and closes (`meta.doors`): 6 in blush in the women's, with a sanitary bin in each; 3 in grey and two pairs of urinals in the men's. Two basin counters under a mirror on the front wall. The women's also has a powder table, a baby changing table and plants |
 | Planters | (−4.5, −5) by the entrance, (±6.5, −21), (6.5, −50); a seating island at (−6.5, −50) | 2 × 2 × 0.6 m |
 
 ## Zones

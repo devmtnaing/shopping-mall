@@ -537,34 +537,93 @@ function props(g: Geo, meta: MallMeta) {
   const under = (BRIDGE.z0 + BRIDGE.z1) / 2;
   for (const x of [-2.5, 2.5]) place('fruit', x, 0, under, inward(x));
 
-  restrooms(g, place);
+  restrooms(g, meta, place);
 }
+
+/** A restroom cubicle: width across, depth from the back wall, partition height, gap under them, thickness, door width. */
+const CUBICLE = { w: 1.4, d: 1.7, top: 2, lift: 0.15, t: 0.04, door: 0.75 };
 
 /**
  * The restrooms in the ground-floor corners beside the lobby: women's on the west, men's on the
- * east. In through a doorway off the concourse, cubicles along the back wall (with urinals after
- * them in the men's), basins under a mirror along the front wall, and a sign outside.
+ * east. In through a doorway off the concourse. Cubicles along the back wall, each with a toilet and
+ * a door the client opens and closes (meta.doors); urinals after them in the men's. Basins under a
+ * mirror along the front wall. The women's has blush cubicles, a sanitary bin in each, a powder
+ * table, a baby changing table and plants. A sign outside says which is which.
  */
-function restrooms(g: Geo, place: (kind: string, x: number, y: number, z: number, yaw?: number) => void) {
+function restrooms(
+  g: Geo,
+  meta: MallMeta,
+  place: (kind: string, x: number, y: number, z: number, yaw?: number) => void,
+) {
+  const { w, d, top, lift, t, door } = CUBICLE;
   const back = SLOT_Z0 + 0.15; // the face of the divider behind the first shop unit
+  const front = back + d;
+  const doors: NonNullable<MallMeta['doors']> = [];
+  meta.doors = doors;
   for (const s of [-1, 1] as const) {
+    const women = s < 0;
     /** x, `u` metres in from the restroom's concourse wall. */
     const at = (u: number) => s * (X_CON + T + u);
-    const stalls = s < 0 ? 7 : 3;
-    const pitch = PROPS.stall?.footprint?.[0] ?? 1.26;
-    const depth = PROPS.stall?.footprint?.[2] ?? 2;
-    for (let i = 0; i < stalls; i++) place('stall', at(2.6 + pitch * (i + 0.5)), 0, back + depth / 2, PI);
-    if (s > 0) for (const u of [7.96, 9.6]) place('urinal', at(u), 0, back + 0.35, PI);
+    /** A box from u0 to u1 in from the concourse wall. */
+    const box = (
+      mat: string | null,
+      u0: number,
+      u1: number,
+      y0: number,
+      y1: number,
+      z0: number,
+      z1: number,
+    ) =>
+      g.box(
+        mat,
+        xs(s, X_CON + T + u0, X_CON + T + u1, y0, z0),
+        xs(s, X_CON + T + u0, X_CON + T + u1, y1, z1, true),
+        mat === null,
+      );
+    const mat = women ? 'blush' : 'partition';
+    const n = women ? 6 : 3;
+    const u0 = 2.6; // the first cubicle's side, in from the doorway
+    // partitions between the cubicles (and at both ends), raised off the floor on little feet; solid
+    // all the way down, so nobody crawls under
+    for (let k = 0; k <= n; k++) {
+      const u = u0 + k * w;
+      box(mat, u - t / 2, u + t / 2, lift, top, back, front);
+      box(null, u - t / 2, u + t / 2, 0, top, back, front);
+      box('panel', u - 0.03, u + 0.03, 0, lift, front - 0.06, front);
+    }
+    for (let i = 0; i < n; i++) {
+      const a = u0 + i * w;
+      // the front: a door by one side (hinged on the partition) and a fixed panel beside it
+      const hinge = a + t;
+      box(mat, hinge + door + 0.01, a + w - t / 2, lift, top, front - t, front);
+      box(null, hinge + door + 0.01, a + w - t / 2, 0, top, front - t, front);
+      doors.push({
+        id: `${women ? 'w' : 'm'}-stall-${i}`,
+        hinge: [at(hinge), 0, front - t / 2],
+        yaw: s > 0 ? 0 : PI, // along the front, away from the hinge
+        width: door,
+        height: top - lift,
+        lift,
+        swing: s > 0 ? PI / 2 : -PI / 2, // into the cubicle
+        color: women ? '#e3b9b4' : '#9aa2a7',
+      });
+      place('toilet', at(a + w / 2), 0, back + 0.34, PI);
+      if (women) place('sanitary-bin', at(a + w - 0.27), 0, back + 0.2, PI);
+    }
+    if (!women) for (const u of [7.96, 9.6]) place('urinal', at(u), 0, back + 0.35, PI);
     for (const u of [5, 7.1]) place('vanity', at(u), 0, -0.45);
-    g.box(
-      'mirror',
-      xs(s, X_CON + T + 4, X_CON + T + 8.1, 1.2, -0.02),
-      xs(s, X_CON + T + 4, X_CON + T + 8.1, 2.1, 0, true),
-      false,
-    );
+    box('mirror', 4, 8.1, 1.2, 2.1, -0.02, 0);
+    const towardsConcourse = s < 0 ? -PI / 2 : PI / 2;
+    place('plant', at(0.5), 0, -0.5);
+    if (women) {
+      box('blush', 8.9, 10.3, 0, 2.6, -0.02, 0); // a blush panel behind the powder table
+      place('powder-table', at(9.6), 0, -0.47);
+      place('baby-changing', at(X_OUT - X_CON - T - 0.33), 0.55, -2.4, towardsConcourse);
+      place('plant', at(11.25), 0, -0.5);
+      place('plant', at(11.35), 0, back + 0.4);
+    }
     // outside, beside the doorway, facing the concourse
-    const x = s * (X_CON - 0.6);
-    place('restroom-sign', x, 0, RESTROOM_DOOR.z0 - 0.9, x > 0 ? PI / 2 : -PI / 2);
+    place(women ? 'sign-women' : 'sign-men', s * (X_CON - 0.6), 0, RESTROOM_DOOR.z0 - 0.9, towardsConcourse);
   }
 }
 
