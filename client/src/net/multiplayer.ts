@@ -7,6 +7,7 @@ import {
   ANIM,
   animSpeed,
   FLAG_GROUNDED,
+  FLAG_HOLDING,
   packAnim,
   animState as wireState,
 } from '@shopping-mall/shared/protocol';
@@ -53,6 +54,8 @@ export function createMultiplayer(opts: {
   onSelfEmote: (e: string) => void;
   /** Whether you're sitting on a bench (others see you sit). */
   seated: () => boolean;
+  /** Whether you have an apple in your hand (others see it there). */
+  holding: () => boolean;
   /** Where people can sit, so other players sit right on each kind of seat. */
   seats?: readonly SeatSpot[];
   /** Someone within hugging range hugged you (turn to face them). */
@@ -60,7 +63,7 @@ export function createMultiplayer(opts: {
   /** Someone threw an apple (fly it here too). */
   onThrow?: (o: [number, number, number], v: [number, number, number]) => void;
 }) {
-  const { scene, player, travel, floorAt, onSelfEmote, seated, onHugFrom, onThrow } = opts;
+  const { scene, player, travel, floorAt, onSelfEmote, seated, holding, onHugFrom, onThrow } = opts;
   const room = new URLSearchParams(location.search).get('room') ?? 'main';
   const remotes = new Remotes();
   let historyShown = false;
@@ -262,7 +265,7 @@ export function createMultiplayer(opts: {
       wire.z = player.pos.z;
       wire.yaw = player.facing;
       wire.anim = packAnim(animState(player, seated()), player.speed);
-      wire.flags = player.grounded ? FLAG_GROUNDED : 0;
+      wire.flags = (player.grounded ? FLAG_GROUNDED : 0) | (holding() ? FLAG_HOLDING : 0);
       net.sendInput(wire);
     },
     /** Every frame: move everyone else, and refresh minimap dots twice a second. */

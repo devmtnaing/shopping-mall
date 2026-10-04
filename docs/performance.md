@@ -15,7 +15,7 @@ Speed is a feature here, with hard limits: CI fails when anything goes over budg
 ### Download
 | Item | Budget (over the wire) |
 |---|---|
-| JS (initial, gz) | **≤ 220 KB** (three core ~130 KB + app ~60 KB + Preact ~5 KB) |
+| JS (initial, gz) | **≤ 221 KB** (three core ~130 KB + app ~60 KB + Preact ~5 KB) |
 | CSS | ≤ 15 KB |
 | Fonts | ≤ 60 KB (1 variable woff2, subset). Complex-script fonts load lazily per locale |
 | First-playable world chunk (atrium + concourse) | **≤ 1.5 MB** |

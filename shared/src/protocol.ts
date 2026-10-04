@@ -20,6 +20,8 @@ export type Pose = { x: number; y: number; z: number; yaw: number; anim: number;
 /** Animation states packed into the high nibble of `anim`; the low nibble is speed in 0.5 m/s steps. */
 export const ANIM = { idle: 0, walk: 1, run: 2, jump: 3, fall: 4, sit: 5 } as const;
 export const FLAG_GROUNDED = 1;
+/** Holding an apple (T-507): everyone sees it in their hand until they throw it. */
+export const FLAG_HOLDING = 2;
 
 const TAU = Math.PI * 2;
 const cm = (m: number) => Math.max(-32768, Math.min(32767, Math.round(m * 100)));

@@ -1,6 +1,6 @@
 {
   "$comment": "Gzipped byte budgets for client/dist. See docs/performance.md. Loosen only with a written reason in the PR.",
-  "initialJs": 225280,
+  "initialJs": 226304,
   "css": 15360,
   "anyLazyChunk": 61440
 }

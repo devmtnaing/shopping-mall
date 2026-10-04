@@ -164,6 +164,11 @@ export class Avatar {
     }
   }
 
+  /** Whether something is in the right hand. */
+  get holding() {
+    return this.held !== null;
+  }
+
   /** Put something in the right hand (in world units, e.g. an apple), or empty it with null. */
   hold(item: Object3D | null) {
     this.held?.removeFromParent();

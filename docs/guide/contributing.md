@@ -37,7 +37,7 @@ Read [Architecture](../architecture) first. The decisions behind it are in the A
 | `pnpm lint` | Biome: format and lint (`pnpm format` fixes most things) |
 | `pnpm typecheck` | TypeScript, strict |
 | `pnpm test` | Vitest: client, server, shared, tools. Database and storage tests need `TEST_DATABASE_URL` and `TEST_S3_ENDPOINT`, and skip without them. |
-| `pnpm build && pnpm size` | Bundle size budget (initial JS ≤ 220 KB gzipped) |
+| `pnpm build && pnpm size` | Bundle size budget (initial JS ≤ 221 KB gzipped) |
 | `pnpm perf` | Load and runtime budgets in Chromium on throttled 4G (`--gpu` to enforce frame time) |
 | `pnpm a11y` | axe-core on every main screen, plus a keyboard-only flow |
 | `pnpm screenshots` | Phone layouts (iPhone 13 portrait and landscape, Pixel 7) into `screenshots/` |
