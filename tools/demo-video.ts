@@ -1,5 +1,5 @@
 // pnpm demo:video [--url http://localhost:5173/] — records the ~60 s gameplay tour for the README:
-// Mya enters the mall and runs down the concourse to Bo, they wave and dance together, Mya finds a
+// Poe enters the mall and runs down the concourse to Bo, they wave and dance together, Poe finds a
 // café in the directory and steps inside, picks an apple and throws it at Bo, sits on a bench, and
 // pops into a restroom cubicle (the door shows engaged). Bo is a second visitor in another browser,
 // so run it against a mall with a server. Writes demo/demo.webm; `pnpm demo:media` turns that into
@@ -20,7 +20,7 @@ type Vec = { set: (x: number, y: number, z: number) => void };
 type Debug = {
   mallDebug: {
     player: { place: (x: number, y: number, z: number, yaw?: number) => void; facing: number; pos: Vec };
-    orbit: { yaw: number; pitch: number };
+    orbit: { yaw: number; pitch: number; zoom: number };
   };
 };
 const wait = (page: Page, ms: number) => page.waitForTimeout(ms);
@@ -91,8 +91,8 @@ await bo.page.waitForFunction(() => performance.getEntriesByName('playable').len
 await place(bo.page, 1.6, -17.5, Math.PI);
 
 const browser = await chromium.launch({ headless: false, args: ['--window-size=1280,760'] });
-const mya = await enter(browser, 'Mya', 13, true);
-const page = mya.page;
+const poe = await enter(browser, 'Poe', 13, true);
+const page = poe.page;
 const where = async (label: string) =>
   console.log(
     label,
@@ -102,7 +102,7 @@ const where = async (label: string) =>
     }),
   );
 await wait(page, 2200); // the landing dolly
-await mya.field.pressSequentially('Mya', { delay: 110 });
+await poe.field.pressSequentially('Poe', { delay: 110 });
 for (const n of [3, 8, 15, 13]) {
   await page.getByRole('radio', { name: `Character ${n}` }).check();
   await wait(page, 320);
@@ -144,7 +144,7 @@ await hold(page, 'KeyW', 1500); // step inside: tables and chairs
 await wait(page, 1500);
 
 // apples: pick one at the fruit stand and throw it at Bo
-// Bo a few steps off to one side; Mya faces him, the camera over her shoulder
+// Bo a few steps off to one side; Poe faces him, the camera over her shoulder
 const toBo = Math.atan2(2, -4);
 await place(bo.page, -0.6, -33, toBo + Math.PI);
 await place(page, 1.4, -37, toBo, -0.22, toBo + 0.45);
@@ -166,25 +166,31 @@ await wait(page, 2600);
 await page.keyboard.press('KeyE'); // stand up
 await wait(page, 400);
 
-// the men's restroom: in through the doorway and into a cubicle; the door shows engaged
-await place(page, 8.4, -3.6, -Math.PI / 2, -0.25);
+// the women's restroom: in through the doorway and into a cubicle; the door shows engaged
+// from the doorway, the camera in close (the lobby's planter tree is just behind)
+await place(page, -9.6, -3.6, Math.PI / 2, -0.25);
+await page.evaluate(() => {
+  (window as unknown as Debug).mallDebug.orbit.zoom = 2.6;
+});
 await wait(page, 700);
-await hold(page, 'KeyW', 1300);
+await hold(page, 'KeyW', 900);
 await where('in the restroom');
 // cut to her in a cubicle, the camera up over the partitions, looking down
-await place(page, 13.3, -4.9, 0, -1.15);
+await place(page, -13.3, -4.9, 0, -1.15);
 await wait(page, 900);
 await where('in the cubicle');
 await page.keyboard.press('KeyE'); // close the door
 await wait(page, 2400);
-await page.keyboard.press('KeyE'); // and out again
-await wait(page, 500);
-await hold(page, 'KeyS', 800);
-await wait(page, 600);
+await page.keyboard.press('KeyE'); // and open again
+await wait(page, 1000);
 
-// back out in the lobby, Bo's waiting for a hug
-await place(bo.page, 2.4, -11, -Math.PI / 2);
-await place(page, 3.8, -11, Math.PI / 2, -0.18, 0);
+// back out by the restrooms, Bo's waiting for a hug
+// (on the west side, so the camera doesn't sweep through the lobby's planter tree getting there)
+await place(bo.page, -8.2, -9, -Math.PI / 2);
+await place(page, -6.8, -9, Math.PI / 2, -0.18, 0);
+await page.evaluate(() => {
+  (window as unknown as Debug).mallDebug.orbit.zoom = 4.5;
+});
 await wait(page, 600);
 await page.keyboard.press('Digit8');
 await wait(page, 300);
@@ -194,7 +200,7 @@ await wait(page, 2600);
 // the overview to finish
 await page.keyboard.press('KeyM');
 await wait(page, 3500);
-await mya.ctx.close();
+await poe.ctx.close();
 await browser.close();
 await other.close();
 
