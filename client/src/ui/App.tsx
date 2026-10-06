@@ -9,6 +9,7 @@ import { Announcement } from './Announcement';
 import { ApplePrompt } from './ApplePrompt';
 import { Chat } from './Chat';
 import { Dock } from './Dock';
+import { DoorPrompt } from './DoorPrompt';
 import { EmoteBar } from './EmoteBar';
 import { Fade } from './Fade';
 import { BrandPill, NetNotice, OverviewFloors, TopRight, ZoneLabel } from './Hud';
@@ -82,6 +83,7 @@ function App() {
       <TopRight playing />
       <ShopPrompt />
       <SeatPrompt />
+      <DoorPrompt />
       <ApplePrompt />
       <Dock />
       {meta && <Minimap meta={meta} />}

@@ -28,6 +28,8 @@ export class Player {
   readonly emoteLimit = new RateLimit(4, 2);
   /** Apples: a burst of 3, then one a second. */
   readonly throwLimit = new RateLimit(3, 1);
+  /** Opening and closing doors. */
+  readonly doorLimit = new RateLimit(4, 1);
   /** Changing character: a burst of 3, then one every 2 s. */
   readonly lookLimit = new RateLimit(3, 1 / 2);
   /** One report every 30 s. */

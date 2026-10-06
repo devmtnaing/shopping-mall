@@ -32,6 +32,8 @@ const RAIL_H = 1.1;
 const GUARD_H = 1.6;
 const ENTRANCE = 5; // half-width of the glass entrance
 const FLAG_DOOR = 7; // half-width of the flagship's doorway
+/** The restrooms in the corners beside the lobby (women's west, men's east): their doorway off the concourse. */
+const RESTROOM_DOOR = { z0: -4.4, z1: -2.8, h: 2.6 };
 /** Escalator A (west, up to the bridge's south edge) and B (east, down from its north edge): centre x, width. */
 const ESC = { a: -3, b: 3, w: ESCALATOR.width + 0.5 }; // w: overall, balustrades included
 /** Escalators rise at 30°, like real ones: this much run for the climb to the upper floor. */
@@ -76,9 +78,13 @@ function shell(g: Geo) {
   g.box('wall', [-X_OUT, 0, Z_END - T], [X_OUT, ROOF, Z_END]);
   g.box('wall', [-X_OUT - T, 0, Z_END - T], [-X_OUT, ROOF, T]);
   g.box('wall', [X_OUT, 0, Z_END - T], [X_OUT + T, ROOF, T]);
-  // close off the dead corners beside the lobby and beside the flagship, both floors
+  // close off the corners beside the lobby (the restrooms, with a doorway on the ground floor) and
+  // beside the flagship, both floors
   for (const s of [-1, 1]) {
-    g.box('wall', xs(s, X_CON, X_CON + T, 0, SLOT_Z0), xs(s, X_CON, X_CON + T, ROOF, 0, true));
+    const { z0, z1, h } = RESTROOM_DOOR;
+    g.box('wall', xs(s, X_CON, X_CON + T, 0, SLOT_Z0), xs(s, X_CON, X_CON + T, ROOF, z0, true));
+    g.box('wall', xs(s, X_CON, X_CON + T, 0, z1), xs(s, X_CON, X_CON + T, ROOF, 0, true));
+    g.box('wall', xs(s, X_CON, X_CON + T, h, z0), xs(s, X_CON, X_CON + T, ROOF, z1, true));
     g.box('wall', xs(s, X_CON, X_CON + T, 0, Z_FLAG), xs(s, X_CON, X_CON + T, ROOF, Z_SHOPS_END, true));
   }
   // roof, open over the atrium, where a skylight sits instead
@@ -530,6 +536,95 @@ function props(g: Geo, meta: MallMeta) {
   // fruit stands under the bridge, between the escalators: pick an apple (F) and throw it (T-507)
   const under = (BRIDGE.z0 + BRIDGE.z1) / 2;
   for (const x of [-2.5, 2.5]) place('fruit', x, 0, under, inward(x));
+
+  restrooms(g, meta, place);
+}
+
+/** A restroom cubicle: width across, depth from the back wall, partition height, gap under them, thickness, door width. */
+const CUBICLE = { w: 1.4, d: 1.7, top: 2, lift: 0.15, t: 0.04, door: 0.75 };
+
+/**
+ * The restrooms in the ground-floor corners beside the lobby: women's on the west, men's on the
+ * east. In through a doorway off the concourse. Cubicles along the back wall, each with a toilet and
+ * a door the client opens and closes (meta.doors); urinals after them in the men's. Basins under a
+ * mirror along the front wall. The women's has blush cubicles, a sanitary bin in each, a powder
+ * table, a baby changing table and plants. A sign outside says which is which.
+ */
+function restrooms(
+  g: Geo,
+  meta: MallMeta,
+  place: (kind: string, x: number, y: number, z: number, yaw?: number) => void,
+) {
+  const { w, d, top, lift, t, door } = CUBICLE;
+  const back = SLOT_Z0 + 0.15; // the face of the divider behind the first shop unit
+  const front = back + d;
+  const doors: NonNullable<MallMeta['doors']> = [];
+  meta.doors = doors;
+  for (const s of [-1, 1] as const) {
+    const women = s < 0;
+    /** x, `u` metres in from the restroom's concourse wall. */
+    const at = (u: number) => s * (X_CON + T + u);
+    /** A box from u0 to u1 in from the concourse wall. */
+    const box = (
+      mat: string | null,
+      u0: number,
+      u1: number,
+      y0: number,
+      y1: number,
+      z0: number,
+      z1: number,
+    ) =>
+      g.box(
+        mat,
+        xs(s, X_CON + T + u0, X_CON + T + u1, y0, z0),
+        xs(s, X_CON + T + u0, X_CON + T + u1, y1, z1, true),
+        mat === null,
+      );
+    const mat = women ? 'blush' : 'partition';
+    const n = women ? 6 : 3;
+    const u0 = 2.6; // the first cubicle's side, in from the doorway
+    // partitions between the cubicles (and at both ends), raised off the floor on little feet; solid
+    // all the way down, so nobody crawls under
+    for (let k = 0; k <= n; k++) {
+      const u = u0 + k * w;
+      box(mat, u - t / 2, u + t / 2, lift, top, back, front);
+      box(null, u - t / 2, u + t / 2, 0, top, back, front);
+      box('panel', u - 0.03, u + 0.03, 0, lift, front - 0.06, front);
+    }
+    for (let i = 0; i < n; i++) {
+      const a = u0 + i * w;
+      // the front: a door by one side (hinged on the partition) and a fixed panel beside it
+      const hinge = a + t;
+      box(mat, hinge + door + 0.01, a + w - t / 2, lift, top, front - t, front);
+      box(null, hinge + door + 0.01, a + w - t / 2, 0, top, front - t, front);
+      doors.push({
+        id: `${women ? 'w' : 'm'}-stall-${i}`,
+        hinge: [at(hinge), 0, front - t / 2],
+        yaw: s > 0 ? 0 : PI, // along the front, away from the hinge
+        width: door,
+        height: top - lift,
+        lift,
+        swing: s > 0 ? PI / 2 : -PI / 2, // into the cubicle
+        color: women ? '#e3b9b4' : '#9aa2a7',
+      });
+      place('toilet', at(a + w / 2), 0, back + 0.34, PI);
+      if (women) place('sanitary-bin', at(a + w - 0.27), 0, back + 0.2, PI);
+    }
+    if (!women) for (const u of [7.96, 9.6]) place('urinal', at(u), 0, back + 0.35, PI);
+    for (const u of [5, 7.1]) place('vanity', at(u), 0, -0.45);
+    box('mirror', 4, 8.1, 1.2, 2.1, -0.02, 0);
+    const towardsConcourse = s < 0 ? -PI / 2 : PI / 2;
+    place('plant', at(0.5), 0, -0.5);
+    if (women) {
+      box('blush', 8.9, 10.3, 0, 2.6, -0.02, 0); // a blush panel behind the powder table
+      place('powder-table', at(9.6), 0, -0.47);
+      place('baby-changing', at(X_OUT - X_CON - T - 0.33), 0.55, -2.4, towardsConcourse);
+      place('plant', at(11.25), 0, -0.5);
+      place('plant', at(11.35), 0, back + 0.4);
+    }
+    // outside, beside the doorway, facing the concourse
+    place(women ? 'sign-women' : 'sign-men', s * (X_CON - 0.6), 0, RESTROOM_DOOR.z0 - 0.9, towardsConcourse);
+  }
 }
 
 function zones(meta: MallMeta) {
@@ -577,6 +672,14 @@ function zones(meta: MallMeta) {
     min: [-VOID.x, CEIL, BRIDGE.z1],
     max: [VOID.x, ROOF, BRIDGE.z0],
   });
+  for (const s of [-1, 1] as const)
+    zs.push({
+      id: s < 0 ? 'restroom-women' : 'restroom-men',
+      name: s < 0 ? "Women's restroom" : "Men's restroom",
+      priority: 10,
+      min: xs(s, X_CON, X_OUT, 0, SLOT_Z0),
+      max: xs(s, X_CON, X_OUT, CEIL, 0, true),
+    });
   for (const slot of meta.slots)
     zs.push({ id: `shop-${slot.id}`, name: 'Vacant unit', priority: 10, slot: slot.id, ...slot.interior });
 }

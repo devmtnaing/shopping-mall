@@ -163,6 +163,9 @@ sequenceDiagram
 ### Interest management
 Players are grouped by zone. A client hears about the players in its own zone and the zones next to it, up to 40, nearest first. Chat goes to everyone in the room, and emotes only to those nearby.
 
+### Doors
+The restroom cubicles have doors (`meta.doors`). E at a door sends `{t: 'door', id, open}`. The room keeps the closed ones and who closed each: only that person can open it again, each person holds one door at a time (closing another opens the first), and a door opens when its holder leaves. Everyone hears `{t: 'door', door, open, by}`, and a newcomer's welcome lists the closed doors. A request that isn't yours to make gets the door's real state back. The client swings each door and makes a closed one solid with an obstacle box, since the collision mesh doesn't change. Offline, the doors are all yours.
+
 ### Interpolation
 The client keeps the last few snapshots in a ring buffer and draws remote players 100 ms behind the server's time, interpolating their position and turning. If a packet is late, it carries on the motion for up to 250 ms and then holds still.
 

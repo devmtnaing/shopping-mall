@@ -24,6 +24,7 @@ const clientMessage = z.discriminatedUnion('t', [
     o: z.tuple([finite, finite, finite]),
     v: z.tuple([finite, finite, finite]),
   }),
+  z.object({ t: z.literal('door'), id: z.string().regex(/^[a-z0-9-]{1,40}$/), open: z.boolean() }),
   z.object({
     t: z.literal('report'),
     id: z.number().int().nonnegative(),

@@ -44,6 +44,8 @@ export const others = signal<{ x: number; z: number; floor: number; color: strin
 
 /** 'sit' when a bench is within reach, 'stand' while sitting (drives the seat prompt). */
 export const seatPrompt = signal<'sit' | 'stand' | null>(null);
+/** At a cubicle door: close it, open it (you closed it), or it's engaged (someone else did). */
+export const doorPrompt = signal<'close' | 'open' | 'engaged' | null>(null);
 /** At a fruit stand ("pick"), or holding apples ("throw"); `held` is how many (T-507). */
 export const applePrompt = signal<{ mode: 'pick' | 'throw' } | null>(null);
 

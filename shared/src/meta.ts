@@ -39,6 +39,25 @@ export const metaSchema = z.object({
   ),
   /** Furniture and decoration from the props packs (props/<pack>.glb), by kind. Optional: a mall can be bare. */
   props: z.array(z.object({ kind: z.string(), pos: vec3, yaw: z.number() })).optional(),
+  /**
+   * Doors that open and close (the restroom cubicles'). The panel runs `width` along its local +X
+   * from `hinge` (at floor level), `lift` up off the floor and `height` tall, turned `yaw` about +Y
+   * when closed and `yaw + swing` when open. `color` is the panel's (sRGB hex).
+   */
+  doors: z
+    .array(
+      z.object({
+        id: z.string().regex(/^[a-z0-9-]{1,40}$/),
+        hinge: vec3,
+        yaw: z.number(),
+        width: z.number().positive(),
+        height: z.number().positive(),
+        lift: z.number().nonnegative(),
+        swing: z.number(),
+        color: z.string().optional(),
+      }),
+    )
+    .optional(),
   /** Moving walkways: carry the player from `from` to `to` (bottom → top) at `speed` m/s. */
   escalators: z.array(
     z.object({ id: z.string(), from: vec3, to: vec3, width: z.number(), speed: z.number() }),
@@ -49,6 +68,7 @@ export type MallMeta = z.infer<typeof metaSchema>;
 export type Slot = MallMeta['slots'][number];
 export type Zone = MallMeta['zones'][number];
 export type Escalator = MallMeta['escalators'][number];
+export type Door = NonNullable<MallMeta['doors']>[number];
 export type Vec3 = z.infer<typeof vec3>;
 
 /** Where a mall package's files live. The content API sends this when the host has uploaded one. */
