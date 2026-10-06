@@ -142,6 +142,34 @@ describe.runIf(TEST_DB && S3)('shop owners', () => {
     const me = await call('GET', '/api/owner/me', undefined, { Authorization: `Bearer ${session}` });
     expect(await me.json()).toMatchObject({ shop: mine.id, photos: 0, limits: OWNER_LIMITS });
 
+    // SQL injection in either field gets nowhere: the values are sent to Postgres as parameters,
+    // never pasted into the query, and the password is only ever compared with a stored hash
+    const attempts: { email: unknown; password: unknown }[] = [
+      { email: "' OR '1'='1", password: "' OR '1'='1" },
+      { email: "owner@example.com' --", password: 'x' },
+      { email: "owner@example.com'; --", password: "' OR 'true'='true" },
+      { email: "' UNION SELECT email, password_hash FROM shop_owners --", password: 'x' },
+      { email: "x'; DROP TABLE shop_owners; --", password: 'x' },
+      { email: 'owner@example.com', password: "' OR ''='" },
+      // and objects instead of strings (the NoSQL kind) are turned away before any query
+      { email: { $ne: null }, password: { $ne: null } },
+      { email: 'owner@example.com', password: true },
+    ];
+    for (const body of attempts) {
+      const res = await call('POST', '/api/owner/sign-in', body);
+      expect([400, 401]).toContain(res.status);
+      const text = await res.text();
+      expect(text).not.toMatch(/token|s1\$|owner@example\.com/);
+    }
+    // nothing was dropped or changed: the real sign-in still works
+    expect(
+      (await call('POST', '/api/owner/sign-in', { email: 'owner@example.com', password: 'tea-leaf-salad' }))
+        .status,
+    ).toBe(200);
+    // and the list of owners is the host's alone, without password hashes
+    expect((await call('GET', '/api/owners')).status).toBe(401);
+    expect(await (await call('GET', '/api/owners', undefined, host)).text()).not.toMatch(/s1\$|hash/i);
+
     const list = (await (await call('GET', '/api/owners', undefined, host)).json()) as unknown[];
     expect(list).toEqual([{ shop: mine.id, email: 'owner@example.com', status: 'active' }]);
   });

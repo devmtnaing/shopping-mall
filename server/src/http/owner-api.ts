@@ -49,8 +49,10 @@ export type OwnerApiOptions = {
   publicUrl?: string;
 };
 
-/** Where links in emails point: PUBLIC_URL, or the origin the host's /admin is open on. */
-/** Who an email is from: the mall's name and address, or null if the address can't be told. */
+/**
+ * Who an email is from: the mall's name and address (PUBLIC_URL, or the origin the host's /admin is
+ * open on), or null if the address can't be told.
+ */
 export async function senderFor(
   sql: Sql,
   req: IncomingMessage,
