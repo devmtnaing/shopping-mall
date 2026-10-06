@@ -72,6 +72,8 @@ export type ServerOptions = {
   mailer?: Mailer | null;
   /** The mall's public address (PUBLIC_URL), for links in emails. */
   publicUrl?: string;
+  /** RESEND_WEBHOOK_SECRET: lets the mail provider report bounces and deliveries (mail-events.ts). */
+  mailWebhookSecret?: string;
   /** Content database; without it there's no /api and clients use mall.config.ts. */
   db?: Sql;
   /** Public URL for an uploaded asset id (storage arrives in T-703). */
@@ -216,6 +218,7 @@ export async function startServer(opts: ServerOptions = {}) {
         },
         mailer: opts.mailer,
         publicUrl: opts.publicUrl,
+        mailWebhookSecret: opts.mailWebhookSecret,
         // tell every connected visitor that content changed (they refetch it)
         onChange: (version) => {
           for (const room of rooms.values()) room.broadcast({ t: 'content', version });

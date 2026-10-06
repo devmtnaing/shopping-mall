@@ -82,10 +82,25 @@ The mall emails two things: a note to someone whose rental application you appro
 | `MAIL_PROVIDER` | `resend`, `log` (prints emails to the server log, for development) or `none`. Defaults to `resend` when `RESEND_API_KEY` is set. |
 | `RESEND_API_KEY` | An API key from [Resend](https://resend.com) with permission to send. |
 | `MAIL_FROM` | Who the email is from, for example `Mall <mall@example.com>`. Its domain must be verified in Resend. |
+| `RESEND_WEBHOOK_SECRET` | Optional. The signing secret of a Resend webhook ([below](#bounces-and-deliveries)), so `/admin` shows what became of each email. |
 | `MAIL_REPLY_TO` | Optional. An inbox you read, for example `you@example.com`: replies go there, and the emails invite them ("just reply to this email"). Without it they don't, since replies to `MAIL_FROM` may reach no one. |
 | `PUBLIC_URL` | The mall's address, for example `https://mall.example.com`, so links point there. Defaults to the address `/admin` is open on. |
 
 A missing setting or unknown provider stops the server at start, so a typo doesn't go unnoticed. If an email fails to send, `/admin` says so and shows the link to send by hand.
+
+### Bounces and deliveries
+
+With a webhook set up, `/admin` shows what became of each email: delivered, delayed, bounced (with the receiving server's words), not sent because the address had bounced before, or marked as spam. It's under each rental application and in each shop's **Shop owner** box.
+
+An email that can never arrive (a permanent bounce, or an address Resend won't send to any more) also gives up on the person it was for: the shop made for them is taken out of the mall and their application turned down, both with the reason, so the unit is for rent again. That only happens to someone who has never signed in, so a real owner's shop never goes because one email bounced. Removed shops are listed under **Shops → Removed shops**.
+
+To set it up, in Resend go to **Webhooks → Add webhook**:
+
+1. **Endpoint URL**: your mall's address followed by `/api/mail/events`. If the mall is behind Cloudflare with bot protection on (Bot Fight Mode), use the host's own address instead (on Railway, the `web` service's `*.up.railway.app` domain), so Cloudflare doesn't challenge Resend's servers.
+2. **Events**: `email.delivered`, `email.delivery_delayed`, `email.bounced`, `email.suppressed`, `email.complained` and `email.failed`.
+3. Copy the webhook's **signing secret** (`whsec_…`) into `RESEND_WEBHOOK_SECRET` on the server. Reports without a valid signature are refused.
+
+Emails sent before the webhook was set up aren't tracked: for those, remove the shop yourself (**Shops → Remove**) and give the reason.
 
 A new sending domain often lands in spam at first, until mail providers have seen people open its emails. Ask early recipients to mark it "not spam", and check the headers say SPF, DKIM and DMARC pass (in Gmail, **Show original**).
 

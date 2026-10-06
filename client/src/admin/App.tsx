@@ -6,7 +6,7 @@ import { useSignal } from '@preact/signals';
 import type { MallConfig, Shop } from '@shopping-mall/shared/config';
 import type { MallArt, MallMeta } from '@shopping-mall/shared/meta';
 import type { OwnerInfo } from '@shopping-mall/shared/owners';
-import type { RentalApplication } from '@shopping-mall/shared/rentals';
+import type { RemovedShop, RentalApplication } from '@shopping-mall/shared/rentals';
 import { CATEGORY_FOR_KIND } from '@shopping-mall/shared/shop-kinds';
 import { render } from 'preact';
 import { useEffect } from 'preact/hooks';
@@ -16,8 +16,9 @@ import { Building } from './Building';
 import { MallForm } from './MallForm';
 import { OwnerAdmin, SetPassword } from './Owner';
 import { OwnerAccess } from './OwnerAccess';
+import { RemovedShops } from './RemovedShops';
 import { Rentals } from './Rentals';
-import { ShopEditor } from './ShopEditor';
+import { ShopEditor, slotLabel } from './ShopEditor';
 import { ShopList } from './ShopList';
 import './admin.css';
 
@@ -110,6 +111,7 @@ function Admin() {
   const rentals = useSignal<RentalApplication[]>([]);
   const prefill = useSignal<RentalApplication | null>(null);
   const owners = useSignal<OwnerInfo[]>([]);
+  const removed = useSignal<RemovedShop[]>([]);
   const error = useSignal('');
 
   const load = async () => {
@@ -138,11 +140,24 @@ function Admin() {
       /* shown as no news; the next poll tries again */
     }
   };
+  const loadRemoved = async () => {
+    try {
+      removed.value = await api.removedShops();
+    } catch {
+      /* the list just stays as it was */
+    }
+  };
   useEffect(() => {
     void load();
     void loadRentals();
     void loadOwners();
-    const timer = setInterval(loadRentals, RENTALS_POLL_MS);
+    void loadRemoved();
+    // new applications, and news of the emails sent (a bounce can take a shop out on its own)
+    const timer = setInterval(() => {
+      void loadRentals();
+      void loadOwners();
+      void loadRemoved();
+    }, RENTALS_POLL_MS);
     return () => clearInterval(timer);
   }, []);
   const pending = rentals.value.filter((r) => r.status === 'pending').length;
@@ -202,9 +217,18 @@ function Admin() {
             onAdd={() => (editing.value = 'new')}
             onEdit={(s) => (editing.value = s)}
             onDelete={async (s) => {
-              if (!confirm(`Delete ${s.name}? Its unit becomes free and its products are removed.`)) return;
-              await api.deleteShop(s.id);
-              await load();
+              const reason = prompt(
+                `Remove ${s.name} from the mall? Its unit is for rent again, and a copy is kept under Removed shops.\n\nWhy is it being removed?`,
+                '',
+              );
+              if (reason === null) return;
+              if (!reason.trim()) return alert('Say why it’s being removed, so it’s on record.');
+              try {
+                await api.removeShop(s.id, reason.trim());
+              } catch (e) {
+                return alert((e as Error).message);
+              }
+              await Promise.all([load(), loadOwners(), loadRemoved()]);
             }}
             onMove={async (from, to) => {
               const ids = c.shops.map((s) => s.id);
@@ -212,6 +236,15 @@ function Admin() {
               ids.splice(to, 0, moved as string);
               await api.reorder(ids);
               await load();
+            }}
+          />
+        )}
+        {c && tab.value === 'shops' && editing.value === null && (
+          <RemovedShops
+            shops={removed.value}
+            unit={(id) => {
+              const s = slots.value.find((x) => x.id === id);
+              return s ? slotLabel(s) : id;
             }}
           />
         )}

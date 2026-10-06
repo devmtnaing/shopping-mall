@@ -52,6 +52,8 @@ export default defineRailway(() => {
       RESEND_API_KEY: preserve(),
       MAIL_FROM: preserve(),
       MAIL_REPLY_TO: preserve(),
+      // Resend's webhook signing secret: bounce and delivery reports (server/src/mail-events.ts)
+      RESEND_WEBHOOK_SECRET: preserve(),
       PUBLIC_URL: 'https://mall.devmtnaing.com',
     },
   });

@@ -33,6 +33,7 @@ describe.runIf(TEST_DB && S3)('shop owners', () => {
     async send(email) {
       if (mailFails) throw new Error('provider down');
       mail.push(email);
+      return { id: `email-${mail.length}` };
     },
   };
   const call = (method: string, path: string, body?: unknown, headers: Record<string, string> = {}) =>
@@ -171,7 +172,15 @@ describe.runIf(TEST_DB && S3)('shop owners', () => {
     expect(await (await call('GET', '/api/owners', undefined, host)).text()).not.toMatch(/s1\$|hash/i);
 
     const list = (await (await call('GET', '/api/owners', undefined, host)).json()) as unknown[];
-    expect(list).toEqual([{ shop: mine.id, email: 'owner@example.com', status: 'active' }]);
+    expect(list).toEqual([
+      // with the latest set-password email to them (the test mailer's id), not yet reported on
+      {
+        shop: mine.id,
+        email: 'owner@example.com',
+        status: 'active',
+        mail: { status: 'sent', at: expect.any(String) },
+      },
+    ]);
   });
 
   it('lets an owner change their own shop only, within the limits', async () => {

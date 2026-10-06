@@ -1,6 +1,8 @@
-// Sending email (approval notes to applicants, set-password links to shop owners). The rest of the server only sees `Mailer`, so
-// a provider is one entry in PROVIDERS: pick it with MAIL_PROVIDER and give it its own settings.
-// Without one configured, nothing is sent and the host copies links from /admin as before.
+// Sending email (approval notes to applicants, set-password links to shop owners). The rest of the
+// server only sees `Mailer`, so a provider is one entry in PROVIDERS: pick it with MAIL_PROVIDER and
+// give it its own settings. Without one configured, nothing is sent and the host copies links from
+// /admin as before. What became of each email arrives later from the provider (mail-events.ts).
+import { randomUUID } from 'node:crypto';
 
 export type Email = { to: string; subject: string; text: string; html?: string };
 
@@ -9,8 +11,11 @@ export interface Mailer {
   readonly name: string;
   /** Where replies go (MAIL_REPLY_TO), if anywhere: the emails only invite a reply when it's set. */
   readonly replyTo?: string;
-  /** Sends one email; throws if the provider refuses it. */
-  send(email: Email): Promise<void>;
+  /**
+   * Sends one email; throws if the provider refuses it. Returns the provider's id for it, which its
+   * webhook names when it reports what became of the email (mail-events.ts).
+   */
+  send(email: Email): Promise<{ id?: string } | undefined>;
 }
 
 type Env = Record<string, string | undefined>;
@@ -38,16 +43,23 @@ export function resendMailer(opts: {
         signal: AbortSignal.timeout(10_000),
       });
       if (!res.ok) throw new Error(`resend: ${res.status} ${(await res.text()).slice(0, 200)}`);
+      const { id } = (await res.json().catch(() => ({}))) as { id?: unknown };
+      return typeof id === 'string' ? { id } : {};
     },
   };
 }
 
-/** Prints each email instead of sending it: for local development. */
+/**
+ * Prints each email instead of sending it: for local development. Each gets a made-up id, printed
+ * with it, so a bounce can be tried out by posting a signed report about that id.
+ */
 export function logMailer(): Mailer {
   return {
     name: 'log',
     async send(email) {
-      console.log(`mail to ${email.to}: ${email.subject}\n${email.text}`);
+      const id = `log-${randomUUID()}`;
+      console.log(`mail ${id} to ${email.to}: ${email.subject}\n${email.text}`);
+      return { id };
     },
   };
 }

@@ -6,6 +6,7 @@ import { useSignal } from '@preact/signals';
 import { OWNER_LIMITS, type OwnerInfo } from '@shopping-mall/shared/owners';
 import { useId } from 'preact/hooks';
 import { api } from './api';
+import { MailBadge } from './MailBadge';
 
 const STATUS: Record<OwnerInfo['status'], string> = {
   invited: 'Invited: hasn’t set a password yet',
@@ -74,6 +75,7 @@ export function OwnerAccess(props: {
           <strong>{props.owner.email}</strong> · {STATUS[props.owner.status]}
         </p>
       )}
+      {props.owner?.status !== 'active' && <MailBadge mail={props.owner?.mail} />}
       <form class="owner-row" onSubmit={invite}>
         <label class="sr-only" for={`${id}-email`}>
           Owner’s email

@@ -1,6 +1,7 @@
 // Reading and seeding mall content. The shape matches MallConfig (shared/src/config.ts), so the
 // client consumes the same thing whether it comes from the database or from mall.config.ts.
 import type { MallConfig, Shop } from '@shopping-mall/shared/config';
+import type { RemovedShop } from '@shopping-mall/shared/rentals';
 import type { TransactionSql } from 'postgres';
 import type { Sql } from './db.ts';
 
@@ -172,11 +173,51 @@ export async function saveShop(sql: Sql, s: Shop): Promise<number> {
 }
 
 /** Delete a shop (its products go with it). Returns the new version, or null if there was no such shop. */
-export async function deleteShop(sql: Sql, id: string): Promise<number | null> {
-  return sql.begin(async (tx) => {
-    const gone = await tx`delete from shops where id = ${id} returning id`;
-    return gone.length ? bump(tx) : null;
-  });
+/**
+ * Take a shop out of the mall, keeping a copy (with its products and owner's email) in
+ * removed_shops with the reason. Its unit is free again. Returns the new content version, or null
+ * if there's no such shop. Pass `tx` to do it inside a transaction already under way.
+ */
+export async function removeShop(sql: Sql, id: string, reason: string): Promise<number | null> {
+  return sql.begin((tx) => removeShopIn(tx, id, reason));
+}
+
+export async function removeShopIn(tx: Tx, id: string, reason: string): Promise<number | null> {
+  const kept = await tx`insert into removed_shops (shop_id, slot, name, owner_email, reason, shop)
+    select s.id, s.slot, s.name, o.email, ${reason}, jsonb_build_object(
+      'shop', to_jsonb(s),
+      'products', coalesce((select jsonb_agg(to_jsonb(p) order by p.sort) from products p where p.shop_id = s.id), '[]'::jsonb)
+    )
+    from shops s left join shop_owners o on o.shop_id = s.id
+    where s.id = ${id}
+    returning id`;
+  if (!kept.length) return null;
+  await tx`delete from shops where id = ${id}`; // its products and owner go with it
+  return bump(tx);
+}
+
+/** Shops taken out of the mall, the latest first. */
+export async function listRemovedShops(sql: Sql): Promise<RemovedShop[]> {
+  const rows = await sql<
+    {
+      id: string;
+      shop_id: string;
+      slot: string;
+      name: string;
+      owner_email: string | null;
+      reason: string;
+      removed_at: Date;
+    }[]
+  >`select id, shop_id, slot, name, owner_email, reason, removed_at from removed_shops order by removed_at desc`;
+  return rows.map((r) => ({
+    id: Number(r.id),
+    shop: r.shop_id,
+    slot: r.slot,
+    name: r.name,
+    ...(r.owner_email ? { ownerEmail: r.owner_email } : {}),
+    reason: r.reason,
+    removedAt: r.removed_at.toISOString(),
+  }));
 }
 
 /** Put shops in this order (ids not listed keep their place after the listed ones). */

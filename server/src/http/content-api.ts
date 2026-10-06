@@ -9,14 +9,16 @@ import { deleteAsset, KINDS, listAssets, storeAsset } from '../assets.ts';
 import {
   type AssetUrl,
   contentVersion,
-  deleteShop,
+  listRemovedShops,
   loadContent,
+  removeShop,
   reorderShops,
   saveMall,
   saveShop,
   setMallArt,
 } from '../db/content.ts';
 import type { Sql } from '../db/db.ts';
+import { recordEmail } from '../db/mail.ts';
 import {
   decideRental,
   deleteRental,
@@ -26,6 +28,7 @@ import {
   slotTaken,
 } from '../db/rentals.ts';
 import { type Mailer, rentalApprovedEmail } from '../mail.ts';
+import { mailEvent, verifyWebhook } from '../mail-events.ts';
 import type { Storage } from '../storage.ts';
 import { ownerApi, senderFor } from './owner-api.ts';
 import { bearer, CORS, HttpError, json, readBody, readJson } from './util.ts';
@@ -49,7 +52,12 @@ export type ContentApiOptions = {
   mailer?: Mailer | null;
   /** PUBLIC_URL: the mall's address, for links in emails. */
   publicUrl?: string;
+  /** RESEND_WEBHOOK_SECRET: checks that reports of bounces and deliveries come from the provider. */
+  mailWebhookSecret?: string;
 };
+
+/** Why a shop is removed, or an application turned down, in the host's words. */
+const reasonSchema = z.string().trim().max(300, 'At most 300 characters.');
 
 const SHOP_ID = /^\/api\/shops\/([a-z0-9][a-z0-9-]*)$/;
 const RENTAL = /^\/api\/rentals\/(\d{1,15})(?:\/(approve|reject))?$/;
@@ -77,6 +85,7 @@ export function contentApi(opts: ContentApiOptions) {
     onRequested,
     mailer,
     publicUrl,
+    mailWebhookSecret,
   } = opts;
   const owners = ownerApi({
     sql,
@@ -96,7 +105,14 @@ export function contentApi(opts: ContentApiOptions) {
     const from = await senderFor(sql, req, publicUrl, mailer);
     if (!from) return { emailed: false, mailError: 'Couldn’t tell the mall’s address (set PUBLIC_URL).' };
     try {
-      await mailer.send(rentalApprovedEmail({ to: a.email, name: a.name, business: a.business, from }));
+      const sent = await mailer.send(
+        rentalApprovedEmail({ to: a.email, name: a.name, business: a.business, from }),
+      );
+      // kept by the provider's id, so its reports of a bounce or a delivery find their way here
+      if (sent?.id)
+        await recordEmail(sql, { id: sent.id, kind: 'approval', recipient: a.email, rentalId: a.id }).catch(
+          (e) => console.warn('mail: couldn’t record the email:', (e as Error).message),
+        );
       return { emailed: true };
     } catch (e) {
       console.warn(`mail (${mailer.name}) failed:`, (e as Error).message);
@@ -193,6 +209,25 @@ export function contentApi(opts: ContentApiOptions) {
       return;
     }
 
+    // the mail provider reporting what became of an email (mail-events.ts); signed, so only it can
+    if (path === '/api/mail/events' && method === 'POST') {
+      if (!mailWebhookSecret) throw new HttpError(404, 'Email reports are not set up on this server.');
+      const raw = Buffer.from(await readBody(req, 64 * 1024)).toString('utf8');
+      if (!verifyWebhook(mailWebhookSecret, req.headers, raw))
+        throw new HttpError(401, 'That isn’t signed by the mail provider.');
+      let event: unknown;
+      try {
+        event = JSON.parse(raw);
+      } catch {
+        throw new HttpError(400, 'That isn’t JSON.');
+      }
+      const outcome = await mailEvent(sql, event);
+      json(res, 200, { ok: true });
+      if (outcome.version !== null) onChange(outcome.version); // a shop was taken out: repaint signs
+      if (outcome.freed) await requestedChanged();
+      return;
+    }
+
     if (await owners.publicRoute(req, res, path, method)) return;
 
     // a shop owner, signed in: their own shop only (owner-api.ts)
@@ -246,7 +281,18 @@ export function contentApi(opts: ContentApiOptions) {
       const id = Number(rental[1]);
       const action = rental[2];
       if (action && method === 'POST') {
-        const done = await decideRental(sql, id, action === 'approve' ? 'approved' : 'rejected');
+        // turning down may say why (shown in /admin, never to the applicant)
+        const reason =
+          action === 'reject'
+            ? parse(z.object({ reason: reasonSchema.optional() }).nullable(), await readJson(req, 4096))
+                ?.reason
+            : undefined;
+        const done = await decideRental(
+          sql,
+          id,
+          action === 'approve' ? 'approved' : 'rejected',
+          reason || undefined,
+        );
         if (!done) throw new HttpError(404, 'No such application.');
         if (done === 'decided') throw new HttpError(409, 'This application has already been decided.');
         json(res, 200, action === 'approve' ? { ...done, ...(await emailApproval(req, done)) } : done);
@@ -255,6 +301,11 @@ export function contentApi(opts: ContentApiOptions) {
         json(res, 200, { deleted: id });
       } else throw new HttpError(405, 'Method not allowed.');
       await requestedChanged(); // a decided or deleted application may free its unit
+      return;
+    }
+
+    if (path === '/api/removed-shops' && method === 'GET') {
+      json(res, 200, await listRemovedShops(sql));
       return;
     }
 
@@ -282,8 +333,14 @@ export function contentApi(opts: ContentApiOptions) {
           throw e;
         }
       } else if (method === 'DELETE') {
-        version = await deleteShop(sql, id);
+        // removing a shop keeps a copy with the host's reason (listed under Removed shops)
+        const { reason } = parse(
+          z.object({ reason: reasonSchema.min(1, 'Say why it’s being removed.') }),
+          await readJson(req, 4096),
+        );
+        version = await removeShop(sql, id, reason);
         if (version === null) throw new HttpError(404, `No shop "${id}".`);
+        await requestedChanged();
       } else throw new HttpError(405, 'Method not allowed.');
     }
 

@@ -68,6 +68,15 @@ export const ROUTES: Route[] = [
     edgeExempt: 'only logs a line, never stores anything, and drops what is over the limit',
   },
   {
+    route: '/api/mail/events',
+    methods: ['POST'],
+    access: 'public',
+    limit:
+      'signed by the mail provider (RESEND_WEBHOOK_SECRET): anything else is refused after one HMAC, before any query; 64 KB body',
+    edgeExempt:
+      'the mail provider’s servers call it (point its webhook at the Railway domain, past Cloudflare’s bot checks), and unsigned calls cost one HMAC',
+  },
+  {
     route: '/api/rentals/requested',
     methods: ['GET'],
     access: 'public',
@@ -131,6 +140,7 @@ export const ROUTES: Route[] = [
   { route: '/api/shops/order', methods: ['POST'], access: 'host' },
   { route: '^\\/api\\/shops\\/([a-z0-9][a-z0-9-]*)$', methods: ['PUT', 'DELETE'], access: 'host' },
   { route: '/api/owners', methods: ['GET'], access: 'host' },
+  { route: '/api/removed-shops', methods: ['GET'], access: 'host' },
   { route: '^\\/api\\/shops\\/([a-z0-9][a-z0-9-]*)\\/owner$', methods: ['POST', 'DELETE'], access: 'host' },
 
   // ---- a signed-in shop owner (their own shop only)

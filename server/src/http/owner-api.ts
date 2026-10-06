@@ -8,6 +8,7 @@ import { z } from 'zod';
 import { storeAsset } from '../assets.ts';
 import { mallName } from '../db/content.ts';
 import type { Sql } from '../db/db.ts';
+import { recordEmail } from '../db/mail.ts';
 import {
   clearUnusedPhotos,
   inviteFor,
@@ -218,7 +219,7 @@ export function ownerApi(opts: OwnerApiOptions) {
     if (!from || !invite)
       return { emailed: false, mailError: 'Couldn’t tell the mall’s address (set PUBLIC_URL).' };
     try {
-      await mailer.send(
+      const sent = await mailer.send(
         ownerInviteEmail({
           to: invite.email,
           name: invite.person,
@@ -228,6 +229,13 @@ export function ownerApi(opts: OwnerApiOptions) {
           from,
         }),
       );
+      if (sent?.id)
+        await recordEmail(sql, {
+          id: sent.id,
+          kind: 'invite',
+          recipient: invite.email,
+          shopId: invite.shop,
+        }).catch((e) => console.warn('mail: couldn’t record the email:', (e as Error).message));
       return { emailed: true };
     } catch (e) {
       console.warn(`mail (${mailer.name}) failed:`, (e as Error).message);

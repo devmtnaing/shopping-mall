@@ -3,6 +3,7 @@
 // apply holds the unit; approving still turns down any other waiting one, for older data.
 import type { RentalApplication, RentalRequest, RentalStatus, ShopKind } from '@shopping-mall/shared/rentals';
 import type { Sql } from './db.ts';
+import { type MailRow, toMail } from './mail.ts';
 
 type Row = {
   id: string;
@@ -16,7 +17,8 @@ type Row = {
   status: RentalStatus;
   created_at: Date;
   decided_at: Date | null;
-};
+  reason: string | null;
+} & Partial<MailRow>;
 
 const toApplication = (r: Row): RentalApplication => ({
   id: Number(r.id),
@@ -30,6 +32,8 @@ const toApplication = (r: Row): RentalApplication => ({
   status: r.status,
   createdAt: r.created_at.toISOString(),
   ...(r.decided_at ? { decidedAt: r.decided_at.toISOString() } : {}),
+  ...(r.reason ? { reason: r.reason } : {}),
+  ...(r.mail_status ? { mail: toMail(r as MailRow) } : {}),
 });
 
 /** Whether a shop is in this unit now. */
@@ -62,8 +66,16 @@ export async function requestedSlots(sql: Sql): Promise<string[]> {
 
 /** Every application: waiting ones first, then the newest. */
 export async function listRentals(sql: Sql): Promise<RentalApplication[]> {
-  const rows = await sql<Row[]>`select * from rental_applications
-    order by (status = 'pending') desc, created_at desc`;
+  // each with its latest approval email, if one was sent
+  const rows = await sql<
+    Row[]
+  >`select a.*, m.status as mail_status, m.detail as mail_detail, m.updated_at as mail_at
+    from rental_applications a
+    left join lateral (
+      select status, detail, updated_at from emails
+      where rental_id = a.id and kind = 'approval' order by sent_at desc limit 1
+    ) m on true
+    order by (a.status = 'pending') desc, a.created_at desc`;
   return rows.map(toApplication);
 }
 
@@ -75,12 +87,14 @@ export async function decideRental(
   sql: Sql,
   id: number,
   status: 'approved' | 'rejected',
+  reason?: string,
 ): Promise<RentalApplication | null | 'decided'> {
   return sql.begin(async (tx) => {
     const [row] = await tx<Row[]>`select * from rental_applications where id = ${id} for update`;
     if (!row) return null;
     if (row.status !== 'pending') return 'decided';
-    const [done] = await tx<Row[]>`update rental_applications set status = ${status}, decided_at = now()
+    const [done] = await tx<Row[]>`update rental_applications
+      set status = ${status}, decided_at = now(), reason = ${status === 'rejected' ? (reason ?? null) : null}
       where id = ${id} returning *`;
     if (status === 'approved')
       await tx`update rental_applications set status = 'rejected', decided_at = now()

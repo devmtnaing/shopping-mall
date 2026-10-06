@@ -24,6 +24,19 @@ export type RentalRequest = z.infer<typeof rentalRequestSchema>;
 export const RENTAL_STATUSES = ['pending', 'approved', 'rejected'] as const;
 export type RentalStatus = (typeof RENTAL_STATUSES)[number];
 
+/**
+ * What became of an email the mall sent, as its provider reported it: `sent` until it says more.
+ * `bounced` and `suppressed` mean it never arrived (`suppressed`: an earlier bounce, so the provider
+ * didn't try); `delayed` is a temporary hold-up; `complained`: they marked it as spam.
+ */
+export type MailStatus = {
+  status: 'sent' | 'delivered' | 'delayed' | 'bounced' | 'suppressed' | 'complained' | 'failed';
+  /** The provider's words, for a bounce or a failure. */
+  detail?: string;
+  /** ISO time of the latest news. */
+  at: string;
+};
+
 /** An application as the host sees it. */
 export type RentalApplication = Omit<RentalRequest, 'website'> & {
   id: number;
@@ -31,4 +44,20 @@ export type RentalApplication = Omit<RentalRequest, 'website'> & {
   /** ISO times. */
   createdAt: string;
   decidedAt?: string;
+  /** Why it was turned down: the host's words, or that the email to them bounced. */
+  reason?: string;
+  /** The approval email, once one was sent. */
+  mail?: MailStatus;
+};
+
+/** A shop taken out of the mall, and why (by the host, or because emails to its owner bounced). */
+export type RemovedShop = {
+  id: number;
+  shop: string;
+  slot: string;
+  name: string;
+  ownerEmail?: string;
+  reason: string;
+  /** ISO time. */
+  removedAt: string;
 };

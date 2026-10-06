@@ -64,7 +64,7 @@ export function ShopList(props: {
                 Edit
               </button>
               <button type="button" class="btn small danger" onClick={() => props.onDelete(s)}>
-                Delete
+                Remove
               </button>
             </span>
           </li>

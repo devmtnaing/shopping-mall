@@ -5,7 +5,7 @@ import { signal } from '@preact/signals';
 import type { MallConfig, Shop } from '@shopping-mall/shared/config';
 import type { MallArt } from '@shopping-mall/shared/meta';
 import type { OWNER_LIMITS, OwnerInfo } from '@shopping-mall/shared/owners';
-import type { RentalApplication } from '@shopping-mall/shared/rentals';
+import type { RemovedShop, RentalApplication } from '@shopping-mall/shared/rentals';
 import { httpUrl, signInAsHost } from '../net/socket';
 
 export const token = signal<string | null>(null);
@@ -109,7 +109,10 @@ export const api = {
   content: () => call<{ version: number; config: MallConfig; art?: MallArt | null }>('GET', '/api/content'),
   saveMall: (m: MallConfig['mall']) => call<{ version: number }>('PUT', '/api/mall', m),
   saveShop: (s: Shop) => call<{ version: number }>('PUT', `/api/shops/${s.id}`, s),
-  deleteShop: (id: string) => call<{ version: number }>('DELETE', `/api/shops/${id}`),
+  /** Take a shop out of the mall; a copy is kept, with `reason`, under Removed shops. */
+  removeShop: (id: string, reason: string) =>
+    call<{ version: number }>('DELETE', `/api/shops/${id}`, { reason }),
+  removedShops: () => call<RemovedShop[]>('GET', '/api/removed-shops'),
   reorder: (ids: string[]) => call<{ version: number }>('POST', '/api/shops/order', ids),
   assets: () => call<Asset[]>('GET', '/api/assets'),
   upload: (kind: string, file: Blob) =>
@@ -119,11 +122,12 @@ export const api = {
     call<{ version: number }>('PUT', '/api/art/mall', ids),
   resetArt: () => call<{ version: number }>('DELETE', '/api/art/mall'),
   rentals: () => call<RentalApplication[]>('GET', '/api/rentals'),
-  decideRental: (id: number, action: 'approve' | 'reject') =>
-    // approving also emails the applicant, when the server has a mail service
+  /** Approving also emails the applicant, when the server has a mail service; turning down may say why. */
+  decideRental: (id: number, action: 'approve' | 'reject', reason?: string) =>
     call<RentalApplication & { emailed?: boolean; mailError?: string }>(
       'POST',
       `/api/rentals/${id}/${action}`,
+      reason ? { reason } : undefined,
     ),
   deleteRental: (id: number) => call<{ deleted: number }>('DELETE', `/api/rentals/${id}`),
 };

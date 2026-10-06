@@ -423,6 +423,29 @@ fieldset {
 .status.approved {
   color: #8fd694;
 }
+/* what became of the email to them (MailBadge.tsx), and why something was turned down or removed */
+.mail-badge {
+  margin: 0;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+.mail-badge.ok strong {
+  color: #8fd694;
+}
+.mail-badge.wait strong {
+  color: var(--muted);
+}
+.mail-badge.bad {
+  color: var(--danger);
+}
+.rental-reason {
+  margin: 0;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+.removed-shops {
+  margin-top: 32px;
+}
 .badge {
   display: inline-grid;
   place-items: center;

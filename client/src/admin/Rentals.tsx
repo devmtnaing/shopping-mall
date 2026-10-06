@@ -9,6 +9,7 @@ import type { OwnerInfo } from '@shopping-mall/shared/owners';
 import type { RentalApplication } from '@shopping-mall/shared/rentals';
 import { rentEn } from '../i18n/rent';
 import { api } from './api';
+import { MailBadge } from './MailBadge';
 import { OwnerAccess } from './OwnerAccess';
 import { slotLabel } from './ShopEditor';
 
@@ -47,13 +48,20 @@ export function Rentals(props: {
     }
     if (action === 'delete' && !confirm(`Delete the application from ${a.business}? This can't be undone.`))
       return;
+    // why, for your own records (they aren't told it); Cancel keeps the application waiting
+    let reason: string | undefined;
+    if (action === 'reject') {
+      const said = prompt(`Turn down ${a.business}? Why (optional, only you see it):`, '');
+      if (said === null) return;
+      reason = said.trim() || undefined;
+    }
     busy.value = a.id;
     error.value = '';
     notice.value = '';
     try {
       if (action === 'delete') await api.deleteRental(a.id);
       else {
-        const done = await api.decideRental(a.id, action);
+        const done = await api.decideRental(a.id, action, reason);
         if (done.mailError) error.value = `${done.mailError} Let them know yourself: ${a.email}.`;
         else if (done.emailed) notice.value = `Approved. ${a.name} has been emailed to let them know.`;
       }
@@ -112,6 +120,12 @@ export function Rentals(props: {
                   </>
                 )}
               </p>
+              <MailBadge mail={a.mail} />
+              {a.status === 'rejected' && a.reason && (
+                <p class="rental-reason">
+                  <strong>Why:</strong> {a.reason}
+                </p>
+              )}
               {taken && a.status !== 'rejected' && <p class="hint">This unit is now {taken.name}.</p>}
               {taken && a.status === 'approved' && (
                 <OwnerAccess

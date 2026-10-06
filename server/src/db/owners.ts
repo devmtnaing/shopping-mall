@@ -5,6 +5,7 @@ import { HttpError } from '../http/util.ts';
 import { hashInvite, newInvite } from '../owners.ts';
 import type { Storage } from '../storage.ts';
 import type { Sql } from './db.ts';
+import { type MailRow, toMail } from './mail.ts';
 
 type Row = {
   shop_id: string;
@@ -47,16 +48,29 @@ export async function removeOwner(sql: Sql, shop: string): Promise<boolean> {
 }
 
 export async function listOwners(sql: Sql): Promise<OwnerInfo[]> {
-  const rows = await sql<Row[]>`select * from shop_owners order by shop_id`;
-  return rows.map((r) => ({
-    shop: r.shop_id,
-    email: r.email,
-    status: r.password_hash
-      ? 'active'
-      : r.invite_expires && r.invite_expires > new Date()
-        ? 'invited'
-        : 'expired',
-  }));
+  // each with the latest set-password email to their shop, if one was sent
+  const rows = await sql<
+    (Row & MailRow)[]
+  >`select o.*, m.status as mail_status, m.detail as mail_detail, m.updated_at as mail_at
+    from shop_owners o
+    left join lateral (
+      select status, detail, updated_at from emails
+      where shop_id = o.shop_id and kind = 'invite' order by sent_at desc limit 1
+    ) m on true
+    order by o.shop_id`;
+  return rows.map((r) => {
+    const mail = toMail(r);
+    return {
+      shop: r.shop_id,
+      email: r.email,
+      status: r.password_hash
+        ? 'active'
+        : r.invite_expires && r.invite_expires > new Date()
+          ? 'invited'
+          : 'expired',
+      ...(mail ? { mail } : {}),
+    };
+  });
 }
 
 /** The shop and email a set-password link is for, if it's still good. */

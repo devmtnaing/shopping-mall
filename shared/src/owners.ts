@@ -1,5 +1,7 @@
 // What a shop owner (a tenant signed in at /shop-admin/ with their own password) may do. Kept small:
 // every photo is stored and served by the mall, and hosting has a budget.
+import type { MailStatus } from './rentals.ts';
+
 export const OWNER_LIMITS = {
   /** Products in their list (no JSON feeds for owners). */
   products: 5,
@@ -19,4 +21,6 @@ export type OwnerInfo = {
   email: string;
   /** 'invited': the set-password link hasn't been used yet; 'expired': it ran out unused. */
   status: 'invited' | 'active' | 'expired';
+  /** The latest set-password email to them, once one was sent. */
+  mail?: MailStatus;
 };

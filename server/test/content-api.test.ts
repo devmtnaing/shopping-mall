@@ -102,10 +102,21 @@ describe.runIf(TEST_DB)('content API', () => {
       body: JSON.stringify(['verde', 'stride']),
     });
     expect(order.status).toBe(200);
-    const del = await fetch(`${base}/api/shops/lumen-coffee`, { method: 'DELETE', headers: host });
-    expect(del.status).toBe(200);
-    const missing = await fetch(`${base}/api/shops/lumen-coffee`, { method: 'DELETE', headers: host });
-    expect(missing.status).toBe(404);
+    // removing a shop needs a reason, and keeps it with a copy of the shop
+    const remove = (reason?: string) =>
+      fetch(`${base}/api/shops/lumen-coffee`, {
+        method: 'DELETE',
+        headers: host,
+        body: JSON.stringify({ reason }),
+      });
+    expect((await remove()).status).toBe(400);
+    expect((await remove('Closed for good')).status).toBe(200);
+    expect((await remove('again')).status).toBe(404);
+    const removed = (await (await fetch(`${base}/api/removed-shops`, { headers: host })).json()) as unknown[];
+    expect(removed).toMatchObject([
+      { shop: 'lumen-coffee', name: 'Lumen Coffee', reason: 'Closed for good' },
+    ]);
+    expect((await fetch(`${base}/api/removed-shops`)).status).toBe(401);
     const { version, config: live } = (await (await fetch(`${base}/api/content`)).json()) as {
       version: number;
       config: { mall: { name: string }; shops: { id: string }[] };

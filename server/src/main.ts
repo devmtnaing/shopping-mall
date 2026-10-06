@@ -33,6 +33,8 @@ const server = await startServer({
   // optional: email set-password links to shop owners (MAIL_PROVIDER, see mail.ts)
   mailer: mailerFromEnv(),
   publicUrl: process.env.PUBLIC_URL || undefined,
+  // optional: the mail provider reports bounces here, and /admin shows them (mail-events.ts)
+  mailWebhookSecret: process.env.RESEND_WEBHOOK_SECRET || undefined,
   db: db ?? undefined,
   fallbackContent: parseConfig(config),
   storage,

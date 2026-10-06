@@ -147,6 +147,7 @@ describe.runIf(TEST_DB)('rental applications', () => {
         async send(e) {
           if (fails) throw new Error('provider down');
           mail.push(e);
+          return {};
         },
       },
     });

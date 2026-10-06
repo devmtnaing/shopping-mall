@@ -24,9 +24,11 @@ describe.runIf(TEST_DB)('content database', () => {
     expect(tables.map((t) => t.table_name)).toEqual([
       'assets',
       'chat',
+      'emails',
       'mall',
       'migrations',
       'products',
+      'removed_shops',
       'rental_applications',
       'shop_owners',
       'shops',
