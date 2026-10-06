@@ -19,6 +19,7 @@
     "a11y": "node tools/a11y.ts",
     "screenshots": "node tools/screenshots.ts",
     "demo:video": "node tools/demo-video.ts",
+    "demo:media": "node tools/demo-media.ts",
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
     "check": "pnpm typecheck && pnpm lint && pnpm test && pnpm build && pnpm size",

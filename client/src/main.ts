@@ -472,6 +472,7 @@ if (debugMode || perfMode) {
     mallDebug: {
       scene,
       camera,
+      orbit,
       renderer,
       mall,
       player,

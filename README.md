@@ -6,7 +6,7 @@
 
 No sign-up and nothing to install. It works on a phone too.
 
-[![Gameplay: picking a character, walking the mall with other visitors, dancing, visiting a shop, the overview map, throwing apples and sitting on a bench](docs/media/gameplay.webp)](https://mall.devmtnaing.com)
+[![Gameplay: Mya runs down the mall to meet Bo, they wave and dance together, she finds a café in the directory, throws an apple at Bo, sits on a bench, pops into a restroom cubicle, and they hug before the overview map](docs/media/gameplay.webp)](https://mall.devmtnaing.com)
 
 <sub>▶ [Watch it as a video (MP4, 720p)](docs/media/gameplay.mp4)</sub>
 
