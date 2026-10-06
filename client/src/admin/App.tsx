@@ -1,5 +1,6 @@
 // The admin: sign in with the host password, then manage shops, the mall and uploaded files.
 // Every save goes live in the mall straight away (the server tells visitors to refetch).
+// Shop owners use the same app at /shop-admin/, where signing in is with their email and password.
 
 import { useSignal } from '@preact/signals';
 import type { MallConfig, Shop } from '@shopping-mall/shared/config';
@@ -20,8 +21,14 @@ import { ShopEditor } from './ShopEditor';
 import { ShopList } from './ShopList';
 import './admin.css';
 
+/** Shop owners' door (/shop-admin/); the host's is /admin/. */
+const forOwners = location.pathname.startsWith('/shop-admin');
+const OTHER_DOOR = forOwners
+  ? { href: '/admin/', label: 'The mall’s host? Sign in here' }
+  : { href: '/shop-admin/', label: 'Look after a shop? Sign in here' };
+
 function SignIn() {
-  const owner = useSignal(false);
+  const owner = forOwners;
   const email = useSignal('');
   const secret = useSignal('');
   const error = useSignal('');
@@ -32,20 +39,20 @@ function SignIn() {
         e.preventDefault();
         error.value = '';
         try {
-          if (owner.value) await api.ownerSignIn(email.value.trim(), secret.value);
+          if (owner) await api.ownerSignIn(email.value.trim(), secret.value);
           else await api.signIn(secret.value);
         } catch (x) {
           error.value = (x as Error).message;
         }
       }}
     >
-      <h1>{owner.value ? 'Your shop' : 'Mall admin'}</h1>
+      <h1>{owner ? 'Your shop' : 'Mall admin'}</h1>
       <p>
-        {owner.value
+        {owner
           ? 'Sign in with your email and the password you set, to look after your shop.'
           : 'Sign in with the host password to edit shops, products and files.'}
       </p>
-      {owner.value && (
+      {owner && (
         <>
           <label for="email">Email</label>
           <input
@@ -58,7 +65,7 @@ function SignIn() {
           />
         </>
       )}
-      <label for="secret">{owner.value ? 'Password' : 'Host password'}</label>
+      <label for="secret">{owner ? 'Password' : 'Host password'}</label>
       <input
         id="secret"
         type="password"
@@ -74,17 +81,10 @@ function SignIn() {
       <button type="submit" class="btn primary">
         Sign in
       </button>
-      <button
-        type="button"
-        class="link-btn"
-        onClick={() => {
-          owner.value = !owner.value;
-          error.value = '';
-        }}
-      >
-        {owner.value ? 'I’m the mall’s host' : 'I look after a shop'}
-      </button>
-      {owner.value && <small class="hint">Forgot your password? Ask the mall’s host for a new link.</small>}
+      {owner && <small class="hint">Forgot your password? Ask the mall’s host for a new link.</small>}
+      <a class="link-btn" href={OTHER_DOOR.href}>
+        {OTHER_DOOR.label}
+      </a>
     </form>
   );
 }
@@ -273,8 +273,10 @@ function Admin() {
   );
 }
 
-/** A set-password link (/admin/?invite=…), read once; the address bar loses it after use. */
+/** A set-password link (/shop-admin/?invite=…), read once; the address bar loses it after use. */
 const inviteParam = new URLSearchParams(location.search).get('invite');
+// links sent before owners had their own page went to /admin/?invite=…
+if (inviteParam && !forOwners) location.replace(`/shop-admin/${location.search}`);
 
 function App() {
   const invite = useSignal(inviteParam);

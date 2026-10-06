@@ -159,7 +159,7 @@ export function ownerInviteEmail(o: {
   days: number;
   from: Sender;
 }): Email {
-  const admin = `${o.from.site}/admin/`;
+  const admin = `${o.from.site}/shop-admin/`;
   return letter({
     to: o.to,
     subject: `${o.shop} is ready at ${o.from.mall}`,

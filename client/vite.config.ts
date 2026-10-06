@@ -68,7 +68,7 @@ function assetVersions(): Plugin {
     transformIndexHtml: {
       order: 'pre',
       handler: (_html, ctx) =>
-        // the admin page loads nothing from public/assets that needs it
+        // the admin pages (admin/, shop-admin/) load nothing from public/assets that needs it
         ctx.filename.endsWith('admin/index.html')
           ? []
           : [
@@ -87,9 +87,14 @@ export default defineConfig({
   plugins: [preact(), mallConfig(), assetVersions()],
   build: {
     target: 'es2022',
-    // two pages: the mall, and the host's admin (its own bundle, never loaded by visitors)
+    // the mall, and the admin (its own bundle, never loaded by visitors) behind two doors: /admin/
+    // for the host and /shop-admin/ for shop owners
     rollupOptions: {
-      input: { main: resolve(__dirname, 'index.html'), admin: resolve(__dirname, 'admin/index.html') },
+      input: {
+        main: resolve(__dirname, 'index.html'),
+        admin: resolve(__dirname, 'admin/index.html'),
+        shopAdmin: resolve(__dirname, 'shop-admin/index.html'),
+      },
     },
     manifest: true,
     // Three.js alone is ~500 kB minified; real limits are gzip budgets in /budgets.json.

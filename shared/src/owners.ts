@@ -1,4 +1,4 @@
-// What a shop owner (a tenant signed in to /admin with their own password) may do. Kept small:
+// What a shop owner (a tenant signed in at /shop-admin/ with their own password) may do. Kept small:
 // every photo is stored and served by the mall, and hosting has a budget.
 export const OWNER_LIMITS = {
   /** Products in their list (no JSON feeds for owners). */

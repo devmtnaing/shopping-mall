@@ -49,7 +49,7 @@ export type OwnerApiOptions = {
   publicUrl?: string;
 };
 
-/** Where a set-password link points: PUBLIC_URL, or the origin the host's /admin is open on. */
+/** Where links in emails point: PUBLIC_URL, or the origin the host's /admin is open on. */
 /** Who an email is from: the mall's name and address, or null if the address can't be told. */
 export async function senderFor(
   sql: Sql,
@@ -221,7 +221,7 @@ export function ownerApi(opts: OwnerApiOptions) {
           to: invite.email,
           name: invite.person,
           shop: invite.name,
-          link: `${from.site}/admin/?invite=${token}`,
+          link: `${from.site}/shop-admin/?invite=${token}`,
           days: OWNER_LIMITS.inviteDays,
           from,
         }),

@@ -93,7 +93,7 @@ describe.runIf(TEST_DB && S3)('shop owners', () => {
     expect(mail).toHaveLength(1);
     expect(mail[0]?.to).toBe('owner@example.com');
     expect(mail[0]?.subject).toContain(mine.name);
-    expect(mail[0]?.text).toContain(`https://mall.example/admin/?invite=${body.token}`);
+    expect(mail[0]?.text).toContain(`https://mall.example/shop-admin/?invite=${body.token}`);
 
     mailFails = true;
     const again = await call('POST', `/api/shops/${mine.id}/owner`, { email: 'owner@example.com' }, host);
@@ -107,7 +107,7 @@ describe.runIf(TEST_DB && S3)('shop owners', () => {
     await call('POST', `/api/shops/${mine.id}/owner`, { email: 'owner@example.com' }, host);
     expect(mail[0]?.text).toMatch(/^Hi Aye Aye,/);
     expect(mail[0]?.subject).toBe(`${mine.name} is ready at ${seeded.mall.name}`);
-    expect(mail[0]?.text).toContain('https://mall.example/admin/');
+    expect(mail[0]?.text).toContain('https://mall.example/shop-admin/');
     // someone else's address: no name to go by
     await call('POST', `/api/shops/${mine.id}/owner`, { email: 'other@example.com' }, host);
     expect(mail[1]?.text).toMatch(/^Hello,/);

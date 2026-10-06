@@ -64,7 +64,7 @@ describe('mail', () => {
     expect(e.subject).toBe('Tom & <Jerry> is ready at Shopping Mall');
     expect(e.text).toMatch(/^Hi Aye,/);
     expect(e.text).toContain('https://m/x?a=1&b=2');
-    expect(e.text).toContain('https://mall.example.com/admin/');
+    expect(e.text).toContain('https://mall.example.com/shop-admin/');
     expect(e.text).not.toContain('reply');
     expect(e.html).toContain('Tom &#38; &#60;Jerry&#62;');
     expect(e.html).not.toContain('<Jerry>');

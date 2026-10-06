@@ -40,7 +40,7 @@ export function OwnerAccess(props: {
     error.value = '';
     try {
       const { token, emailed, mailError } = await api.inviteOwner(props.shop, email.value.trim());
-      link.value = `${location.origin}/admin/?invite=${token}`;
+      link.value = `${location.origin}/shop-admin/?invite=${token}`;
       sent.value = { emailed, mailError };
       copied.value = false;
       props.onChanged();

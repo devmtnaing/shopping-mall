@@ -21,7 +21,7 @@ Open a second browser window to watch yourself walk around. `?debug` adds an ove
 
 | Folder | What's there |
 |---|---|
-| `client/` | The browser app: three.js world, Preact UI (`src/ui`), admin page (`src/admin`, `admin/index.html`) |
+| `client/` | The browser app: three.js world, Preact UI (`src/ui`), admin pages (`src/admin`; `admin/index.html` for the host, `shop-admin/index.html` for shop owners) |
 | `server/` | Node WebSocket server, content API, uploads, Postgres migrations |
 | `shared/` | Code both sides use: protocol, config schema, meta schema, navgrid, avatars list |
 | `tools/` | Greybox generator, navgrid baker, asset pipeline, Blender build, bots, perf and a11y gates |

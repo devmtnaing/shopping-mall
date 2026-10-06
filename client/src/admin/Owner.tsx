@@ -1,4 +1,4 @@
-// Shop owners in /admin: the set-password page their invite link opens, and their own view once
+// Shop owners at /shop-admin/: the set-password page their invite link opens, and their own view once
 // signed in: just their shop, in the same editor the host uses (with the unit locked and limits).
 
 import { useSignal } from '@preact/signals';
@@ -11,7 +11,7 @@ import { ShopEditor } from './ShopEditor';
 
 const BUILT_IN_META = '/assets/mall/mall.meta.json';
 
-/** Opened from the invite link (/admin/?invite=…): choose a password, and you're in. */
+/** Opened from the invite link (/shop-admin/?invite=…): choose a password, and you're in. */
 export function SetPassword({ invite, onDone }: { invite: string; onDone: () => void }) {
   const who = useSignal<{ email: string; name: string } | null>(null);
   const password = useSignal('');
