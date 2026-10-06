@@ -56,7 +56,7 @@ Set these as environment variables, in a `.env` file if you use docker compose. 
 | `ROOM_CAPACITY` | How many people fit in a room before newcomers go to `main-2`, `main-3` and so on (default 100). |
 | `REPORT_WEBHOOK` | A URL that also gets each player report as a POST, for example a chat webhook. |
 | `RENTAL_WEBHOOK` | A URL that gets each rental application as a POST, for example a Slack or Discord incoming webhook ([renting out units](./shops#renting-out-empty-units)). |
-| `MAIL_PROVIDER`, `RESEND_API_KEY`, `MAIL_FROM`, `PUBLIC_URL` | Email set-password links to new shop owners ([email](#email)). |
+| `MAIL_PROVIDER`, `RESEND_API_KEY`, `MAIL_FROM`, `MAIL_REPLY_TO`, `PUBLIC_URL` | Email approved applicants, and set-password links to new shop owners ([email](#email)). |
 | `BLOCKLIST_FILE` | Words to mask in chat and refuse in names. |
 | `EVENTS` | Set to `off` to stop logging the anonymous usage events ([privacy](../privacy)). |
 | `PORT` | Server port (default 8787). |
@@ -75,15 +75,18 @@ The UI's text is in `client/src/i18n/en.ts` and `my.ts` (Burmese). To add a lang
 
 ## Email
 
-The mall can email a new shop owner their set-password link when you invite them ([shop owners](./shops#shop-owners)). Without email set up, `/admin` shows the link and you send it yourself.
+The mall emails two things: a note to someone whose rental application you approve, saying what happens next, and a new shop owner's set-password link when you invite them ([shop owners](./shops#shop-owners)). Each greets the person by the name they applied with and says which mall it's from and why they're getting it. Without email set up, nothing is sent: `/admin` shows the set-password link and you send it yourself.
 
 | Variable | What it does |
 |---|---|
 | `MAIL_PROVIDER` | `resend`, `log` (prints emails to the server log, for development) or `none`. Defaults to `resend` when `RESEND_API_KEY` is set. |
 | `RESEND_API_KEY` | An API key from [Resend](https://resend.com) with permission to send. |
 | `MAIL_FROM` | Who the email is from, for example `Mall <mall@example.com>`. Its domain must be verified in Resend. |
+| `MAIL_REPLY_TO` | Optional. An inbox you read, for example `you@example.com`: replies go there, and the emails invite them ("just reply to this email"). Without it they don't, since replies to `MAIL_FROM` may reach no one. |
 | `PUBLIC_URL` | The mall's address, for example `https://mall.example.com`, so links point there. Defaults to the address `/admin` is open on. |
 
 A missing setting or unknown provider stops the server at start, so a typo doesn't go unnoticed. If an email fails to send, `/admin` says so and shows the link to send by hand.
+
+A new sending domain often lands in spam at first, until mail providers have seen people open its emails. Ask early recipients to mark it "not spam", and check the headers say SPF, DKIM and DMARC pass (in Gmail, **Show original**).
 
 To use another service, add it to `PROVIDERS` in `server/src/mail.ts`: a function that reads its settings from the environment and returns something with a `send({ to, subject, text, html })` method.

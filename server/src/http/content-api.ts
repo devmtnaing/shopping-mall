@@ -25,9 +25,9 @@ import {
   saveRental,
   slotTaken,
 } from '../db/rentals.ts';
-import type { Mailer } from '../mail.ts';
+import { type Mailer, rentalApprovedEmail } from '../mail.ts';
 import type { Storage } from '../storage.ts';
-import { ownerApi } from './owner-api.ts';
+import { ownerApi, senderFor } from './owner-api.ts';
 import { bearer, CORS, HttpError, json, readBody, readJson } from './util.ts';
 
 export type ContentApiOptions = {
@@ -45,7 +45,7 @@ export type ContentApiOptions = {
   onRental?: (application: RentalApplication) => void;
   /** Which units have an application waiting changed (to repaint everyone's signs). */
   onRequested?: (slots: string[]) => void;
-  /** Sends set-password links to new shop owners (mail.ts). */
+  /** Emails approved applicants and sends set-password links to new shop owners (mail.ts). */
   mailer?: Mailer | null;
   /** PUBLIC_URL: the mall's address, for links in emails. */
   publicUrl?: string;
@@ -87,6 +87,22 @@ export function contentApi(opts: ContentApiOptions) {
     publicUrl,
     allowSignIn: (req) => allow(req, 'sign-in'),
   });
+  /** Tells an approved applicant so, if a mailer is set up. Never throws. */
+  async function emailApproval(
+    req: IncomingMessage,
+    a: RentalApplication,
+  ): Promise<{ emailed: boolean; mailError?: string }> {
+    if (!mailer) return { emailed: false };
+    const from = await senderFor(sql, req, publicUrl, mailer);
+    if (!from) return { emailed: false, mailError: 'Couldn’t tell the mall’s address (set PUBLIC_URL).' };
+    try {
+      await mailer.send(rentalApprovedEmail({ to: a.email, name: a.name, business: a.business, from }));
+      return { emailed: true };
+    } catch (e) {
+      console.warn(`mail (${mailer.name}) failed:`, (e as Error).message);
+      return { emailed: false, mailError: `The approval email to ${a.email} didn’t send.` };
+    }
+  }
   const needStorage = () => {
     if (!storage) throw new HttpError(503, 'Uploads are not set up on this server (S3_* settings).');
     return storage;
@@ -233,7 +249,7 @@ export function contentApi(opts: ContentApiOptions) {
         const done = await decideRental(sql, id, action === 'approve' ? 'approved' : 'rejected');
         if (!done) throw new HttpError(404, 'No such application.');
         if (done === 'decided') throw new HttpError(409, 'This application has already been decided.');
-        json(res, 200, done);
+        json(res, 200, action === 'approve' ? { ...done, ...(await emailApproval(req, done)) } : done);
       } else if (!action && method === 'DELETE') {
         if (!(await deleteRental(sql, id))) throw new HttpError(404, 'No such application.');
         json(res, 200, { deleted: id });

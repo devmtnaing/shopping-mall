@@ -58,6 +58,12 @@ export async function seedIfEmpty(sql: Sql, config: MallConfig): Promise<boolean
   });
 }
 
+/** The mall's name, for emails. */
+export async function mallName(sql: Sql): Promise<string> {
+  const [row] = await sql<{ name: string }[]>`select name from mall`;
+  return row?.name ?? 'The mall';
+}
+
 /** The whole mall as the client sees it, plus the content version (for caching and live updates). */
 export async function loadContent(
   sql: Sql,

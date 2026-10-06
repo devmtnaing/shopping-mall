@@ -26,6 +26,8 @@ export function Rentals(props: {
 }) {
   const busy = useSignal<number | null>(null);
   const error = useSignal('');
+  /** What happened after an approval: whether the applicant was emailed. */
+  const notice = useSignal('');
   const unit = (id: string) => {
     const s = props.slots.find((x) => x.id === id);
     return s ? slotLabel(s) : `Unit ${id}`;
@@ -47,9 +49,14 @@ export function Rentals(props: {
       return;
     busy.value = a.id;
     error.value = '';
+    notice.value = '';
     try {
       if (action === 'delete') await api.deleteRental(a.id);
-      else await api.decideRental(a.id, action);
+      else {
+        const done = await api.decideRental(a.id, action);
+        if (done.mailError) error.value = `${done.mailError} Let them know yourself: ${a.email}.`;
+        else if (done.emailed) notice.value = `Approved. ${a.name} has been emailed to let them know.`;
+      }
       props.onChanged();
     } catch (e) {
       error.value = (e as Error).message;
@@ -65,12 +72,17 @@ export function Rentals(props: {
       </header>
       <p class="hint">
         Visitors apply by pressing E at a vacant unit. The first to apply holds it until you decide; turning
-        them down opens it again. Approve one, then create their shop and invite them as its owner: they get a
-        link to set a password and look after the shop themselves.
+        them down opens it again. Approve one (they’re emailed to say so), then create their shop and invite
+        them as its owner: they get a link to set a password and look after the shop themselves.
       </p>
       {error.value && (
         <p class="banner error" role="alert">
           {error.value}
+        </p>
+      )}
+      {notice.value && (
+        <p class="banner" role="status">
+          {notice.value}
         </p>
       )}
       {props.rentals.length === 0 && <p class="hint">No applications yet.</p>}

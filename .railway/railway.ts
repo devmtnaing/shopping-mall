@@ -47,9 +47,11 @@ export default defineRailway(() => {
       ...s3,
       HOST_SECRET: preserve(),
       ROOM_CAPACITY: '100',
-      // set-password emails to shop owners (server/src/mail.ts); the key and sender live in Railway
+      // emails to approved applicants and new shop owners (server/src/mail.ts); the key, sender and
+      // reply-to address live in Railway
       RESEND_API_KEY: preserve(),
       MAIL_FROM: preserve(),
+      MAIL_REPLY_TO: preserve(),
       PUBLIC_URL: 'https://mall.devmtnaing.com',
     },
   });

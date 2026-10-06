@@ -101,6 +101,18 @@ describe.runIf(TEST_DB && S3)('shop owners', () => {
     expect(await again.json()).toMatchObject({ emailed: false, mailError: expect.any(String) });
   });
 
+  it('greets the owner by the name they applied with, and says which mall it is', async () => {
+    await db.sql`insert into rental_applications (slot, name, email, business, about, kind, status)
+      values (${mine.slot}, 'Aye Aye', 'Owner@Example.com', ${mine.name}, 'x', 'cafe', 'approved')`;
+    await call('POST', `/api/shops/${mine.id}/owner`, { email: 'owner@example.com' }, host);
+    expect(mail[0]?.text).toMatch(/^Hi Aye Aye,/);
+    expect(mail[0]?.subject).toBe(`${mine.name} is ready at ${seeded.mall.name}`);
+    expect(mail[0]?.text).toContain('https://mall.example/admin/');
+    // someone else's address: no name to go by
+    await call('POST', `/api/shops/${mine.id}/owner`, { email: 'other@example.com' }, host);
+    expect(mail[1]?.text).toMatch(/^Hello,/);
+  });
+
   it('invites by a one-time link, then signs in with email and password', async () => {
     expect((await call('POST', `/api/shops/${mine.id}/owner`, { email: 'x@example.com' })).status).toBe(401);
     const token = await invite();

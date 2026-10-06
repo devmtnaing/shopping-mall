@@ -63,11 +63,21 @@ export async function listOwners(sql: Sql): Promise<OwnerInfo[]> {
 export async function inviteFor(
   sql: Sql,
   token: string,
-): Promise<{ shop: string; email: string; name: string } | null> {
-  const [row] = await sql<{ shop_id: string; email: string; name: string }[]>`
-    select o.shop_id, o.email, s.name from shop_owners o join shops s on s.id = o.shop_id
+): Promise<{ shop: string; email: string; name: string; person?: string } | null> {
+  // `person`: the owner's own name, from the approved application for the shop's unit, when the
+  // invite went to the address they applied with
+  const [row] = await sql<{ shop_id: string; email: string; name: string; person: string | null }[]>`
+    select o.shop_id, o.email, s.name, r.name as person
+    from shop_owners o join shops s on s.id = o.shop_id
+    left join lateral (
+      select name from rental_applications
+      where slot = s.slot and status = 'approved' and lower(email) = lower(o.email)
+      order by decided_at desc limit 1
+    ) r on true
     where o.invite_hash = ${hashInvite(token)} and o.invite_expires > now()`;
-  return row ? { shop: row.shop_id, email: row.email, name: row.name } : null;
+  return row
+    ? { shop: row.shop_id, email: row.email, name: row.name, person: row.person ?? undefined }
+    : null;
 }
 
 /** Use a set-password link: store the password hash and retire the link. */

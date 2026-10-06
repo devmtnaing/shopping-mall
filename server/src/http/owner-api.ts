@@ -6,6 +6,7 @@ import { type Shop, shopSchema } from '@shopping-mall/shared/config';
 import { OWNER_LIMITS } from '@shopping-mall/shared/owners';
 import { z } from 'zod';
 import { storeAsset } from '../assets.ts';
+import { mallName } from '../db/content.ts';
 import type { Sql } from '../db/db.ts';
 import {
   clearUnusedPhotos,
@@ -19,7 +20,7 @@ import {
   removeOwner,
   setOwnerPassword,
 } from '../db/owners.ts';
-import { type Mailer, ownerInviteEmail } from '../mail.ts';
+import { type Mailer, ownerInviteEmail, type Sender } from '../mail.ts';
 import { hashPassword, issueOwnerToken, passwordMatches, readOwnerToken } from '../owners.ts';
 import type { Storage } from '../storage.ts';
 import { HttpError, json, readBody, readJson } from './util.ts';
@@ -49,6 +50,17 @@ export type OwnerApiOptions = {
 };
 
 /** Where a set-password link points: PUBLIC_URL, or the origin the host's /admin is open on. */
+/** Who an email is from: the mall's name and address, or null if the address can't be told. */
+export async function senderFor(
+  sql: Sql,
+  req: IncomingMessage,
+  publicUrl: string | undefined,
+  mailer: Mailer,
+): Promise<Sender | null> {
+  const site = siteOrigin(req, publicUrl);
+  return site ? { mall: await mallName(sql), site, replies: !!mailer.replyTo } : null;
+}
+
 function siteOrigin(req: IncomingMessage, publicUrl?: string): string | null {
   const raw = publicUrl || req.headers.origin;
   try {
@@ -199,17 +211,19 @@ export function ownerApi(opts: OwnerApiOptions) {
     token: string,
   ): Promise<{ emailed: boolean; mailError?: string }> {
     if (!mailer) return { emailed: false };
-    const origin = siteOrigin(req, publicUrl);
+    const from = await senderFor(sql, req, publicUrl, mailer);
     const invite = await inviteFor(sql, token);
-    if (!origin || !invite)
+    if (!from || !invite)
       return { emailed: false, mailError: 'Couldn’t tell the mall’s address (set PUBLIC_URL).' };
     try {
       await mailer.send(
         ownerInviteEmail({
           to: invite.email,
+          name: invite.person,
           shop: invite.name,
-          link: `${origin}/admin/?invite=${token}`,
+          link: `${from.site}/admin/?invite=${token}`,
           days: OWNER_LIMITS.inviteDays,
+          from,
         }),
       );
       return { emailed: true };

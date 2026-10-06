@@ -60,11 +60,6 @@ const pan = (page: Page, yaw: number, ms: number, pitch?: number) =>
       }),
     [yaw, ms, pitch ?? null],
   );
-/** Turn on the spot (the body only). */
-const turn = (page: Page, yaw: number) =>
-  page.evaluate((yaw) => {
-    (window as unknown as Debug).mallDebug.player.facing = yaw;
-  }, yaw);
 
 async function enter(browser: Browser, name: string, character: number, record: boolean) {
   const ctx = await browser.newContext({

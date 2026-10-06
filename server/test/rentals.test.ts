@@ -5,6 +5,7 @@ import config from '../../mall.config';
 import { seedIfEmpty } from '../src/db/content';
 import type { Sql } from '../src/db/db';
 import { issueHostToken } from '../src/host';
+import type { Email } from '../src/mail';
 import { startServer } from '../src/server';
 import { freshSchema, TEST_DB } from './db';
 import { TestClient } from './helpers';
@@ -130,6 +131,47 @@ describe.runIf(TEST_DB)('rental applications', () => {
   it('says a unit is taken, not requested, once a shop is in it', async () => {
     const res = await post(apply({ slot: taken }));
     expect(await res.json()).toMatchObject({ reason: 'taken' });
+  });
+
+  it('emails the applicant when they’re approved, and says when it couldn’t', async () => {
+    const mail: Email[] = [];
+    let fails = false;
+    await server.close();
+    server = await startServer({
+      port: 0,
+      db: db.sql,
+      hostSecret: SECRET,
+      publicUrl: 'https://mall.example',
+      mailer: {
+        name: 'test',
+        async send(e) {
+          if (fails) throw new Error('provider down');
+          mail.push(e);
+        },
+      },
+    });
+    base = `http://127.0.0.1:${server.port}`;
+    await post(apply());
+    await post(apply({ slot: 'u-e0', business: 'Other' }), '10.0.0.2');
+    const [a, b] = (await list()).sort((x, y) => x.id - y.id) as RentalApplication[];
+    const res = await fetch(`${base}/api/rentals/${a?.id}/approve`, { method: 'POST', headers: host });
+    expect(await res.json()).toMatchObject({ status: 'approved', emailed: true });
+    expect(mail).toHaveLength(1);
+    expect(mail[0]).toMatchObject({ to: 'mya@example.com' });
+    expect(mail[0]?.subject).toContain('Golden Tea');
+    expect(mail[0]?.text).toMatch(/^Hi Mya Mya,/);
+    // turning someone down sends nothing; a failed send still approves, and says so
+    await fetch(`${base}/api/rentals/${b?.id}/reject`, { method: 'POST', headers: host });
+    expect(mail).toHaveLength(1);
+    await post(apply({ slot: 'u-e1', business: 'Third' }), '10.0.0.3');
+    const c = (await list()).find((r) => r.business === 'Third') as RentalApplication;
+    fails = true;
+    const failed = await fetch(`${base}/api/rentals/${c.id}/approve`, { method: 'POST', headers: host });
+    expect(await failed.json()).toMatchObject({
+      status: 'approved',
+      emailed: false,
+      mailError: expect.any(String),
+    });
   });
 
   it('approving one leaves other units’ applications alone', async () => {

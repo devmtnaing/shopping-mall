@@ -24,7 +24,7 @@ You can run the whole mall two ways: with **docker compose** on any machine, or 
 | `MAX_PLAYERS`, `MAX_PER_IP` | The most people in the mall at once (default 20), and connections per IP address (default 5). |
 | `CHAT_KEEP_DAYS`, `CHAT_SHOW_MIN` | Days of chat history to keep (default 30), and how far back newcomers see it, in minutes (default 60). |
 | `AWAY_AFTER_S`, `DROP_SILENT_S`, `IDLE_KICK_MIN` | When someone shows as away (15 s), leaves because their tab is in the background (120 s), or leaves for being idle (15 min, `0` for never). See the [configuration guide](guide/config). |
-| `MAIL_PROVIDER`, `RESEND_API_KEY`, `MAIL_FROM`, `PUBLIC_URL` | Email set-password links to new shop owners (Resend by default). See the [configuration guide](guide/config#email). |
+| `MAIL_PROVIDER`, `RESEND_API_KEY`, `MAIL_FROM`, `MAIL_REPLY_TO`, `PUBLIC_URL` | Email approved applicants, and set-password links to new shop owners (Resend by default). See the [configuration guide](guide/config#email). |
 | `ROOM_CAPACITY`, `REPORT_WEBHOOK`, `RENTAL_WEBHOOK`, `BLOCKLIST_FILE`, `METRICS` | Optional, see `.env.example`. |
 
 **web**

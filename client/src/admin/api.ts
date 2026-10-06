@@ -120,6 +120,10 @@ export const api = {
   resetArt: () => call<{ version: number }>('DELETE', '/api/art/mall'),
   rentals: () => call<RentalApplication[]>('GET', '/api/rentals'),
   decideRental: (id: number, action: 'approve' | 'reject') =>
-    call<RentalApplication>('POST', `/api/rentals/${id}/${action}`),
+    // approving also emails the applicant, when the server has a mail service
+    call<RentalApplication & { emailed?: boolean; mailError?: string }>(
+      'POST',
+      `/api/rentals/${id}/${action}`,
+    ),
   deleteRental: (id: number) => call<{ deleted: number }>('DELETE', `/api/rentals/${id}`),
 };
