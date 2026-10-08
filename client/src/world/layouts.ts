@@ -13,7 +13,7 @@ import type { Shop } from '@shopping-mall/shared/config';
 import type { Slot } from '@shopping-mall/shared/meta';
 
 export type Item = { kind: string; x: number; d: number; yaw: number };
-export type Layout = 'cafe' | 'books' | 'fashion' | 'home' | 'games' | 'store';
+export type Layout = 'cafe' | 'books' | 'fashion' | 'home' | 'games' | 'software' | 'store';
 
 const PI = Math.PI;
 /** Units wider than this are furnished as big stores (bays and a showcase); deeper ones not at all. */
@@ -30,6 +30,7 @@ const KEYWORDS: [Layout, RegExp][] = [
   ['fashion', /fashion|cloth|apparel|shoe|sneaker|wear|boutique|jewel|accessor/i],
   ['home', /home|plant|garden|decor|furnitur|living|flower/i],
   ['games', /game|toy|arcade|play|hobby/i],
+  ['software', /software|coding|code|program|develop|course|academy|tutor|e-?learn|tech/i],
 ];
 
 /**
@@ -86,6 +87,13 @@ const LAYOUTS: Record<Layout, LayoutFn> = {
   ],
   // a row of arcade cabinets down each wall
   games: (D, W) => [...rows(D, 2, 1, 3.4).flatMap((d) => walls(W, 'arcade', d, 0.9)), sofa(D), counter(D)],
+  // a software house teaching online courses: workstations down both walls, a course playing on the
+  // big screen at the back, and a front desk
+  software: (D, W) => [
+    ...rows(D - 2.4, 2, 1.8).flatMap((d) => walls(W, 'workstation', d, 1.25)),
+    { kind: 'course-screen', x: -1.6, d: D - 0.3, yaw: PI },
+    counter(D),
+  ],
   store: (D, W) => [
     ...rows(D, 3, 2.2).flatMap((d, i) => walls(W, i % 2 ? 'shelf-bags' : 'shelf', d, 1.5)),
     { kind: 'cart', x: -(W - 1.45), d: 1.2, yaw: PI / 4 },
@@ -100,6 +108,7 @@ const SHOWCASE: Record<Layout, (depth: number) => Item[]> = {
   fashion: (D) => [-2.4, 0, 2.4].map((x) => ({ kind: 'sneakers', x, d: D - 1.2, yaw: PI })),
   home: (D) => [-2.4, 0, 2.4].map((x) => ({ kind: 'plant-stand', x, d: D - 1.5, yaw: PI })),
   games: (D) => [-2.5, -1.5, -0.5, 0.5, 1.5, 2.5].map((x) => ({ kind: 'arcade', x, d: D - 1.5, yaw: PI })),
+  software: (D) => [-2.8, 0, 2.8].map((x) => ({ kind: 'course-screen', x, d: D - 0.3, yaw: PI })),
   store: (D) => [-2, 2].map((x) => ({ kind: 'shelf', x, d: D - 1.6, yaw: PI })),
 };
 

@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { parseConfig } from '@shopping-mall/shared/config';
 import { PLAYER } from '@shopping-mall/shared/constants';
+import { SHOP_KINDS } from '@shopping-mall/shared/shop-kinds';
 import { Box3, Ray, Vector3 } from 'three';
 import { describe, expect, it } from 'vitest';
 import config from '../../mall.config';
@@ -28,6 +29,8 @@ describe('shop interiors', () => {
     expect(layoutFor(shop('Sneakers'))).toBe('fashion');
     expect(layoutFor(shop('Home'))).toBe('home');
     expect(layoutFor(shop('Games'))).toBe('games');
+    expect(layoutFor(shop('Software'))).toBe('software');
+    expect(layoutFor(shop('Coding courses'))).toBe('software');
     expect(layoutFor(shop('Electronics'))).toBe('store');
     expect(layoutFor(shop(undefined))).toBe('store');
     expect(layoutFor(shop('For rent'))).toBeNull();
@@ -51,6 +54,30 @@ describe('shop interiors', () => {
       const mine = obstacles.filter((b) => room.intersectsBox(b));
       for (const b of mine) expect(room.containsBox(b), slot.id).toBe(true);
       // walk from the doorway straight in, 6 m, a body's width either side of the centre line
+      const door = new Vector3(...slot.door.pos);
+      const f = new Vector3(-Math.sin(slot.door.yaw), 0, -Math.cos(slot.door.yaw));
+      for (let d = 0; d <= 6; d += 0.25) {
+        const at = door
+          .clone()
+          .addScaledVector(f, d)
+          .setY(door.y + 1);
+        for (const b of mine)
+          expect(b.clone().expandByScalar(PLAYER.radius).containsPoint(at), slot.id).toBe(false);
+      }
+    }
+  });
+
+  it('fits a software house in every unit, inside its walls and clear of the aisle', () => {
+    const software = meta.slots.map(
+      (slot) =>
+        ({ ...shops[0], id: `sw-${slot.id}`, slot: slot.id, category: 'Software' }) as (typeof shops)[number],
+    );
+    const sw = furnish(meta, software, index.footprints);
+    expect(sw.placements.filter((p) => p.kind === 'workstation').length).toBeGreaterThan(10);
+    for (const slot of meta.slots) {
+      const room = new Box3(new Vector3(...slot.interior.min), new Vector3(...slot.interior.max));
+      const mine = sw.obstacles.filter((b) => room.intersectsBox(b));
+      for (const b of mine) expect(room.containsBox(b), slot.id).toBe(true);
       const door = new Vector3(...slot.door.pos);
       const f = new Vector3(-Math.sin(slot.door.yaw), 0, -Math.cos(slot.door.yaw));
       for (let d = 0; d <= 6; d += 0.25) {
@@ -104,7 +131,7 @@ describe('shop interiors', () => {
     const { depth, width } = unitSize(e4);
     expect(depth).toBeGreaterThan(4);
     expect(width).toBeGreaterThan(4);
-    for (const layout of ['cafe', 'books', 'fashion', 'home', 'games', 'store'] as const) {
+    for (const layout of SHOP_KINDS) {
       const items = unitItems(layout, depth, width);
       expect(items.length, layout).toBeGreaterThan(2);
       for (const it of items) expect(known.has(it.kind), it.kind).toBe(true);

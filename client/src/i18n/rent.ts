@@ -30,12 +30,15 @@ export const rentEn = {
   'kind.fashion': 'Fashion & accessories',
   'kind.home': 'Home, plants & decor',
   'kind.games': 'Games & toys',
+  'kind.software': 'Software & online courses',
   'kind.store': 'Something else',
   'plan.cafe': 'Tables and chairs down both sides, and a coffee bar at the back.',
   'plan.books': 'Bookcases along both walls and the back, and a till.',
   'plan.fashion': 'Shoe walls down both sides, bag shelves and a till.',
   'plan.home': 'Plant stands down both sides, plants, a sofa and a till.',
   'plan.games': 'A row of arcade machines down each wall, a sofa and a till.',
+  'plan.software':
+    'Computer desks down both walls, a big screen playing a course at the back, and a front desk.',
   'plan.store': 'Shelves down both sides, a trolley by the door and a till.',
 } as const;
 export type RentKey = keyof typeof rentEn;
@@ -68,12 +71,14 @@ export const rentMy: Record<RentKey, string> = {
   'kind.fashion': 'ဖက်ရှင်နှင့် အဆင်တန်ဆာ',
   'kind.home': 'အိမ်သုံး၊ အပင်နှင့် အလှဆင်ပစ္စည်း',
   'kind.games': 'ဂိမ်းနှင့် ကစားစရာ',
+  'kind.software': 'ဆော့ဖ်ဝဲနှင့် အွန်လိုင်းသင်တန်း',
   'kind.store': 'အခြား',
   'plan.cafe': 'နှစ်ဘက်စလုံးတွင် စားပွဲနှင့် ကုလားထိုင်များ၊ နောက်ဘက်တွင် ကော်ဖီကောင်တာ။',
   'plan.books': 'နံရံနှစ်ဘက်နှင့် နောက်ဘက်တွင် စာအုပ်စင်များ၊ ငွေရှင်းကောင်တာ။',
   'plan.fashion': 'နှစ်ဘက်စလုံးတွင် ဖိနပ်စင်များ၊ အိတ်စင်များနှင့် ငွေရှင်းကောင်တာ။',
   'plan.home': 'နှစ်ဘက်စလုံးတွင် အပင်စင်များ၊ အပင်များ၊ ဆိုဖာနှင့် ငွေရှင်းကောင်တာ။',
   'plan.games': 'နံရံတစ်ဘက်စီတွင် ဂိမ်းစက်တန်း၊ ဆိုဖာနှင့် ငွေရှင်းကောင်တာ။',
+  'plan.software': 'နံရံနှစ်ဘက်စလုံးတွင် ကွန်ပျူတာစားပွဲများ၊ နောက်ဘက်တွင် သင်ခန်းစာပြသော မျက်နှာပြင်ကြီးနှင့် ရှေ့ကောင်တာ။',
   'plan.store': 'နှစ်ဘက်စလုံးတွင် ပစ္စည်းစင်များ၊ တံခါးနားတွင် တွန်းလှည်းနှင့် ငွေရှင်းကောင်တာ။',
 };
 
