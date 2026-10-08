@@ -53,3 +53,10 @@ The restrooms, 2026-10-04: 20 credits. (The vanity came without its mirror; the 
 | `sign-men.glb` | 2000 | A freestanding restroom sign for a shopping mall men's restroom: a slim upright navy blue rectangular totem on a low base with one large white man toilet pictogram on its front, flat panel, clean modern design, stylized low-poly game asset, flat colors, isolated |
 
 Restroom cubicles and the women's restroom, 2026-10-04: 30 credits.
+
+Not generated yet: the software house (a shop teaching online courses). Higgsfield wasn't reachable from the session that added it, so `workstation` and `course-screen` are stand-ins built from boxes by `tools/assets/software-props.ts` (in `assets-src/props/blockout/`). To replace them, generate these, save them here, point their `src` in `tools/greybox/props.ts` at `higgsfield/` (check `turn` so the screen faces −Z), and run `pnpm assets`.
+
+| File | face_limit | Prompt |
+|---|---|---|
+| `workstation.glb` | 2000 | A computer workstation for a coding school in a shopping mall: a white desk on light oak legs with one monitor showing colorful lines of code, a keyboard, a mouse and a teal mug, and a black office swivel chair pushed in front of it, flat back so it stands against a wall, clean modern design, stylized low-poly game asset, flat colors, isolated |
+| `course-screen.glb` | 2000 | A large wall-mounted TV screen for a software house that sells online courses, showing a video lesson with a teal title bar, lines of code and a big play button, above a low light oak media console with a laptop and a small speaker on it, flat back so it stands against a wall, clean modern design, stylized low-poly game asset, flat colors, isolated |

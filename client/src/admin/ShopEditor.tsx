@@ -4,6 +4,7 @@ import { useSignal } from '@preact/signals';
 import type { Shop } from '@shopping-mall/shared/config';
 import type { Slot } from '@shopping-mall/shared/meta';
 import { OWNER_LIMITS } from '@shopping-mall/shared/owners';
+import { SHOP_CATEGORIES } from '@shopping-mall/shared/shop-kinds';
 import { useEffect, useRef } from 'preact/hooks';
 import { rentEn } from '../i18n/rent';
 import { paintSign } from '../render/signs';
@@ -115,6 +116,18 @@ function SignPreview({ d, aspect }: { d: Draft; aspect: number }) {
   return <div class="sign-preview" ref={host} />;
 }
 
+/**
+ * The categories to choose from. A shop saved before categories were a fixed list may have one of
+ * its own: it stays selectable (and selected) until the host picks another.
+ */
+const categoryOptions = (current: string) => [
+  { value: '', label: 'None (shelves)' },
+  ...(current && !SHOP_CATEGORIES.includes(current)
+    ? [{ value: current, label: `${current} (not in the list)` }]
+    : []),
+  ...SHOP_CATEGORIES.map((c) => ({ value: c, label: c })),
+];
+
 /** What the category puts inside the unit, as a plan from above. */
 function InteriorPreview({ slot, category, accent }: { slot?: Slot; category: string; accent: string }) {
   const layout = layoutFor({ category: category.trim() || undefined });
@@ -122,11 +135,7 @@ function InteriorPreview({ slot, category, accent }: { slot?: Slot; category: st
     <figure class="interior-preview">
       <figcaption>
         <strong>Inside the shop</strong>
-        <small>
-          {layout
-            ? `${rentEn[`plan.${layout}`]} Categories with “food”, “book”, “fashion”, “home” or “game” get their own furniture; anything else gets shelves.`
-            : 'Left empty: the category says it’s for rent.'}
-        </small>
+        <small>{layout ? rentEn[`plan.${layout}`] : 'Left empty: the category says it’s for rent.'}</small>
       </figcaption>
       {slot && layout ? (
         <InteriorPlan
@@ -298,12 +307,12 @@ export function ShopEditor(props: {
             ]}
           />
         )}
-        <Text
+        <Select
           label="Category"
           value={v.category}
-          placeholder="Food & drink"
           hint="Picks the furniture inside (see the plan below)."
-          onInput={(category) => set({ category })}
+          onChange={(category) => set({ category })}
+          options={categoryOptions(v.category)}
         />
         <Text
           label="Tagline"

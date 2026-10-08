@@ -17,6 +17,7 @@ export const PACKS = [
   'shop-fashion',
   'shop-home',
   'shop-games',
+  'shop-software',
   'restrooms',
   'restroom-women',
 ] as const;
@@ -39,6 +40,8 @@ export type PropSpec = {
 const H = 'higgsfield';
 const F = 'kenney-furniture-kit';
 const M = 'kenney-mini-market';
+/** Stand-ins built by tools/assets/software-props.ts, until Higgsfield models replace them. */
+const B = 'blockout';
 
 export const PROPS: Record<string, PropSpec> = {
   bench: {
@@ -168,6 +171,24 @@ export const PROPS: Record<string, PropSpec> = {
     size: 1.8,
     turn: Math.PI / 2,
     footprint: [0.8, 1.8, 0.9],
+  },
+  /** A desk with a monitor and its office chair (on the −Z side, facing the screen). */
+  workstation: {
+    pack: 'shop-software',
+    src: `${B}/workstation.glb`,
+    axis: 'x',
+    size: 1.4,
+    turn: 0,
+    footprint: [1.4, 1.3, 1.25],
+  },
+  /** A big screen playing a course video, over a low console: stands against a wall. */
+  'course-screen': {
+    pack: 'shop-software',
+    src: `${B}/course-screen.glb`,
+    axis: 'x',
+    size: 2.6,
+    turn: 0,
+    footprint: [2.6, 2.4, 0.5],
   },
   shelf: {
     pack: 'shops',

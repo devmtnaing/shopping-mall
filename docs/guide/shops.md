@@ -15,7 +15,7 @@ Go to `/admin/` on your mall (for example <http://localhost:8080/admin/>) and en
 | Name, tagline | On the sign and at the top of the shop's panel. Name up to 40 characters. |
 | ID | Used in links (`?s=lumen-coffee`). Lowercase letters, digits and dashes. |
 | Unit | Which storefront the shop takes. Taken units are marked. `w0` to `w5` are on the left as you walk in and `e0` to `e5` on the right, `u-` means upstairs, and `flagship` is the big store at the far end ([map](../greybox)). |
-| Category | Groups shops in the directory, and picks the furniture inside: a café gets tables and a coffee bar, a bookshop gets bookcases, and so on. "For rent" leaves the unit empty. The editor shows a plan of the unit with that furniture. |
+| Category | Chosen from a list: Food & drink, Books, Fashion, Home, Games, Software, Shop, or For rent. Groups shops in the directory, and picks the furniture inside: a café gets tables and a coffee bar, a bookshop gets bookcases, a software house gets computer desks and a screen playing a course, and so on. "For rent" leaves the unit empty. The editor shows a plan of the unit with that furniture. A shop saved earlier with a category of its own keeps it until you pick one from the list. |
 | Sign colour, accent | The sign background and the highlight colour used in the panel. |
 | Logo | Upload a PNG, JPEG or WebP (up to 2 MB), or paste a URL. |
 | Description, features | The panel text, and up to 8 feature lines. |
